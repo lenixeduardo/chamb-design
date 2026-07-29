@@ -1,0 +1,37 @@
+{
+  "name": "@opendesign/ai",
+  "version": "0.1.0",
+  "description": "Provider-agnostic AI layer: Claude, GPT, Gemini, DeepSeek, Ollama, OpenRouter, LM Studio",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@opendesign/core": "workspace:*",
+    "@opendesign/design-system": "workspace:*"
+  },
+  "devDependencies": {
+    "@opendesign/components": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10"
+  }
+}
