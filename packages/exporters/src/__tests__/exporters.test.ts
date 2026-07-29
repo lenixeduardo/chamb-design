@@ -184,3 +184,26 @@ describe('naming helpers', () => {
     expect(toPascalCase('')).toBe('Section');
   });
 });
+
+describe('html reset', () => {
+  it('neutralises the browser defaults that would break canvas parity', async () => {
+    const { files } = await exportProject(registry, document, 'html');
+    const styles = files.find((f) => f.path === 'styles.css')!;
+
+    // A default `h1 { margin: 0.67em 0 }` adds ~40px of space the designer
+    // never asked for. The other targets get this from Tailwind's Preflight.
+    expect(styles.contents).toMatch(/h1,[\s\S]*?margin: 0;/);
+    expect(styles.contents).toMatch(/a \{[\s\S]*?text-decoration: none;/);
+    expect(styles.contents).toMatch(/button,[\s\S]*?font: inherit;/);
+    expect(styles.contents).toMatch(/ul,\s*\n?ol \{[\s\S]*?list-style: none;/);
+  });
+
+  it('applies the reset before the generated layout rules', async () => {
+    const { files } = await exportProject(registry, document, 'html');
+    const styles = files.find((f) => f.path === 'styles.css')!;
+    // Order matters: node rules must win over the reset, not the other way round.
+    expect(styles.contents.indexOf('/* Reset */')).toBeLessThan(
+      styles.contents.indexOf('/* Layout */'),
+    );
+  });
+});

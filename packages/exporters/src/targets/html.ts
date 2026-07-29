@@ -168,8 +168,65 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * The other targets get this from Tailwind's Preflight. This one has no
+ * dependencies, so it needs its own — and it is not cosmetic: a browser's
+ * default \`h1 { margin: 0.67em 0 }\` silently adds ~40px above and below a
+ * display heading, which is how an export stops matching the canvas.
+ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+hr {
+  border: 0;
+  margin: 0;
+}
+
 img,
-video {
+video,
+svg,
+iframe {
   display: block;
   max-width: 100%;
 }
