@@ -71,7 +71,7 @@ export const navbar: ComponentContribution = {
               {
                 type: 'frame',
                 name: 'Links',
-                style: { ...row(7), display: 'none' },
+                style: { ...row(6), display: 'none' },
                 responsive: { md: { display: 'flex' } },
                 children: links.map((label) => ({
                   type: 'link',

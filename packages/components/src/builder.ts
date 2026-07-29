@@ -62,8 +62,18 @@ function defaultName(type: string): string {
 /*                             Style shorthands                               */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The spacing steps that actually exist in the default token set.
+ *
+ * Typing these rather than accepting `number` turns a whole class of silent
+ * bug into a compile error: `{spacing.7}` does not throw anywhere at runtime —
+ * it compiles to `var(--spacing-7)`, resolves to nothing, and the gap simply
+ * vanishes. That shipped once and was caught by looking at a screenshot.
+ */
+export type SpacingStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 | 20 | 24 | 32;
+
 /** `pad(4)` -> uniform `{spacing.4}`; `pad(6, 4)` -> vertical/horizontal. */
-export function pad(vertical: number | string, horizontal = vertical) {
+export function pad(vertical: SpacingStep, horizontal: SpacingStep = vertical) {
   return {
     top: `{spacing.${vertical}}` as const,
     bottom: `{spacing.${vertical}}` as const,
@@ -72,19 +82,19 @@ export function pad(vertical: number | string, horizontal = vertical) {
   };
 }
 
-export const space = (step: number | string) => `{spacing.${step}}` as const;
+export const space = (step: SpacingStep) => `{spacing.${step}}` as const;
 export const color = (name: string) => `{color.${name}}` as const;
 export const radius = (name: string) => `{radius.${name}}` as const;
 export const shadow = (name: string) => `{shadow.${name}}` as const;
 export const fontSize = (name: string) => `{size.${name}}` as const;
 
 /** A vertical flex container — the workhorse of every block. */
-export function column(gap: number | string, extra: StyleMap = {}): StyleMap {
+export function column(gap: SpacingStep, extra: StyleMap = {}): StyleMap {
   return { display: 'flex', direction: 'column', gap: space(gap), ...extra };
 }
 
 /** A horizontal flex container. */
-export function row(gap: number | string, extra: StyleMap = {}): StyleMap {
+export function row(gap: SpacingStep, extra: StyleMap = {}): StyleMap {
   return { display: 'flex', direction: 'row', align: 'center', gap: space(gap), ...extra };
 }
 

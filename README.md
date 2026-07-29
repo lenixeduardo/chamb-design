@@ -112,11 +112,18 @@ all run without a network.
 pnpm test
 ```
 
-293 tests across the packages. The suites that matter most: operation
+347 tests across the packages. The suites that matter most: operation
 invertibility (every edit must undo exactly), export output (no editor
 attributes leak, void elements stay void, responsive overrides become media
-queries), the AI repair loop (a malformed batch must never half-apply), and the
-plugin contract (a third-party plugin can do everything a first-party one can).
+queries), the AI repair loop (a malformed batch must never half-apply), the
+server's all-or-nothing writes, and the plugin contract (a third-party plugin
+can do everything a first-party one can).
+
+One suite worth calling out: every block is checked for references to tokens
+that do not exist. `{spacing.7}` in a scale that stops at 6 throws nowhere — it
+compiles to `var(--spacing-7)`, resolves to nothing, and the gap silently
+vanishes. That bug shipped once and was caught by looking at a screenshot,
+which is not a scalable review process.
 
 ## Licence
 
