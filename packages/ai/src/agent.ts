@@ -17,7 +17,12 @@ import {
   DESIGN_SYSTEM_PROMPT,
   IMPORT_SYSTEM_PROMPT,
 } from './prompts.js';
-import { formatIssues, reviewDocument, reviewHeadingStructure, type ReviewIssue } from './review.js';
+import {
+  formatIssues,
+  reviewDocument,
+  reviewHeadingStructure,
+  type ReviewIssue,
+} from './review.js';
 import type { ChatMessage, ChatProvider, ContentPart, TokenUsage } from './provider.js';
 
 /**
@@ -88,7 +93,9 @@ function isInsertBlock(value: unknown): value is InsertBlockOperation {
 }
 
 export class DesignAgent {
-  private readonly options: Required<Pick<AgentOptions, 'maxRepairAttempts' | 'autoReview' | 'temperature'>> &
+  private readonly options: Required<
+    Pick<AgentOptions, 'maxRepairAttempts' | 'autoReview' | 'temperature'>
+  > &
     AgentOptions;
 
   constructor(options: AgentOptions) {
@@ -119,9 +126,11 @@ export class DesignAgent {
 
     const userContent: ContentPart[] = [
       { type: 'text', text: `CURRENT DOCUMENT\n\n${context.text}` },
-      ...(request.images ?? []).map(
-        (image): ContentPart => ({ type: 'image', data: image.data, mimeType: image.mimeType }),
-      ),
+      ...(request.images ?? []).map((image): ContentPart => ({
+        type: 'image',
+        data: image.data,
+        mimeType: image.mimeType,
+      })),
       { type: 'text', text: `REQUEST\n\n${request.prompt}` },
     ];
 

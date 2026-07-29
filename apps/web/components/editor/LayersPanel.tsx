@@ -90,7 +90,10 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                 <button
                   type="button"
                   onClick={() => hasChildren && toggleCollapse(node.id)}
-                  className={cn('grid h-4 w-4 shrink-0 place-items-center', !hasChildren && 'invisible')}
+                  className={cn(
+                    'grid h-4 w-4 shrink-0 place-items-center',
+                    !hasChildren && 'invisible',
+                  )}
                   aria-label={collapsed.has(node.id) ? 'Expand' : 'Collapse'}
                 >
                   {collapsed.has(node.id) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}

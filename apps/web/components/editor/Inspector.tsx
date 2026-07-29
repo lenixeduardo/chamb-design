@@ -215,7 +215,9 @@ export function Inspector({ editor }: { editor: Editor }) {
               max={1}
               step={0.01}
               value={style.opacity ?? 1}
-              onChange={(event) => set({ opacity: Number(event.target.value) }, `opacity:${primary.id}`)}
+              onChange={(event) =>
+                set({ opacity: Number(event.target.value) }, `opacity:${primary.id}`)
+              }
               className="w-full accent-brand"
             />
           </Field>
@@ -263,7 +265,11 @@ export function Inspector({ editor }: { editor: Editor }) {
                   ['bottom', AlignEndHorizontal],
                 ] as [AlignMode, typeof AlignStartHorizontal][]
               ).map(([mode, Icon]) => (
-                <IconButton key={mode} label={`Align ${mode}`} onClick={() => editor.alignSelection(mode)}>
+                <IconButton
+                  key={mode}
+                  label={`Align ${mode}`}
+                  onClick={() => editor.alignSelection(mode)}
+                >
                   <Icon size={14} />
                 </IconButton>
               ))}

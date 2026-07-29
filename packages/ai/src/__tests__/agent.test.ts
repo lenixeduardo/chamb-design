@@ -433,9 +433,7 @@ describe('DesignAgent', () => {
     expect(events.some((e) => e.type === 'review')).toBe(true);
 
     const done = events.find((e) => e.type === 'done')!;
-    expect(done.type === 'done' && done.document.nodes.n_img?.props.alt).toBe(
-      'Product screenshot',
-    );
+    expect(done.type === 'done' && done.document.nodes.n_img?.props.alt).toBe('Product screenshot');
   });
 
   it('surfaces token usage from the provider', async () => {

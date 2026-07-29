@@ -148,19 +148,23 @@ export function buildDocumentContext(
   document: DesignDocument,
   options: { pageId?: string; selection?: NodeId[]; contextOptions?: ContextOptions } = {},
 ): DocumentContext {
-  const page =
-    document.pages.find((p) => p.id === options.pageId) ?? document.pages[0];
+  const page = document.pages.find((p) => p.id === options.pageId) ?? document.pages[0];
 
   const sections: string[] = [];
 
   sections.push(`PROJECT: ${document.name}`);
   sections.push(
     `PAGES: ${document.pages
-      .map((p) => `${p.id} ${JSON.stringify(p.name)} path=${p.path}${p.id === page?.id ? ' (current)' : ''}`)
+      .map(
+        (p) =>
+          `${p.id} ${JSON.stringify(p.name)} path=${p.path}${p.id === page?.id ? ' (current)' : ''}`,
+      )
       .join('\n       ')}`,
   );
 
-  sections.push(`THEME: ${document.activeThemeId} (available: ${document.themes.map((t) => t.id).join(', ')})`);
+  sections.push(
+    `THEME: ${document.activeThemeId} (available: ${document.themes.map((t) => t.id).join(', ')})`,
+  );
   sections.push(`DESIGN TOKENS:\n${summarizeTokens(document)}`);
 
   if (document.assets.length > 0) {

@@ -38,7 +38,9 @@ const vueTarget: SfcTarget = {
   wrap: (markup, imports) => {
     const importLines = imports.map((i) => `import ${i.name} from '${i.path}';`);
     const script =
-      importLines.length > 0 ? `<script setup lang="ts">\n${importLines.join('\n')}\n</script>\n\n` : '';
+      importLines.length > 0
+        ? `<script setup lang="ts">\n${importLines.join('\n')}\n</script>\n\n`
+        : '';
     return `${script}<template>\n${markup}\n</template>\n`;
   },
   scaffold: (document) => [
@@ -73,10 +75,12 @@ const svelteTarget: SfcTarget = {
   dialect: 'svelte',
   componentDir: 'src/lib/components',
   pageDir: 'src/routes',
-  pageFileName: (_pageName, path) => (path === '/' ? '+page.svelte' : `${toKebabCase(path)}/+page.svelte`),
+  pageFileName: (_pageName, path) =>
+    path === '/' ? '+page.svelte' : `${toKebabCase(path)}/+page.svelte`,
   wrap: (markup, imports) => {
     const importLines = imports.map((i) => `  import ${i.name} from '${i.path}';`);
-    const script = importLines.length > 0 ? `<script lang="ts">\n${importLines.join('\n')}\n</script>\n\n` : '';
+    const script =
+      importLines.length > 0 ? `<script lang="ts">\n${importLines.join('\n')}\n</script>\n\n` : '';
     return `${script}${markup}\n`;
   },
   scaffold: (document) => [
@@ -159,8 +163,7 @@ function generateSfc(document: DesignDocument, target: SfcTarget): GeneratedFile
     }
 
     const refs = collectComponentRefs(shell);
-    const importPath =
-      target.id === 'svelte' ? '$lib/components' : '../components';
+    const importPath = target.id === 'svelte' ? '$lib/components' : '../components';
 
     files.push({
       path: `${target.pageDir}/${target.pageFileName(page.name, page.path)}`,

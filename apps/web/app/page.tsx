@@ -230,8 +230,8 @@ export default function WorkspacePage() {
       </section>
 
       <footer className="mt-12 border-t border-hairline pt-5 text-[11px] text-ink-faint">
-        Projects are stored in this browser. Nothing leaves your machine unless you connect a
-        cloud model provider or a sync server.
+        Projects are stored in this browser. Nothing leaves your machine unless you connect a cloud
+        model provider or a sync server.
       </footer>
     </main>
   );

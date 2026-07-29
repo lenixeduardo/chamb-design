@@ -37,10 +37,13 @@ describe('viewport math', () => {
   });
 
   it('fits a rect inside a container', () => {
-    const viewport = fitToRect({ x: 0, y: 0, width: 1440, height: 900 }, {
-      width: 800,
-      height: 600,
-    });
+    const viewport = fitToRect(
+      { x: 0, y: 0, width: 1440, height: 900 },
+      {
+        width: 800,
+        height: 600,
+      },
+    );
     expect(viewport.zoom).toBeLessThan(1);
     expect(viewport.zoom).toBeGreaterThan(0);
   });

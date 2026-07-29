@@ -100,9 +100,10 @@ async function runRemotely(options: RunAgentOptions, handlers: AgentStreamHandle
   });
 
   if (!response.ok) {
-    const detail = (await response.json().catch(() => null)) as
-      | { error?: string; hint?: string }
-      | null;
+    const detail = (await response.json().catch(() => null)) as {
+      error?: string;
+      hint?: string;
+    } | null;
     handlers.onError?.(
       [detail?.error ?? `request failed with ${response.status}`, detail?.hint]
         .filter(Boolean)

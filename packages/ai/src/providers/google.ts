@@ -18,9 +18,10 @@ import {
  */
 export function googleProvider(config: ProviderConfig = {}): ChatProvider {
   const doFetch = config.fetch ?? globalThis.fetch;
-  const baseUrl = (
-    config.baseUrl ?? 'https://generativelanguage.googleapis.com/v1beta'
-  ).replace(/\/$/, '');
+  const baseUrl = (config.baseUrl ?? 'https://generativelanguage.googleapis.com/v1beta').replace(
+    /\/$/,
+    '',
+  );
 
   return {
     id: 'google',
@@ -47,15 +48,11 @@ export function googleProvider(config: ProviderConfig = {}): ChatProvider {
         },
         body: JSON.stringify({
           contents: toGoogleContents(request.messages),
-          ...(request.system
-            ? { systemInstruction: { parts: [{ text: request.system }] } }
-            : {}),
+          ...(request.system ? { systemInstruction: { parts: [{ text: request.system }] } } : {}),
           generationConfig: {
             temperature: request.temperature ?? 0.4,
             maxOutputTokens: request.maxTokens ?? 8192,
-            ...(request.responseFormat === 'json'
-              ? { responseMimeType: 'application/json' }
-              : {}),
+            ...(request.responseFormat === 'json' ? { responseMimeType: 'application/json' } : {}),
           },
         }),
         ...(request.signal ? { signal: request.signal } : {}),
@@ -65,15 +62,13 @@ export function googleProvider(config: ProviderConfig = {}): ChatProvider {
 
       for await (const event of parseSSE(response, 'google')) {
         const candidates = event.candidates as
-          | { content?: { parts?: { text?: string }[] } }[]
-          | undefined;
+          { content?: { parts?: { text?: string }[] } }[] | undefined;
 
         const delta =
           candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
 
         const usage = event.usageMetadata as
-          | { promptTokenCount?: number; candidatesTokenCount?: number }
-          | undefined;
+          { promptTokenCount?: number; candidatesTokenCount?: number } | undefined;
 
         if (usage) {
           yield {

@@ -59,11 +59,18 @@ export function zoomAt(viewport: Viewport, anchor: Point, nextZoom: number): Vie
 }
 
 /** Viewport that fits `bounds` in a `container`-sized screen, with padding. */
-export function fitToRect(bounds: Rect, container: { width: number; height: number }, padding = 64): Viewport {
+export function fitToRect(
+  bounds: Rect,
+  container: { width: number; height: number },
+  padding = 64,
+): Viewport {
   const availableWidth = Math.max(container.width - padding * 2, 1);
   const availableHeight = Math.max(container.height - padding * 2, 1);
   const zoom = clampZoom(
-    Math.min(availableWidth / Math.max(bounds.width, 1), availableHeight / Math.max(bounds.height, 1)),
+    Math.min(
+      availableWidth / Math.max(bounds.width, 1),
+      availableHeight / Math.max(bounds.height, 1),
+    ),
   );
   return {
     zoom,

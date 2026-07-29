@@ -95,10 +95,12 @@ function renderNode(
 
   const custom = options.components?.[node.type];
   if (custom) {
-    return createElement(
-      custom,
-      { key: node.id, node, document, children } as NodeComponentProps & { key: string },
-    );
+    return createElement(custom, {
+      key: node.id,
+      node,
+      document,
+      children,
+    } as NodeComponentProps & { key: string });
   }
 
   const spec = getPrimitive(node.type);

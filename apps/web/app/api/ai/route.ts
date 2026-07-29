@@ -38,8 +38,7 @@ interface AgentRequestBody {
 export async function GET() {
   const providers = listProviders().map((provider) => ({
     ...provider,
-    configured:
-      provider.locality === 'local' || Boolean(process.env[ENV_KEYS[provider.id] ?? '']),
+    configured: provider.locality === 'local' || Boolean(process.env[ENV_KEYS[provider.id] ?? '']),
   }));
 
   return NextResponse.json({ providers });

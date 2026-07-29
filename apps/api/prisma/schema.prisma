@@ -1,0 +1,234 @@
+// OpenDesign persistence schema.
+//
+// The server is optional: the editor is fully usable local-first, and this
+// schema exists for teams that want shared projects, history and comments.
+// That shapes two decisions below:
+//
+//   1. Documents are stored as JSONB rather than shredded into tables. The
+//      document model already has its own operation system and validation;
+//      normalising it into rows would duplicate that logic in SQL and make
+//      every read a join-heavy reconstruction.
+//   2. Every mutation is also appended to `Commit`, so history survives even
+//      when a client goes offline and reconnects with a divergent copy.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7 moved the connection URL out of the schema: it lives in
+// `prisma.config.ts` for the CLI, and reaches the client through a driver
+// adapter. See `src/common/prisma.service.ts`.
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  ownedProjects Project[]     @relation("ProjectOwner")
+  memberships   Membership[]
+  commits       Commit[]
+  comments      Comment[]
+
+  @@map("users")
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  folder    String?
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// The serialized DesignDocument. Validated against the core schema before
+  /// it is written, so a bad client can never persist a corrupt tree.
+  document Json
+
+  /// Schema version of the stored document, for migrations on read.
+  schemaVersion Int @default(1)
+
+  owner       User         @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  branches    Branch[]
+  snapshots   Snapshot[]
+  commits     Commit[]
+  assets      Asset[]
+  comments    Comment[]
+  deployments Deployment[]
+
+  @@index([ownerId, updatedAt])
+  @@map("projects")
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      Role     @default(EDITOR)
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("memberships")
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  createdAt DateTime @default(now())
+
+  headSnapshotId    String?
+  forkedFromShaSnap String?
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshots Snapshot[]
+  commits   Commit[]
+
+  @@unique([projectId, name])
+  @@map("branches")
+}
+
+model Snapshot {
+  id        String   @id @default(cuid())
+  projectId String
+  branchId  String?
+  name      String
+  message   String?
+  createdAt DateTime @default(now())
+
+  /// Full document at this point in time. Snapshots are the recovery path when
+  /// an operation log replay fails, so they are stored whole and never pruned
+  /// automatically.
+  document Json
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branch  Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@map("snapshots")
+}
+
+enum CommitSource {
+  USER
+  AI
+  PLUGIN
+  IMPORT
+  SYSTEM
+}
+
+model Commit {
+  id        String       @id @default(cuid())
+  projectId String
+  branchId  String?
+  authorId  String?
+  label     String
+  source    CommitSource @default(USER)
+  createdAt DateTime     @default(now())
+
+  /// The operations applied, and their inverses. Storing both means a commit
+  /// can be undone server-side without recomputing anything.
+  operations Json
+  inverse    Json
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branch  Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  author  User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@map("commits")
+}
+
+enum AssetKind {
+  IMAGE
+  SVG
+  VIDEO
+  ICON
+  LOGO
+  FONT
+}
+
+model Asset {
+  id        String    @id @default(cuid())
+  projectId String
+  kind      AssetKind
+  name      String
+  url       String
+  mimeType  String?
+  width     Int?
+  height    Int?
+  size      Int?
+  alt       String?
+  createdAt DateTime  @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, kind])
+  @@map("assets")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  projectId String
+  authorId  String?
+  /// Node the comment is anchored to; null for page-level comments.
+  nodeId    String?
+  pageId    String?
+  body      String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  parentId String?
+  parent   Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentThread")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, resolved])
+  @@map("comments")
+}
+
+enum DeploymentTarget {
+  VERCEL
+  NETLIFY
+  CLOUDFLARE
+  STATIC
+}
+
+enum DeploymentStatus {
+  QUEUED
+  BUILDING
+  READY
+  FAILED
+}
+
+model Deployment {
+  id        String           @id @default(cuid())
+  projectId String
+  target    DeploymentTarget
+  status    DeploymentStatus @default(QUEUED)
+  url       String?
+  error     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("deployments")
+}

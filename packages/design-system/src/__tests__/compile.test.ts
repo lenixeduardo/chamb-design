@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { defaultTokens, defaultThemes, createNode } from '@opendesign/core';
+import { nodeToClassName, styleToClasses, styleToCssProperties, toReactStyle } from '../compile.js';
 import {
-  nodeToClassName,
-  styleToClasses,
-  styleToCssProperties,
-  toReactStyle,
-} from '../compile.js';
-import { buildThemeCss, checkContrast, contrastRatio, flattenTokens, tokenToVar } from '../tokens.js';
+  buildThemeCss,
+  checkContrast,
+  contrastRatio,
+  flattenTokens,
+  tokenToVar,
+} from '../tokens.js';
 
 describe('token plumbing', () => {
   it('flattens tokens into Tailwind-compatible custom properties', () => {
@@ -80,9 +81,10 @@ describe('tailwind compiler', () => {
   });
 
   it('falls back to per-side utilities when sides differ', () => {
-    expect(
-      styleToClasses({ padding: { top: '{spacing.2}', bottom: '{spacing.8}' } }),
-    ).toEqual(['pt-2', 'pb-8']);
+    expect(styleToClasses({ padding: { top: '{spacing.2}', bottom: '{spacing.8}' } })).toEqual([
+      'pt-2',
+      'pb-8',
+    ]);
   });
 
   it('emits semantic color utilities for token refs and arbitrary values otherwise', () => {
@@ -123,7 +125,11 @@ describe('tailwind compiler', () => {
   it('never emits duplicate classes', () => {
     const node = createNode({ type: 'frame', style: { display: 'flex' } });
     node.className = 'flex';
-    expect(nodeToClassName(node).split(' ').filter((c) => c === 'flex')).toHaveLength(1);
+    expect(
+      nodeToClassName(node)
+        .split(' ')
+        .filter((c) => c === 'flex'),
+    ).toHaveLength(1);
   });
 });
 

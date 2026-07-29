@@ -44,14 +44,12 @@ beforeAll(async () => {
 
 describe('exporter registry', () => {
   it('registers all six targets through the plugin API', () => {
-    expect(registry.getExporters().map((e) => e.id).sort()).toEqual([
-      'astro',
-      'html',
-      'next',
-      'react',
-      'svelte',
-      'vue',
-    ]);
+    expect(
+      registry
+        .getExporters()
+        .map((e) => e.id)
+        .sort(),
+    ).toEqual(['astro', 'html', 'next', 'react', 'svelte', 'vue']);
   });
 
   it('rejects an unknown target with a helpful message', async () => {

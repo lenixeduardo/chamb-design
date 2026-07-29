@@ -35,7 +35,10 @@ function nodeClassName(node: SceneNode): string {
   return `${base}-${node.id.replace(/^n_/, '').slice(0, 4)}`;
 }
 
-function collectRules(document: DesignDocument, rootId: string): {
+function collectRules(
+  document: DesignDocument,
+  rootId: string,
+): {
   rules: CssRule[];
   classNames: Map<string, string>;
 } {
@@ -89,7 +92,9 @@ function renderStylesheet(rules: CssRule[]): string {
 
   for (const [minWidth, group] of [...byBreakpoint.entries()].sort((a, b) => a[0] - b[0])) {
     const inner = group
-      .map((rule) => `  ${rule.selector} {\n${cssPropertiesToString(rule.declarations, '    ')}\n  }`)
+      .map(
+        (rule) => `  ${rule.selector} {\n${cssPropertiesToString(rule.declarations, '    ')}\n  }`,
+      )
       .join('\n\n');
     lines.push(`@media (min-width: ${minWidth}px) {\n${inner}\n}`);
   }

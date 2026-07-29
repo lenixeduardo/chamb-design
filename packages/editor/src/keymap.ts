@@ -137,7 +137,7 @@ export const BINDINGS: Binding[] = [
   },
   {
     id: 'toggle-grid',
-    keys: 'mod+\'',
+    keys: "mod+'",
     label: 'Toggle grid',
     section: 'View',
     run: (editor) => editor.toggleGrid(),
@@ -164,10 +164,7 @@ export function eventToCombo(event: KeyboardEvent): string {
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
-  );
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
 /**

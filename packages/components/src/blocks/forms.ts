@@ -226,7 +226,10 @@ export const newsletterForm: ComponentContribution = {
               {
                 type: 'button',
                 name: 'Submit',
-                props: { text: (props?.submitLabel as string) ?? 'Subscribe', buttonType: 'submit' },
+                props: {
+                  text: (props?.submitLabel as string) ?? 'Subscribe',
+                  buttonType: 'submit',
+                },
                 style: {
                   display: 'flex',
                   justify: 'center',

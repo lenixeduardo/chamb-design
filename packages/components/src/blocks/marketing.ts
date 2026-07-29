@@ -162,7 +162,8 @@ export const heroSplit: ComponentContribution = {
     {
       name: 'subtitle',
       type: 'string',
-      defaultValue: 'Every element on the canvas is real code you can export the moment it looks right.',
+      defaultValue:
+        'Every element on the canvas is real code you can export the moment it looks right.',
     },
     { name: 'image', type: 'image', defaultValue: '' },
   ],
@@ -225,7 +226,10 @@ export const heroSplit: ComponentContribution = {
                     type: 'frame',
                     name: 'Actions',
                     style: { ...row(3), wrap: true },
-                    children: [ctaButton('Start free', 'primary'), ctaButton('Book a demo', 'ghost')],
+                    children: [
+                      ctaButton('Start free', 'primary'),
+                      ctaButton('Book a demo', 'ghost'),
+                    ],
                   },
                 ],
               },
@@ -277,12 +281,30 @@ export const featureGrid: ComponentContribution = {
   create: ({ createId, props }) => {
     const columns = typeof props?.columns === 'number' ? props.columns : 3;
     const features = [
-      { title: 'AI that edits, not guesses', body: 'Prompts turn into precise document operations you can undo.' },
-      { title: 'Design tokens everywhere', body: 'Change one token and the whole project follows, exports included.' },
-      { title: 'Clean code on the way out', body: 'Export React, Vue, Svelte or plain HTML with no runtime lock-in.' },
-      { title: 'Plugin-first architecture', body: 'Blocks, exporters and model providers all use the same public API.' },
-      { title: 'Real responsive editing', body: 'Per-breakpoint overrides that mirror how CSS actually cascades.' },
-      { title: 'Versioning built in', body: 'Snapshots and branches so experiments never cost you working state.' },
+      {
+        title: 'AI that edits, not guesses',
+        body: 'Prompts turn into precise document operations you can undo.',
+      },
+      {
+        title: 'Design tokens everywhere',
+        body: 'Change one token and the whole project follows, exports included.',
+      },
+      {
+        title: 'Clean code on the way out',
+        body: 'Export React, Vue, Svelte or plain HTML with no runtime lock-in.',
+      },
+      {
+        title: 'Plugin-first architecture',
+        body: 'Blocks, exporters and model providers all use the same public API.',
+      },
+      {
+        title: 'Real responsive editing',
+        body: 'Per-breakpoint overrides that mirror how CSS actually cascades.',
+      },
+      {
+        title: 'Versioning built in',
+        body: 'Snapshots and branches so experiments never cost you working state.',
+      },
     ].slice(0, Math.max(columns * 2, 3));
 
     return buildTree(
@@ -387,9 +409,21 @@ export const testimonials: ComponentContribution = {
   props: [{ name: 'title', type: 'string', defaultValue: 'Teams ship faster with OpenDesign' }],
   create: ({ createId, props }) => {
     const quotes = [
-      { quote: 'We replaced three tools with one canvas and the handoff meeting disappeared.', name: 'Ana Ribeiro', role: 'Design lead, Northwind' },
-      { quote: 'The exported code passed review untouched. That has never happened before.', name: 'Marcus Lee', role: 'Staff engineer, Kestrel' },
-      { quote: 'Branching designs like code changed how our team runs experiments.', name: 'Priya Nair', role: 'Head of product, Lumen' },
+      {
+        quote: 'We replaced three tools with one canvas and the handoff meeting disappeared.',
+        name: 'Ana Ribeiro',
+        role: 'Design lead, Northwind',
+      },
+      {
+        quote: 'The exported code passed review untouched. That has never happened before.',
+        name: 'Marcus Lee',
+        role: 'Staff engineer, Kestrel',
+      },
+      {
+        quote: 'Branching designs like code changed how our team runs experiments.',
+        name: 'Priya Nair',
+        role: 'Head of product, Lumen',
+      },
     ];
 
     return buildTree(
@@ -501,7 +535,11 @@ export const ctaBanner: ComponentContribution = {
   keywords: ['call to action', 'conversion', 'signup'],
   props: [
     { name: 'title', type: 'string', defaultValue: 'Start designing in the open' },
-    { name: 'subtitle', type: 'string', defaultValue: 'Free forever, self-hostable, MIT licensed.' },
+    {
+      name: 'subtitle',
+      type: 'string',
+      defaultValue: 'Free forever, self-hostable, MIT licensed.',
+    },
     { name: 'cta', type: 'string', defaultValue: 'Create your first project' },
   ],
   create: ({ createId, props }) =>
@@ -532,7 +570,10 @@ export const ctaBanner: ComponentContribution = {
               {
                 type: 'heading',
                 name: 'Title',
-                props: { text: (props?.title as string) ?? 'Start designing in the open', level: 'h2' },
+                props: {
+                  text: (props?.title as string) ?? 'Start designing in the open',
+                  level: 'h2',
+                },
                 style: {
                   color: color('foreground'),
                   font: {

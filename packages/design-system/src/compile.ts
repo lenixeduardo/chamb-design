@@ -1,4 +1,11 @@
-import type { BoxValue, Breakpoint, Length, SceneNode, SizeValue, StyleMap } from '@opendesign/core';
+import type {
+  BoxValue,
+  Breakpoint,
+  Length,
+  SceneNode,
+  SizeValue,
+  StyleMap,
+} from '@opendesign/core';
 import { isRef, tokenSuffix, tokenToVar } from './tokens.js';
 
 /**
@@ -219,7 +226,8 @@ export function styleToClasses(style: StyleMap, options: CompileOptions = {}): s
     if (width !== undefined) {
       c.push(width === 1 ? 'border' : `border-${scaleValue(width)}`);
     }
-    if (style.border.style && style.border.style !== 'solid') c.push(`border-${style.border.style}`);
+    if (style.border.style && style.border.style !== 'solid')
+      c.push(`border-${style.border.style}`);
     const borderColor = colorValue(style.border.color);
     if (borderColor) c.push(`border-${borderColor}`);
   }
@@ -255,8 +263,17 @@ export function styleToClasses(style: StyleMap, options: CompileOptions = {}): s
   if (style.aspectRatio) c.push(`aspect-[${style.aspectRatio.replace(/\s+/g, '')}]`);
 
   if (style.font) {
-    const { family, size, weight, lineHeight, letterSpacing, align, transform, italic, decoration } =
-      style.font;
+    const {
+      family,
+      size,
+      weight,
+      lineHeight,
+      letterSpacing,
+      align,
+      transform,
+      italic,
+      decoration,
+    } = style.font;
 
     const familyValue = namedValue(family);
     if (familyValue) c.push(`font-${familyValue}`);

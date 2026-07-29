@@ -132,7 +132,9 @@ export class Editor {
     // and nested ids are dropped, which is what every design tool does.
     const document = this.getDocument();
     const filtered = next.filter(
-      (id) => getNode(document, id) && !next.some((other) => other !== id && isDescendantOf(document, id, other)),
+      (id) =>
+        getNode(document, id) &&
+        !next.some((other) => other !== id && isDescendantOf(document, id, other)),
     );
     this.setState({ selection: filtered });
   }
@@ -196,7 +198,9 @@ export class Editor {
   }
 
   zoomBy(factor: number, anchor: Point): void {
-    this.setState({ viewport: zoomAt(this.state.viewport, anchor, this.state.viewport.zoom * factor) });
+    this.setState({
+      viewport: zoomAt(this.state.viewport, anchor, this.state.viewport.zoom * factor),
+    });
   }
 
   setZoom(zoom: number, anchor: Point = { x: 0, y: 0 }): void {
@@ -348,7 +352,9 @@ export class Editor {
     const document = this.getDocument();
     const pageRoots = new Set(document.pages.map((p) => p.rootId));
 
-    const removable = this.state.selection.filter((id) => !pageRoots.has(id) && getNode(document, id));
+    const removable = this.state.selection.filter(
+      (id) => !pageRoots.has(id) && getNode(document, id),
+    );
     if (removable.length === 0) return;
 
     this.store.transact(
@@ -406,14 +412,12 @@ export class Editor {
 
     const ops: Operation[] = [
       { type: 'insertSubtree', nodes: [group], rootId: group.id, parentId, index },
-      ...ids.map(
-        (id, offset): Operation => ({
-          type: 'moveNode',
-          nodeId: id,
-          parentId: group.id,
-          index: offset,
-        }),
-      ),
+      ...ids.map((id, offset): Operation => ({
+        type: 'moveNode',
+        nodeId: id,
+        parentId: group.id,
+        index: offset,
+      })),
     ];
 
     this.store.transact(ops, { label: 'Group selection' });
@@ -434,7 +438,12 @@ export class Editor {
       const baseIndex = parent.children.indexOf(id);
 
       node.children.forEach((childId, offset) => {
-        ops.push({ type: 'moveNode', nodeId: childId, parentId: parent.id, index: baseIndex + offset });
+        ops.push({
+          type: 'moveNode',
+          nodeId: childId,
+          parentId: parent.id,
+          index: baseIndex + offset,
+        });
         promoted.push(childId);
       });
       ops.push({ type: 'removeSubtree', nodeId: id });
@@ -455,14 +464,12 @@ export class Editor {
     if (this.state.selection.length === 0) return;
 
     const breakpoint = this.state.activeBreakpoint;
-    const ops = this.state.selection.map(
-      (nodeId): Operation => ({
-        type: 'updateStyle',
-        nodeId,
-        style,
-        ...(breakpoint === 'base' ? {} : { breakpoint }),
-      }),
-    );
+    const ops = this.state.selection.map((nodeId): Operation => ({
+      type: 'updateStyle',
+      nodeId,
+      style,
+      ...(breakpoint === 'base' ? {} : { breakpoint }),
+    }));
 
     this.store.transact(ops, {
       label: options.label ?? 'Update style',
@@ -479,7 +486,9 @@ export class Editor {
   }
 
   renameNode(nodeId: NodeId, name: string): void {
-    this.store.transact([{ type: 'setNodeFields', nodeId, fields: { name } }], { label: 'Rename layer' });
+    this.store.transact([{ type: 'setNodeFields', nodeId, fields: { name } }], {
+      label: 'Rename layer',
+    });
   }
 
   toggleVisibility(nodeId: NodeId): void {
@@ -498,7 +507,9 @@ export class Editor {
 
   /** Reorders a node within its parent, used by the layers panel drag handle. */
   moveNode(nodeId: NodeId, parentId: NodeId, index: number): void {
-    this.store.transact([{ type: 'moveNode', nodeId, parentId, index }], { label: 'Reorder layer' });
+    this.store.transact([{ type: 'moveNode', nodeId, parentId, index }], {
+      label: 'Reorder layer',
+    });
   }
 
   /* ---------------------- alignment & distribution ---------------------- */
@@ -513,13 +524,11 @@ export class Editor {
     );
 
     this.store.transact(
-      positions.map(
-        (position, index): Operation => ({
-          type: 'updateStyle',
-          nodeId: rects[index]!.id,
-          style: { x: Math.round(position.x), y: Math.round(position.y) },
-        }),
-      ),
+      positions.map((position, index): Operation => ({
+        type: 'updateStyle',
+        nodeId: rects[index]!.id,
+        style: { x: Math.round(position.x), y: Math.round(position.y) },
+      })),
       { label: `Align ${mode}` },
     );
   }
@@ -534,13 +543,11 @@ export class Editor {
     );
 
     this.store.transact(
-      positions.map(
-        (position, index): Operation => ({
-          type: 'updateStyle',
-          nodeId: rects[index]!.id,
-          style: { x: Math.round(position.x), y: Math.round(position.y) },
-        }),
-      ),
+      positions.map((position, index): Operation => ({
+        type: 'updateStyle',
+        nodeId: rects[index]!.id,
+        style: { x: Math.round(position.x), y: Math.round(position.y) },
+      })),
       { label: `Distribute ${axis === 'x' ? 'horizontally' : 'vertically'}` },
     );
   }

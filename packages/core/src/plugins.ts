@@ -191,9 +191,7 @@ export class PluginRegistry {
     const plugin = this.plugins.get(pluginId);
     if (!plugin) return;
 
-    const dependents = [...this.plugins.values()].filter((p) =>
-      p.dependencies?.includes(pluginId),
-    );
+    const dependents = [...this.plugins.values()].filter((p) => p.dependencies?.includes(pluginId));
     if (dependents.length > 0) {
       throw new Error(
         `[opendesign] cannot unregister "${pluginId}": still required by ${dependents

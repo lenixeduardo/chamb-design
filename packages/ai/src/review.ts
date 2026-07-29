@@ -208,6 +208,7 @@ export function reviewHeadingStructure(document: DesignDocument): ReviewIssue[] 
 /** Formats issues for the repair prompt. */
 export function formatIssues(issues: ReviewIssue[]): string[] {
   return issues.map(
-    (issue) => `[${issue.severity}] ${issue.rule} on node ${issue.nodeId} (${issue.nodeName}): ${issue.message}`,
+    (issue) =>
+      `[${issue.severity}] ${issue.rule} on node ${issue.nodeId} (${issue.nodeName}): ${issue.message}`,
   );
 }

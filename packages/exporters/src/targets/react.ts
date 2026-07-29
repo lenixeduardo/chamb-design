@@ -71,7 +71,8 @@ export function generateReact(
           ? `${pageDir}/${pageRouteSegment(page.path)}${pageRouteSegment(page.path) ? '/' : ''}page.${ext}`
           : `${pageDir}/${toKebabCase(page.name)}.${ext}`;
 
-      const exportKeyword = flavor === 'next' ? 'export default function Page' : `export function ${pageName}`;
+      const exportKeyword =
+        flavor === 'next' ? 'export default function Page' : `export function ${pageName}`;
 
       files.push({
         path: routePath,
@@ -90,7 +91,11 @@ ${body}
 
     files.push({
       path: `${pageDir}/${toKebabCase(page.name)}.${ext}`,
-      contents: componentFile(pageName, serializeElement(element, { dialect: 'jsx', depth: 2 }), []),
+      contents: componentFile(
+        pageName,
+        serializeElement(element, { dialect: 'jsx', depth: 2 }),
+        [],
+      ),
     });
   }
 

@@ -110,7 +110,9 @@ export const card: ComponentContribution = {
           ...column(3),
           padding: pad(6),
           radius: radius('xl'),
-          background: glass ? 'color-mix(in srgb, var(--color-card) 60%, transparent)' : color('card'),
+          background: glass
+            ? 'color-mix(in srgb, var(--color-card) 60%, transparent)'
+            : color('card'),
           border: { width: 1, style: 'solid', color: color('border') },
           shadow: glass ? shadow('glass') : shadow('sm'),
           ...(glass ? { backdropBlur: 16 } : {}),
@@ -229,7 +231,12 @@ export const statTile: ComponentContribution = {
             name: 'Label',
             props: { text: (props?.label as string) ?? 'Monthly revenue' },
             style: {
-              font: { size: '{size.xs}', weight: 500, letterSpacing: '0.08em', transform: 'uppercase' },
+              font: {
+                size: '{size.xs}',
+                weight: 500,
+                letterSpacing: '0.08em',
+                transform: 'uppercase',
+              },
               color: color('muted-foreground'),
             },
           },

@@ -34,7 +34,8 @@ export function motionAttributes(node: SceneNode): Record<string, unknown> {
     '--od-motion-to-transform': keyframeToTransform(motion.to),
   };
 
-  if (motion.from?.blur !== undefined) style['--od-motion-from-blur'] = `blur(${motion.from.blur}px)`;
+  if (motion.from?.blur !== undefined)
+    style['--od-motion-from-blur'] = `blur(${motion.from.blur}px)`;
   if (motion.stagger !== undefined) style['--od-motion-stagger'] = `${motion.stagger}ms`;
 
   return {

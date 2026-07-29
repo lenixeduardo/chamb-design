@@ -31,7 +31,12 @@ const DEFAULT_TIERS: Tier[] = [
     price: '$0',
     period: '/forever',
     description: 'Everything you need to design solo.',
-    features: ['Unlimited projects', 'All export targets', 'Bring your own model key', 'Community support'],
+    features: [
+      'Unlimited projects',
+      'All export targets',
+      'Bring your own model key',
+      'Community support',
+    ],
     cta: 'Start free',
   },
   {
@@ -204,7 +209,11 @@ export const pricingTable: ComponentContribution = {
   description: 'Three-tier pricing grid with a highlighted plan.',
   props: [
     { name: 'title', type: 'string', defaultValue: 'Pricing that stays out of the way' },
-    { name: 'subtitle', type: 'string', defaultValue: 'Open source core, paid only where teams need it.' },
+    {
+      name: 'subtitle',
+      type: 'string',
+      defaultValue: 'Open source core, paid only where teams need it.',
+    },
   ],
   create: ({ createId, props }) =>
     buildTree(
@@ -322,7 +331,10 @@ export const faqSection: ComponentContribution = {
               {
                 type: 'heading',
                 name: 'Title',
-                props: { text: (props?.title as string) ?? 'Frequently asked questions', level: 'h2' },
+                props: {
+                  text: (props?.title as string) ?? 'Frequently asked questions',
+                  level: 'h2',
+                },
                 style: {
                   color: color('foreground'),
                   font: { size: '{size.3xl}', weight: 600, letterSpacing: '-0.02em' },

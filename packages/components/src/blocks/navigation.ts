@@ -32,7 +32,9 @@ export const navbar: ComponentContribution = {
           background: 'color-mix(in srgb, var(--color-background) 72%, transparent)',
           backdropBlur: 16,
           border: { width: 1, style: 'solid', color: color('border') },
-          ...(props?.sticky === false ? {} : { position: 'sticky' as const, inset: { top: 0 }, zIndex: 50 }),
+          ...(props?.sticky === false
+            ? {}
+            : { position: 'sticky' as const, inset: { top: 0 }, zIndex: 50 }),
         },
         children: [
           {
@@ -173,8 +175,7 @@ export const footer: ComponentContribution = {
                         type: 'text',
                         name: 'Tagline',
                         props: {
-                          text:
-                            (props?.tagline as string) ?? 'The open source AI design platform.',
+                          text: (props?.tagline as string) ?? 'The open source AI design platform.',
                         },
                         style: {
                           color: color('muted-foreground'),
@@ -215,7 +216,10 @@ export const footer: ComponentContribution = {
               {
                 type: 'divider',
                 name: 'Rule',
-                style: { width: 'fill', border: { width: 1, style: 'solid', color: color('border') } },
+                style: {
+                  width: 'fill',
+                  border: { width: 1, style: 'solid', color: color('border') },
+                },
               },
               {
                 type: 'frame',

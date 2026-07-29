@@ -195,8 +195,9 @@ describe('tokens', () => {
       value: '#ff0055',
     });
 
-    expect((updated.document.tokens.color as Record<string, Record<string, string>>).primary![500])
-      .toBe('#ff0055');
+    expect(
+      (updated.document.tokens.color as Record<string, Record<string, string>>).primary![500],
+    ).toBe('#ff0055');
 
     const reverted = applyOperations(updated.document, updated.inverse).document;
     expect((reverted.tokens.color as Record<string, Record<string, string>>).primary![500]).toBe(

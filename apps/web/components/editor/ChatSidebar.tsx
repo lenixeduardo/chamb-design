@@ -249,9 +249,7 @@ export function ChatSidebar({
               setModel(provider?.models[0]?.id ?? '');
             }}
             options={providers.map((provider) => ({
-              label: provider.configured
-                ? provider.label
-                : `${provider.label} (not configured)`,
+              label: provider.configured ? provider.label : `${provider.label} (not configured)`,
               value: provider.id,
             }))}
           />

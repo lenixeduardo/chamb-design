@@ -119,8 +119,7 @@ export function createOpenAICompatibleProvider(options: OpenAICompatibleOptions)
         const delta = choices?.[0]?.delta?.content ?? '';
 
         const usageRaw = event.usage as
-          | { prompt_tokens?: number; completion_tokens?: number }
-          | undefined;
+          { prompt_tokens?: number; completion_tokens?: number } | undefined;
 
         if (usageRaw) {
           yield {

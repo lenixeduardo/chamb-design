@@ -385,7 +385,12 @@ export const crmPipeline: ComponentContribution = {
                 border: { width: 1, style: 'solid' as const, color: color('border') },
                 cursor: 'grab',
               },
-              motion: { engine: 'css' as const, trigger: 'hover' as const, to: { y: -2 }, duration: 160 },
+              motion: {
+                engine: 'css' as const,
+                trigger: 'hover' as const,
+                to: { y: -2 },
+                duration: 160,
+              },
               children: [
                 {
                   type: 'text',

@@ -32,12 +32,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
-export function Button({
-  variant = 'secondary',
-  size = 'md',
-  className,
-  ...props
-}: ButtonProps) {
+export function Button({ variant = 'secondary', size = 'md', className, ...props }: ButtonProps) {
   return (
     <button
       type="button"

@@ -100,7 +100,7 @@ export function saveProject(document: DesignDocument, folder?: string): void {
     updatedAt: new Date().toISOString(),
     nodeCount: stats.nodes,
     pageCount: stats.pages,
-    ...(folder ?? existing?.folder ? { folder: folder ?? existing?.folder } : {}),
+    ...((folder ?? existing?.folder) ? { folder: folder ?? existing?.folder } : {}),
   };
 
   writeIndex([summary, ...index.filter((project) => project.id !== document.id)]);
@@ -135,7 +135,13 @@ export function duplicateProject(id: string): DesignDocument | null {
 }
 
 export function listFolders(): string[] {
-  return [...new Set(listProjects().map((p) => p.folder).filter((f): f is string => Boolean(f)))];
+  return [
+    ...new Set(
+      listProjects()
+        .map((p) => p.folder)
+        .filter((f): f is string => Boolean(f)),
+    ),
+  ];
 }
 
 /**

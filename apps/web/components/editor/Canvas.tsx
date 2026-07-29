@@ -106,7 +106,8 @@ export function Canvas({ editor }: { editor: Editor }) {
     };
     const onPointerUp = (event: PointerEvent) => {
       last = null;
-      if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+      if (element.hasPointerCapture(event.pointerId))
+        element.releasePointerCapture(event.pointerId);
     };
 
     element.addEventListener('pointerdown', onPointerDown);
@@ -123,7 +124,9 @@ export function Canvas({ editor }: { editor: Editor }) {
   }, [editor, panning]);
 
   if (!page) {
-    return <div className="canvas-surface grid flex-1 place-items-center text-ink-faint">No page</div>;
+    return (
+      <div className="canvas-surface grid flex-1 place-items-center text-ink-faint">No page</div>
+    );
   }
 
   const { offset, zoom } = state.viewport;
@@ -139,7 +142,9 @@ export function Canvas({ editor }: { editor: Editor }) {
 
       <div
         className="absolute top-0 left-0 origin-top-left"
-        style={{ transform: `translate(${-offset.x * zoom}px, ${-offset.y * zoom}px) scale(${zoom})` }}
+        style={{
+          transform: `translate(${-offset.x * zoom}px, ${-offset.y * zoom}px) scale(${zoom})`,
+        }}
       >
         <div className="pointer-events-none absolute -top-7 left-0 flex items-center gap-2 text-[11px] whitespace-nowrap text-ink-faint">
           <span className="font-medium text-ink-muted">{page.name}</span>
@@ -206,10 +211,7 @@ function SelectionOverlay({ editor }: { editor: Editor }) {
   return (
     <div className="pointer-events-none absolute inset-0">
       {hoverRect && (
-        <div
-          className="absolute border border-brand/45"
-          style={rectStyle(toScreen(hoverRect))}
-        />
+        <div className="absolute border border-brand/45" style={rectStyle(toScreen(hoverRect))} />
       )}
 
       {selectionRects.map((rect, index) => (

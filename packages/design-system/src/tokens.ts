@@ -162,10 +162,7 @@ function formatValue(value: string | number): string {
 }
 
 /** Same data as `buildThemeCss`, but as an object for inline `style` props. */
-export function tokensToCssVariables(
-  tokens: TokenSet,
-  theme?: ThemeDef,
-): Record<string, string> {
+export function tokensToCssVariables(tokens: TokenSet, theme?: ThemeDef): Record<string, string> {
   const out: Record<string, string> = {};
   for (const token of flattenTokens(tokens)) out[token.cssVar] = formatValue(token.value);
   if (theme) {
