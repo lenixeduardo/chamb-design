@@ -10,6 +10,7 @@ import {
   Monitor,
   MousePointer2,
   Palette,
+  ImageIcon,
   Redo2,
   Smartphone,
   Sparkles,
@@ -28,11 +29,12 @@ import { Inspector } from './Inspector';
 import { LayersPanel } from './LayersPanel';
 import { LibraryPanel } from './LibraryPanel';
 import { ThemePanel } from './ThemePanel';
+import { AssetsPanel } from './AssetsPanel';
 import { ExportDialog } from './ExportDialog';
 import { Button, IconButton, SegmentedControl } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
-type LeftTab = 'layers' | 'library' | 'theme';
+type LeftTab = 'layers' | 'library' | 'assets' | 'theme';
 
 /**
  * The editor shell.
@@ -155,12 +157,13 @@ export function EditorShell({ document }: { document: DesignDocument }) {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-hairline bg-panel">
+        <aside className="flex w-72 shrink-0 flex-col overflow-hidden border-r border-hairline bg-panel">
           <nav className="flex shrink-0 gap-0.5 border-b border-hairline p-1.5">
             {(
               [
                 ['layers', 'Layers', Layers],
                 ['library', 'Library', Blocks],
+                ['assets', 'Assets', ImageIcon],
                 ['theme', 'Theme', Palette],
               ] as const
             ).map(([tab, label, Icon]) => (
@@ -169,7 +172,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
                 type="button"
                 onClick={() => setLeftTab(tab)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-[11.5px] transition-colors',
+                  'flex flex-1 items-center justify-center gap-1 rounded-md py-1.5 text-[10.5px] transition-colors',
                   leftTab === tab
                     ? 'bg-panel-raised text-ink'
                     : 'text-ink-faint hover:text-ink-muted',
@@ -184,6 +187,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
           <div className="min-h-0 flex-1 overflow-hidden">
             {leftTab === 'layers' && <LayersPanel editor={editor} />}
             {leftTab === 'library' && <LibraryPanel editor={editor} registry={registry} />}
+            {leftTab === 'assets' && <AssetsPanel editor={editor} />}
             {leftTab === 'theme' && <ThemePanel editor={editor} />}
           </div>
         </aside>

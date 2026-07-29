@@ -9,6 +9,7 @@ import {
   openrouterProvider,
 } from './providers/openai-compatible.js';
 import type { ChatProvider, ProviderConfig } from './provider.js';
+import { IMAGE_PROVIDER_FACTORIES } from './image.js';
 
 export * from './provider.js';
 export * from './context.js';
@@ -16,6 +17,7 @@ export * from './extract.js';
 export * from './prompts.js';
 export * from './review.js';
 export * from './agent.js';
+export * from './image.js';
 export * from './providers/anthropic.js';
 export * from './providers/google.js';
 export * from './providers/openai-compatible.js';
@@ -87,6 +89,23 @@ export const aiProvidersPlugin: OpenDesignPlugin = definePlugin({
           id: model.id,
           label: model.label,
           ...(model.contextWindow !== undefined ? { contextWindow: model.contextWindow } : {}),
+        })),
+        createClient: (config) => factory(config as ProviderConfig),
+      });
+    }
+
+    // Image generation registers through its own contribution point, so a
+    // plugin can add a model source without touching the chat providers.
+    for (const [id, factory] of Object.entries(IMAGE_PROVIDER_FACTORIES)) {
+      const provider = factory({});
+      context.registerImageProvider({
+        id,
+        label: provider.label,
+        locality: provider.locality,
+        models: provider.models.map((model) => ({
+          id: model.id,
+          label: model.label,
+          ...(model.sizes ? { sizes: model.sizes } : {}),
         })),
         createClient: (config) => factory(config as ProviderConfig),
       });

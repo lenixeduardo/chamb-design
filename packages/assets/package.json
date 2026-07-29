@@ -1,7 +1,7 @@
 {
-  "name": "@opendesign/editor",
+  "name": "@opendesign/assets",
   "version": "0.1.0",
-  "description": "Headless editor state: selection, viewport, tools, commands and keymap",
+  "description": "Asset ingestion: storage adapters, dependency-free image probing, and the operations that feed the document model",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,6 +12,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js",
+      "require": "./dist/node.cjs"
     }
   },
   "files": [
@@ -25,17 +30,9 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@opendesign/assets": "workspace:*",
-    "@opendesign/core": "workspace:*",
-    "@opendesign/design-system": "workspace:*"
-  },
-  "peerDependencies": {
-    "react": ">=18"
+    "@opendesign/core": "workspace:*"
   },
   "devDependencies": {
-    "@opendesign/components": "workspace:*",
-    "@types/react": "^19.2.2",
-    "react": "^19.2.8",
     "tsup": "^8.5.1",
     "typescript": "^5.9.2",
     "vitest": "^4.1.10"

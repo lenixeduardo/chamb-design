@@ -12,6 +12,9 @@ const config: NextConfig = {
     '@opendesign/exporters',
     '@opendesign/editor',
     '@opendesign/ai',
+    '@opendesign/assets',
+    '@opendesign/plugin-charts',
+    '@opendesign/plugin-chamb-brand',
   ],
 };
 

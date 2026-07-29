@@ -162,6 +162,8 @@ export const assetSchema = z
     size: z.number().optional(),
     mimeType: z.string().optional(),
     alt: z.string().optional(),
+    prompt: z.string().optional(),
+    generatedBy: z.string().optional(),
     createdAt: z.string(),
   })
   .strict();

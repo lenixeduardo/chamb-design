@@ -10,6 +10,7 @@ import {
   requireNode,
   zoomAt,
   type AlignMode,
+  type Asset,
   type Breakpoint,
   type ComponentContribution,
   type DesignDocument,
@@ -24,6 +25,7 @@ import {
   type StyleMap,
   type Viewport,
 } from '@opendesign/core';
+import { placeAsset, type AssetIngestor, type IngestInput } from '@opendesign/assets';
 
 /**
  * Headless editor state.
@@ -63,6 +65,7 @@ export class Editor {
   private state: EditorState;
   /** Cached measurements from the DOM, keyed by node id. */
   private rects = new Map<NodeId, Rect>();
+  private ingestor: AssetIngestor | undefined;
 
   constructor(document: DesignDocument, options: EditorOptions = {}) {
     this.store = new DocumentStore(document);
@@ -510,6 +513,118 @@ export class Editor {
     this.store.transact([{ type: 'moveNode', nodeId, parentId, index }], {
       label: 'Reorder layer',
     });
+  }
+
+  /* -------------------------------- assets ------------------------------ */
+
+  /**
+   * Supplies the ingestion pipeline.
+   *
+   * Injected rather than constructed here because the choice of storage adapter
+   * belongs to the host: a local-first browser session inlines bytes, a hosted
+   * deployment uploads them. The editor only needs to know that something can
+   * turn a file into operations.
+   */
+  setIngestor(ingestor: AssetIngestor): void {
+    this.ingestor = ingestor;
+  }
+
+  get hasIngestor(): boolean {
+    return this.ingestor !== undefined;
+  }
+
+  private requireIngestor(): AssetIngestor {
+    if (!this.ingestor) {
+      throw new Error(
+        '[opendesign] no asset ingestor configured — call editor.setIngestor() with a storage adapter',
+      );
+    }
+    return this.ingestor;
+  }
+
+  /**
+   * Adds a file to the project library.
+   *
+   * Deliberately does *not* place it on the canvas. Importing a batch of photos
+   * and having twelve nodes appear stacked at the page root is not what anyone
+   * means by "add to assets".
+   */
+  async addAssetFromFile(file: File | Blob, overrides?: Partial<IngestInput>): Promise<Asset> {
+    const { asset, operations } = await this.requireIngestor().ingestFile(file, overrides);
+    this.store.transact(operations, { label: `Add ${asset.name}` });
+    return asset;
+  }
+
+  async addAssetFromUrl(url: string): Promise<Asset> {
+    const { asset, operations } = await this.requireIngestor().ingestUrl(url);
+    this.store.transact(operations, { label: `Import ${asset.name}` });
+    return asset;
+  }
+
+  /** Drops an existing library asset onto the canvas as an image node. */
+  placeAssetOnCanvas(assetId: string): NodeId | null {
+    const document = this.getDocument();
+    const asset = document.assets.find((candidate) => candidate.id === assetId);
+    if (!asset) throw new Error(`[opendesign] asset not found: ${assetId}`);
+
+    const target = this.insertionTarget('primitive');
+    if (!target) return null;
+
+    const operations = placeAsset(asset, { parentId: target.parentId, index: target.index });
+    this.store.transact(operations, { label: `Place ${asset.name}` });
+
+    const inserted = operations[0];
+    if (inserted && inserted.type === 'insertSubtree') {
+      this.select(inserted.rootId);
+      return inserted.rootId;
+    }
+    return null;
+  }
+
+  /**
+   * Adds an asset and places it in one undo step.
+   *
+   * One commit rather than two, because "I dropped an image onto the canvas" is
+   * a single action from the user's point of view and one ⌘Z should reverse it.
+   */
+  async dropFileOnCanvas(file: File | Blob, overrides?: Partial<IngestInput>): Promise<Asset> {
+    const { asset, operations } = await this.requireIngestor().ingestFile(file, overrides);
+
+    const target = this.insertionTarget('primitive');
+    const placement = target
+      ? placeAsset(asset, { parentId: target.parentId, index: target.index })
+      : [];
+
+    this.store.transact([...operations, ...placement], { label: `Add ${asset.name}` });
+
+    const inserted = placement[0];
+    if (inserted && inserted.type === 'insertSubtree') this.select(inserted.rootId);
+    return asset;
+  }
+
+  /** Applies pre-built asset operations, e.g. from image generation. */
+  addGeneratedAssets(operations: Operation[], label = 'Generate image'): void {
+    if (operations.length === 0) return;
+    this.store.transact(operations, { label, source: 'ai' });
+  }
+
+  /** Swaps the source of the selected image node to a library asset. */
+  replaceImageSource(assetId: string): void {
+    const document = this.getDocument();
+    const asset = document.assets.find((candidate) => candidate.id === assetId);
+    if (!asset) throw new Error(`[opendesign] asset not found: ${assetId}`);
+
+    const targets = this.getSelectedNodes().filter((node) => node.type === 'image');
+    if (targets.length === 0) return;
+
+    this.store.transact(
+      targets.map((node): Operation => ({
+        type: 'updateProps',
+        nodeId: node.id,
+        props: { src: asset.url, alt: asset.alt ?? node.props.alt ?? asset.name },
+      })),
+      { label: `Replace image with ${asset.name}` },
+    );
   }
 
   /* ---------------------- alignment & distribution ---------------------- */

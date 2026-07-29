@@ -66,6 +66,22 @@ export interface AIProviderContribution {
   createClient: (config: Record<string, unknown>) => unknown;
 }
 
+/**
+ * A source of generated raster images.
+ *
+ * Kept separate from `AIProviderContribution` because the two have genuinely
+ * different shapes: a chat provider streams tokens, an image provider returns
+ * bytes once. Folding them together would mean one interface where half the
+ * methods are always unused.
+ */
+export interface ImageProviderContribution {
+  id: string;
+  label: string;
+  locality: 'cloud' | 'local';
+  models: { id: string; label: string; sizes?: string[] }[];
+  createClient: (config: Record<string, unknown>) => unknown;
+}
+
 export interface TemplateContribution {
   id: string;
   name: string;
@@ -116,6 +132,7 @@ export interface PluginContext {
   registerComponent: (contribution: ComponentContribution) => void;
   registerExporter: (contribution: ExporterContribution) => void;
   registerAIProvider: (contribution: AIProviderContribution) => void;
+  registerImageProvider: (contribution: ImageProviderContribution) => void;
   registerTemplate: (contribution: TemplateContribution) => void;
   registerCommand: (contribution: CommandContribution) => void;
   registerPanel: (contribution: PanelContribution) => void;
@@ -160,6 +177,7 @@ export class PluginRegistry {
   private readonly components = new Map<string, RegistryEntry<ComponentContribution>>();
   private readonly exporters = new Map<string, RegistryEntry<ExporterContribution>>();
   private readonly providers = new Map<string, RegistryEntry<AIProviderContribution>>();
+  private readonly imageProviders = new Map<string, RegistryEntry<ImageProviderContribution>>();
   private readonly templates = new Map<string, RegistryEntry<TemplateContribution>>();
   private readonly commands = new Map<string, RegistryEntry<CommandContribution>>();
   private readonly panels = new Map<string, RegistryEntry<PanelContribution>>();
@@ -206,6 +224,7 @@ export class PluginRegistry {
       this.components,
       this.exporters,
       this.providers,
+      this.imageProviders,
       this.templates,
       this.commands,
       this.panels,
@@ -264,6 +283,14 @@ export class PluginRegistry {
     return [...this.providers.values()].map((e) => e.contribution);
   }
 
+  getImageProvider(id: string): ImageProviderContribution | undefined {
+    return this.imageProviders.get(id)?.contribution;
+  }
+
+  getImageProviders(): ImageProviderContribution[] {
+    return [...this.imageProviders.values()].map((e) => e.contribution);
+  }
+
   getTemplates(): TemplateContribution[] {
     return [...this.templates.values()].map((e) => e.contribution);
   }
@@ -302,6 +329,7 @@ export class PluginRegistry {
       registerComponent: (c) => add(this.components, 'component', c),
       registerExporter: (c) => add(this.exporters, 'exporter', c),
       registerAIProvider: (c) => add(this.providers, 'ai provider', c),
+      registerImageProvider: (c) => add(this.imageProviders, 'image provider', c),
       registerTemplate: (c) => add(this.templates, 'template', c),
       registerCommand: (c) => add(this.commands, 'command', c),
       registerPanel: (c) => add(this.panels, 'panel', c),

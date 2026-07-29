@@ -1,7 +1,7 @@
 {
-  "name": "@opendesign/editor",
+  "name": "@opendesign/plugin-chamb-brand",
   "version": "0.1.0",
-  "description": "Headless editor state: selection, viewport, tools, commands and keymap",
+  "description": "The chamb-design brand: warm cream, signal red, serif display \u2014 as a theme, blocks and a starter template",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,17 +25,10 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@opendesign/assets": "workspace:*",
-    "@opendesign/core": "workspace:*",
-    "@opendesign/design-system": "workspace:*"
-  },
-  "peerDependencies": {
-    "react": ">=18"
+    "@opendesign/components": "workspace:*",
+    "@opendesign/core": "workspace:*"
   },
   "devDependencies": {
-    "@opendesign/components": "workspace:*",
-    "@types/react": "^19.2.2",
-    "react": "^19.2.8",
     "tsup": "^8.5.1",
     "typescript": "^5.9.2",
     "vitest": "^4.1.10"

@@ -13,7 +13,11 @@ Ordered by what unblocks the most, and honest about what is not built.
 - Automated design review: contrast, alt text, labels, tap targets, fixed widths
 - Editor: canvas, layers, inspector, library, design system panel, export preview
 - Local-first storage with autosave; optional NestJS + Prisma server
-- Plugin system with three worked examples and a contract test suite
+- Plugin system with four worked examples and a contract test suite
+- Asset pipeline: drop, paste, URL import and AI image generation, all through
+  one ingestion path with pluggable storage (inline, HTTP upload, filesystem)
+- Image generation providers (gpt-image, DALL·E, Imagen, local servers) behind
+  their own contribution point
 
 ## Next
 
@@ -31,9 +35,11 @@ channel and conflict resolution — most likely operational transform over the
 existing op types rather than a general CRDT, since the ops are already
 semantic.
 
-**Asset pipeline.** `Asset` exists in the model and the schema, and the AI layer
-generates alt text. There is no upload UI, no storage adapter and no image
-optimisation yet.
+**Image optimisation.** Ingestion probes dimensions but does not resize or
+re-encode. A 4000px photo is stored at 4000px, which is wasteful for a hero that
+renders at 1200. Needs a resize step — deliberately deferred because doing it
+without a native dependency means `OffscreenCanvas` in the browser and something
+else on the server, and that split deserves its own design.
 
 **Comments.** Schema and threading are in place; no UI.
 
@@ -43,8 +49,8 @@ optimisation yet.
 Vercel, Netlify and Cloudflare each need a token flow and a build trigger.
 Deliberately left as plugins so the core does not grow vendor coupling.
 
-**Figma import.** The AI import mode already reconstructs from screenshots and
-pasted HTML. A real `.fig` parser is a substantial separate project; the
+**Figma import.** The AI import mode reconstructs from screenshots — now
+reachable from the chat composer — and from pasted HTML. A real `.fig` parser is a substantial separate project; the
 screenshot path covers most of the value in the meantime.
 
 **Component instances.** `ComponentDef` and `overrides` are in the model, and

@@ -37,6 +37,8 @@ export interface RunAgentOptions {
   pageId?: string;
   selection?: string[];
   images?: { data: string; mimeType: string }[];
+  /** `import` switches the agent to its reconstruction prompt. */
+  mode?: 'design' | 'import';
   registry?: PluginRegistry;
   baseUrl?: string;
   signal?: AbortSignal;
@@ -77,6 +79,7 @@ async function runLocally(options: RunAgentOptions, handlers: AgentStreamHandler
     ...(options.pageId ? { pageId: options.pageId } : {}),
     ...(options.selection ? { selection: options.selection } : {}),
     ...(options.images ? { images: options.images } : {}),
+    ...(options.mode ? { mode: options.mode } : {}),
     ...(options.signal ? { signal: options.signal } : {}),
   })) {
     dispatch(event, handlers);
@@ -95,6 +98,7 @@ async function runRemotely(options: RunAgentOptions, handlers: AgentStreamHandle
       pageId: options.pageId,
       selection: options.selection,
       images: options.images,
+      mode: options.mode,
     }),
     ...(options.signal ? { signal: options.signal } : {}),
   });

@@ -25,6 +25,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@opendesign/assets": "workspace:*",
     "@opendesign/core": "workspace:*",
     "@opendesign/design-system": "workspace:*"
   },

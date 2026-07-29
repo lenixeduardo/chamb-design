@@ -34,10 +34,13 @@ packages/
   exporters      React, Next.js, HTML, Vue, Svelte, Astro
   editor         Headless editor state: selection, viewport, tools, commands
   ai             Claude, GPT, Gemini, DeepSeek, OpenRouter, Ollama, LM Studio
+                 plus image generation: gpt-image, Imagen, local servers
+  assets         Ingestion: storage adapters, image probing, asset operations
 plugins/
   plugin-charts             Example component pack
   plugin-exporter-solid     Example export target
   plugin-provider-mistral   Example model provider
+  plugin-chamb-brand        The chamb-design brand: theme, blocks, template
 ```
 
 ## Quick start
@@ -94,7 +97,15 @@ uses. There is no privileged path — [`plugins/plugin-charts`](plugins/plugin-c
 proves it by testing exactly that.
 
 **Local-first is the default, not a mode.** Storage, models and rendering can
-all run without a network.
+all run without a network. Dropped and generated images are inlined into the
+document by default, so a project stays one portable JSON file — point the same
+pipeline at an upload endpoint and nothing else changes.
+
+**Images are first-class, in both directions.** Drop, paste or generate an image
+and it goes through one pipeline: probed for dimensions (so no layout shift),
+stored by whichever adapter is configured, and recorded as an `addAsset`
+operation — undoable like any edit. Attach a screenshot to the chat and the
+agent switches to reconstruction mode and rebuilds it as real nodes.
 
 ## Documentation
 
@@ -112,7 +123,7 @@ all run without a network.
 pnpm test
 ```
 
-349 tests across the packages. The suites that matter most: operation
+418 tests across the packages. The suites that matter most: operation
 invertibility (every edit must undo exactly), export output (no editor
 attributes leak, void elements stay void, responsive overrides become media
 queries), the AI repair loop (a malformed batch must never half-apply), the

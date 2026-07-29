@@ -1,10 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowUp, Cpu, Cloud, Loader2, Sparkles, Square } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowUp,
+  Cloud,
+  Cpu,
+  ImagePlus,
+  Loader2,
+  Sparkles,
+  Square,
+  X,
+} from 'lucide-react';
 import type { PluginRegistry } from '@opendesign/core';
 import { useEditorState, type Editor } from '@opendesign/editor';
 import { isLocalProvider, runAgent } from '@/lib/agent-client';
+import { fileToBase64, imageFilesFrom } from '@/lib/assets';
 import { Badge, Button, Select } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
@@ -17,10 +28,19 @@ import { cn } from '@/lib/utils';
  * bigger" resolves to the layer the user is looking at.
  */
 
+interface Attachment {
+  id: string;
+  name: string;
+  previewUrl: string;
+  data: string;
+  mimeType: string;
+}
+
 interface Turn {
   id: string;
   role: 'user' | 'assistant';
   text: string;
+  attachmentCount?: number;
   status?: string;
   operationCount?: number;
   issues?: { message: string; nodeId: string; severity: string }[];
@@ -32,7 +52,7 @@ interface ProviderInfo {
   label: string;
   locality: 'cloud' | 'local';
   configured: boolean;
-  models: { id: string; label: string }[];
+  models: { id: string; label: string; vision?: boolean }[];
 }
 
 const SUGGESTIONS = [
@@ -54,12 +74,15 @@ export function ChatSidebar({
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [providerId, setProviderId] = useState('anthropic');
   const [model, setModel] = useState('');
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch('/api/ai')
@@ -80,16 +103,59 @@ export function ChatSidebar({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns]);
 
+  const attachImages = useCallback(async (files: File[]) => {
+    // Vision models take base64, but the composer needs something to show, so
+    // both forms are kept for the lifetime of the attachment.
+    const added = await Promise.all(
+      files.slice(0, 4).map(async (file) => {
+        const { data, mimeType } = await fileToBase64(file);
+        return {
+          id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: file.name || 'screenshot.png',
+          previewUrl: `data:${mimeType};base64,${data}`,
+          data,
+          mimeType,
+        };
+      }),
+    );
+    setAttachments((current) => [...current, ...added].slice(0, 4));
+  }, []);
+
+  // Paste is how a screenshot actually reaches a chat. Scoped to the composer
+  // so pasting into the assets panel still goes to the asset library.
+  useEffect(() => {
+    const node = composerRef.current;
+    if (!node) return;
+
+    const onPaste = (event: ClipboardEvent) => {
+      const files = imageFilesFrom(event.clipboardData);
+      if (files.length === 0) return;
+      event.preventDefault();
+      void attachImages(files);
+    };
+
+    node.addEventListener('paste', onPaste);
+    return () => node.removeEventListener('paste', onPaste);
+  }, [attachImages]);
+
   const activeProvider = providers.find((p) => p.id === providerId);
+  const visionCapable = (activeProvider?.models ?? []).some((model) => model.vision !== false);
 
   const submit = async (prompt: string) => {
     if (!prompt.trim() || busy) return;
 
-    const userTurn: Turn = { id: `u_${Date.now()}`, role: 'user', text: prompt };
+    const pending = attachments;
+    const userTurn: Turn = {
+      id: `u_${Date.now()}`,
+      role: 'user',
+      text: prompt,
+      ...(pending.length > 0 ? { attachmentCount: pending.length } : {}),
+    };
     const assistantTurn: Turn = { id: `a_${Date.now()}`, role: 'assistant', text: '' };
 
     setTurns((current) => [...current, userTurn, assistantTurn]);
     setInput('');
+    setAttachments([]);
     setBusy(true);
 
     const controller = new AbortController();
@@ -109,6 +175,14 @@ export function ChatSidebar({
           model,
           pageId: state.activePageId,
           selection: state.selection,
+          ...(pending.length > 0
+            ? {
+                images: pending.map((item) => ({ data: item.data, mimeType: item.mimeType })),
+                // Reference images mean the request is a reconstruction, which
+                // has its own system prompt.
+                mode: 'import' as const,
+              }
+            : {}),
           ...(registry ? { registry } : {}),
           signal: controller.signal,
         },
@@ -188,9 +262,16 @@ export function ChatSidebar({
         {turns.map((turn) => (
           <article key={turn.id} className="animate-fade-up space-y-1.5">
             {turn.role === 'user' ? (
-              <p className="rounded-lg rounded-br-sm bg-brand/14 px-2.5 py-1.5 text-[12px] leading-relaxed text-ink">
-                {turn.text}
-              </p>
+              <div className="rounded-lg rounded-br-sm bg-brand/14 px-2.5 py-1.5">
+                {turn.attachmentCount ? (
+                  <p className="mb-1 flex items-center gap-1 text-[10.5px] text-brand-soft">
+                    <ImagePlus size={10} />
+                    {turn.attachmentCount} reference image
+                    {turn.attachmentCount === 1 ? '' : 's'}
+                  </p>
+                ) : null}
+                <p className="text-[12px] leading-relaxed text-ink">{turn.text}</p>
+              </div>
             ) : (
               <div className="space-y-1.5">
                 {turn.status && (
@@ -270,56 +351,122 @@ export function ChatSidebar({
           </p>
         )}
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submit(input);
-          }}
-          className="relative"
-        >
-          <textarea
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                void submit(input);
-              }
-            }}
-            rows={3}
-            placeholder={
-              state.selection.length > 0
-                ? `Edit ${state.selection.length} selected layer${state.selection.length === 1 ? '' : 's'}…`
-                : 'Describe a page, a section, or a change…'
-            }
-            className={cn(
-              'w-full resize-none rounded-lg border border-hairline bg-shell py-2 pr-10 pl-2.5',
-              'text-[12px] leading-relaxed text-ink placeholder:text-ink-faint',
-              'transition-colors focus:border-brand focus:outline-none',
-            )}
-          />
-
-          {busy ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="absolute right-1.5 bottom-1.5"
-              onClick={() => abortRef.current?.abort()}
-            >
-              <Square size={11} />
-              Stop
-            </Button>
-          ) : (
-            <button
-              type="submit"
-              disabled={!input.trim()}
-              aria-label="Send"
-              className="absolute right-1.5 bottom-1.5 grid h-7 w-7 place-items-center rounded-md bg-brand text-white transition-opacity disabled:opacity-30"
-            >
-              <ArrowUp size={13} />
-            </button>
+        <div ref={composerRef}>
+          {attachments.length > 0 && (
+            <ul className="mb-2 flex flex-wrap gap-1.5">
+              {attachments.map((item) => (
+                <li key={item.id} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.previewUrl}
+                    alt={item.name}
+                    className="h-12 w-12 rounded-md border border-hairline object-cover"
+                  />
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item.name}`}
+                    onClick={() =>
+                      setAttachments((current) => current.filter((entry) => entry.id !== item.id))
+                    }
+                    className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-shell text-ink-muted hover:text-critical"
+                  >
+                    <X size={9} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
-        </form>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submit(input);
+            }}
+            className="relative"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              const files = imageFilesFrom(event.dataTransfer);
+              if (files.length === 0) return;
+              event.preventDefault();
+              void attachImages(files);
+            }}
+          >
+            <textarea
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  void submit(input);
+                }
+              }}
+              rows={3}
+              placeholder={
+                state.selection.length > 0
+                  ? `Edit ${state.selection.length} selected layer${state.selection.length === 1 ? '' : 's'}…`
+                  : 'Describe a page, a section, or a change…'
+              }
+              className={cn(
+                'w-full resize-none rounded-lg border border-hairline bg-shell py-2 pr-10 pl-2.5',
+                'text-[12px] leading-relaxed text-ink placeholder:text-ink-faint',
+                'transition-colors focus:border-brand focus:outline-none',
+              )}
+            />
+
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                void attachImages(Array.from(event.target.files ?? []));
+                event.target.value = '';
+              }}
+            />
+
+            <button
+              type="button"
+              aria-label="Attach a reference image"
+              title={
+                visionCapable
+                  ? 'Attach a reference image — drop or paste works too'
+                  : 'This model may not accept images'
+              }
+              onClick={() => imageInputRef.current?.click()}
+              className="absolute bottom-1.5 left-1.5 grid h-7 w-7 place-items-center rounded-md text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
+            >
+              <ImagePlus size={13} />
+            </button>
+
+            {busy ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="absolute right-1.5 bottom-1.5"
+                onClick={() => abortRef.current?.abort()}
+              >
+                <Square size={11} />
+                Stop
+              </Button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                aria-label="Send"
+                className="absolute right-1.5 bottom-1.5 grid h-7 w-7 place-items-center rounded-md bg-brand text-white transition-opacity disabled:opacity-30"
+              >
+                <ArrowUp size={13} />
+              </button>
+            )}
+          </form>
+        </div>
+
+        {attachments.length > 0 && (
+          <p className="text-[10.5px] leading-relaxed text-ink-faint">
+            Reference images switch the assistant into reconstruction mode.
+          </p>
+        )}
       </div>
     </div>
   );

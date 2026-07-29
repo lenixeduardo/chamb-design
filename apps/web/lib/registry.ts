@@ -2,6 +2,8 @@ import { PluginRegistry, type OpenDesignPlugin } from '@opendesign/core';
 import { componentsPlugin } from '@opendesign/components';
 import { exportersPlugin } from '@opendesign/exporters';
 import { aiProvidersPlugin } from '@opendesign/ai';
+import { chartsPlugin } from '@opendesign/plugin-charts';
+import { chambBrandPlugin } from '@opendesign/plugin-chamb-brand';
 
 /**
  * The running instance's plugin registry.
@@ -13,7 +15,15 @@ import { aiProvidersPlugin } from '@opendesign/ai';
  */
 let registryPromise: Promise<PluginRegistry> | null = null;
 
-const CORE_PLUGINS: OpenDesignPlugin[] = [componentsPlugin, exportersPlugin, aiProvidersPlugin];
+const CORE_PLUGINS: OpenDesignPlugin[] = [
+  componentsPlugin,
+  exportersPlugin,
+  aiProvidersPlugin,
+  // Bundled community plugins. They load through the same public API as any
+  // third-party pack — which is the whole reason they stay separate packages.
+  chartsPlugin,
+  chambBrandPlugin,
+];
 
 export function getRegistry(): Promise<PluginRegistry> {
   if (!registryPromise) {
