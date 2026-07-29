@@ -8,12 +8,19 @@ import {
 } from 'react';
 import {
   getNode,
+  resolveStyle,
+  type Breakpoint,
   type DesignDocument,
   type NodeId,
   type Page,
   type SceneNode,
 } from '@opendesign/core';
-import { nodeToClassName, tokensToCssVariables } from '@opendesign/design-system';
+import {
+  nodeToClassName,
+  styleToCssProperties,
+  toReactStyle,
+  tokensToCssVariables,
+} from '@opendesign/design-system';
 import { getPrimitive, resolveElement, VOID_ELEMENTS } from './primitives.js';
 import { motionAttributes } from './motion.js';
 
@@ -25,8 +32,16 @@ import { motionAttributes } from './motion.js';
  * `data-od-id`, and the editor layers interaction on top through event
  * delegation and `getBoundingClientRect`.
  *
- * That is what lets the exact same component render the editor canvas, the
- * published site and the SSR preview, with zero divergence between them.
+ * The same component renders the editor canvas, the published site and the SSR
+ * preview. Two style modes exist because they have genuinely different needs:
+ *
+ *   - `classes` (default) emits Tailwind utilities — what published output and
+ *     exported code use, and what keeps the canvas and the export in lockstep.
+ *   - `inline` emits real CSS declarations. The editor canvas needs this: the
+ *     class names come from the user's document at runtime, so Tailwind's
+ *     compiler has never seen them and would emit no CSS for them. Both modes
+ *     compile from the same `StyleMap` through `@opendesign/design-system`, so
+ *     they agree on what a style *means* — they only disagree on how to spell it.
  */
 
 export interface NodeComponentProps {
@@ -47,6 +62,13 @@ export interface RenderOptions {
   omitHidden?: boolean;
   /** Emits `data-od-*` attributes. On for the canvas, off for published sites. */
   editorAttributes?: boolean;
+  /**
+   * `classes` emits Tailwind utilities; `inline` emits resolved CSS.
+   * The canvas must use `inline` — see the note above.
+   */
+  styleMode?: 'classes' | 'inline';
+  /** Breakpoint to resolve against in `inline` mode. */
+  breakpoint?: Breakpoint;
 }
 
 export interface NodeRendererProps extends RenderOptions {
@@ -98,13 +120,31 @@ function renderNode(
   }
 
   const element = resolveElement(node);
-  const className = [spec.baseClassName, nodeToClassName(node)].filter(Boolean).join(' ');
+  const inline = options.styleMode === 'inline';
+
+  // In inline mode only the escape-hatch classes survive; everything the style
+  // compiler would have produced becomes real CSS instead.
+  const className = inline
+    ? [spec.baseClassName, node.className].filter(Boolean).join(' ')
+    : [spec.baseClassName, nodeToClassName(node)].filter(Boolean).join(' ');
+
+  const motion = motionAttributes(node);
+
+  const inlineStyle = inline
+    ? {
+        ...toReactStyle(styleToCssProperties(resolveStyle(node, options.breakpoint ?? 'base'))),
+        ...(node.hidden ? { display: 'none' } : {}),
+      }
+    : undefined;
 
   const attributes: Record<string, unknown> = {
     key: node.id,
     ...(spec.attributes?.(node) ?? {}),
     ...(className ? { className } : {}),
-    ...motionAttributes(node),
+    ...motion,
+    ...(inlineStyle
+      ? { style: { ...(motion.style as Record<string, string> | undefined), ...inlineStyle } }
+      : {}),
   };
 
   if (options.editorAttributes !== false) {

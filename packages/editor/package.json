@@ -1,7 +1,7 @@
 {
-  "name": "@opendesign/renderer",
+  "name": "@opendesign/editor",
   "version": "0.1.0",
-  "description": "Pure React renderer for OpenDesign documents \u2014 knows nothing about the editor",
+  "description": "Headless editor state: selection, viewport, tools, commands and keymap",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,9 +14,7 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -29,14 +27,12 @@
     "@opendesign/design-system": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
+    "react": ">=18"
   },
   "devDependencies": {
+    "@opendesign/components": "workspace:*",
     "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
     "tsup": "^8.5.1",
     "typescript": "^5.9.2",
     "vitest": "^4.1.10"
