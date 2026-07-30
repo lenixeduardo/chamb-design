@@ -4,6 +4,7 @@ import { exportersPlugin } from '@opendesign/exporters';
 import { aiProvidersPlugin } from '@opendesign/ai';
 import { chartsPlugin } from '@opendesign/plugin-charts';
 import { chambBrandPlugin } from '@opendesign/plugin-chamb-brand';
+import { remotionPlugin } from '@opendesign/plugin-remotion';
 
 /**
  * The running instance's plugin registry.
@@ -23,6 +24,9 @@ const CORE_PLUGINS: OpenDesignPlugin[] = [
   // third-party pack — which is the whole reason they stay separate packages.
   chartsPlugin,
   chambBrandPlugin,
+  // Video export. The target only emits code, so Remotion itself stays an
+  // optional peer dependency and nothing here pulls in its licence.
+  remotionPlugin,
 ];
 
 export function getRegistry(): Promise<PluginRegistry> {

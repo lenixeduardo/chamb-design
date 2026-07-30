@@ -1,0 +1,67 @@
+{
+  "name": "@opendesign/plugin-remotion",
+  "version": "0.1.0",
+  "description": "Video export via Remotion. Optional and separately licensed \u2014 see NOTICE.md",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./render": {
+      "types": "./dist/render.d.ts",
+      "import": "./dist/render.js",
+      "require": "./dist/render.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "NOTICE.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@opendesign/core": "workspace:*",
+    "@opendesign/design-system": "workspace:*",
+    "@opendesign/renderer": "workspace:*"
+  },
+  "peerDependencies": {
+    "@remotion/bundler": ">=4.0.0",
+    "@remotion/renderer": ">=4.0.0",
+    "react": ">=18",
+    "react-dom": ">=18",
+    "remotion": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@remotion/bundler": {
+      "optional": true
+    },
+    "@remotion/renderer": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@opendesign/components": "workspace:*",
+    "@opendesign/exporters": "workspace:*",
+    "@remotion/bundler": "^4.0.501",
+    "@remotion/renderer": "^4.0.501",
+    "@types/react": "^19.2.2",
+    "esbuild": "^0.27.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.501",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10"
+  }
+}

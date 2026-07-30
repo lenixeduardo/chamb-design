@@ -57,9 +57,10 @@ screenshot path covers most of the value in the meantime.
 the AI can create reusable components, but instance/override propagation is not
 implemented in the editor.
 
-**Motion timeline.** Presets and the CSS engine work today. GSAP and Framer
-Motion are declared in `MotionSpec` and handled by exporters, but there is no
-keyframe editor.
+**Motion timeline.** Presets and the CSS engine work today, and the video target
+now reads `MotionSpec` as real time. GSAP and Framer Motion are declared in the
+spec and handled by exporters, but there is still no keyframe editor — motion is
+chosen from presets rather than drawn.
 
 ## Not planned
 

@@ -11,8 +11,27 @@
 | `svelte` | SvelteKit routes and `$lib` components                                |
 | `astro`  | Astro pages with frontmatter                                          |
 
-Plus `solid` if you install
-[`plugin-exporter-solid`](../plugins/plugin-exporter-solid).
+Plus two from bundled plugins:
+
+| Id         | Output                                                                         |
+| ---------- | ------------------------------------------------------------------------------ |
+| `solid`    | Solid components ([`plugin-exporter-solid`](../plugins/plugin-exporter-solid)) |
+| `remotion` | An animated video project ([`plugin-remotion`](../plugins/plugin-remotion))    |
+
+### A note on the video target
+
+`remotion` emits a runnable Remotion project — TSX, composition config,
+`package.json` — using nothing but string generation, the same as every other
+target. It does **not** import Remotion, because Remotion is not MIT licensed
+(free for individuals, non-profits and companies up to 3 employees; paid beyond
+that). Making it a hard dependency would hand every downstream company a licence
+obligation they never agreed to.
+
+Animations come from each node's `motion` spec, mapped onto frames — so the video
+matches what the canvas already previews, rather than being authored twice.
+Rendering an actual MP4 needs Remotion installed locally and lives behind
+`@opendesign/plugin-remotion/render`. See
+[the plugin's NOTICE](../plugins/plugin-remotion/NOTICE.md).
 
 ## What "clean code" means here
 

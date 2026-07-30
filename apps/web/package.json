@@ -20,6 +20,7 @@
     "@opendesign/exporters": "workspace:*",
     "@opendesign/plugin-chamb-brand": "workspace:*",
     "@opendesign/plugin-charts": "workspace:*",
+    "@opendesign/plugin-remotion": "workspace:*",
     "@opendesign/renderer": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "^1.27.0",

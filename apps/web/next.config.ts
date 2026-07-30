@@ -15,6 +15,7 @@ const config: NextConfig = {
     '@opendesign/assets',
     '@opendesign/plugin-charts',
     '@opendesign/plugin-chamb-brand',
+    '@opendesign/plugin-remotion',
   ],
 };
 
