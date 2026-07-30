@@ -27,7 +27,7 @@ import {
 /* ----------------------------- fixtures ------------------------------ */
 
 /** A minimal but structurally valid PNG header declaring 120x80. */
-function png(width = 120, height = 80): Uint8Array {
+function png(width = 120, height = 80): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(24);
   bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0);
   bytes.set([0, 0, 0, 13], 8);
@@ -324,11 +324,14 @@ describe('AssetIngestor', () => {
 
   it('re-hosts a remote url instead of referencing it', async () => {
     const bytes = png(500, 500);
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(bytes, { status: 200, headers: { 'content-type': 'image/png' } }),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      // Wrapped in a Blob because `BodyInit` does not accept a typed array
+      // whose buffer is `ArrayBufferLike` under the current lib types.
+      new Response(new Blob([bytes]), {
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+      }),
+    );
 
     const { ingestor, storage } = makeIngestor();
     const { asset } = await ingestor.ingestUrl(

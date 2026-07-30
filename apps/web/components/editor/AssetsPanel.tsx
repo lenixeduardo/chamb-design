@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image as ImageIcon, Loader2, Sparkles, Trash2, Upload, Wand2 } from 'lucide-react';
 import type { Asset } from '@opendesign/core';
 import { findOrphanAssets } from '@opendesign/assets';
 import { useDocument, type Editor } from '@opendesign/editor';
 import { getIngestor, imageFilesFrom } from '@/lib/assets';
+import { getCredential, hasKey, subscribeToSettings } from '@/lib/settings';
 import { Badge, Button, EmptyState, Panel, Select, TextInput } from '@/components/ui/primitives';
 import { cn, formatBytes } from '@/lib/utils';
 
@@ -242,27 +243,47 @@ function GenerateImage({
   editor: Editor;
   onError: (message: string | null) => void;
 }) {
-  const [providers, setProviders] = useState<ImageProviderInfo[]>([]);
+  const [served, setServed] = useState<ImageProviderInfo[]>([]);
   const [providerId, setProviderId] = useState('');
   const [model, setModel] = useState('');
   const [size, setSize] = useState('1024x1024');
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [credentialVersion, setCredentialVersion] = useState(0);
+  const pickedDefault = useRef(false);
+
+  useEffect(() => subscribeToSettings(() => setCredentialVersion((n) => n + 1)), []);
 
   useEffect(() => {
     fetch('/api/images')
       .then((response) => response.json())
-      .then((data: { providers: ImageProviderInfo[] }) => {
-        setProviders(data.providers);
-        const usable = data.providers.find((p) => p.configured) ?? data.providers[0];
-        if (usable) {
-          setProviderId(usable.id);
-          setModel(usable.models[0]?.id ?? '');
-          setSize(usable.models[0]?.sizes?.[0] ?? '1024x1024');
-        }
-      })
-      .catch(() => setProviders([]));
+      .then((data: { providers: ImageProviderInfo[] }) => setServed(data.providers ?? []))
+      .catch(() => setServed([]));
   }, []);
+
+  // An image provider reuses the text provider's key, so a user who added an
+  // OpenAI key for the assistant can generate images with it too.
+  const providers = useMemo(
+    () =>
+      served.map((provider) => ({
+        ...provider,
+        configured: provider.configured || hasKey(provider.id),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keys are read imperatively
+    [served, credentialVersion],
+  );
+
+  // Chosen once; after that the picker is the user's, not ours to reset.
+  useEffect(() => {
+    if (pickedDefault.current || providers.length === 0) return;
+    pickedDefault.current = true;
+
+    const usable = providers.find((provider) => provider.configured) ?? providers[0];
+    if (!usable) return;
+    setProviderId(usable.id);
+    setModel(usable.models[0]?.id ?? '');
+    setSize(usable.models[0]?.sizes?.[0] ?? '1024x1024');
+  }, [providers]);
 
   const active = providers.find((p) => p.id === providerId);
   const activeModel = active?.models.find((m) => m.id === model);
@@ -274,9 +295,14 @@ function GenerateImage({
     onError(null);
 
     try {
+      const credential = getCredential(providerId);
       const response = await fetch('/api/images', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...(credential?.apiKey ? { 'x-od-api-key': credential.apiKey } : {}),
+          ...(credential?.baseUrl ? { 'x-od-base-url': credential.baseUrl } : {}),
+        },
         body: JSON.stringify({ prompt, providerId, model, size }),
       });
 
@@ -387,7 +413,8 @@ function GenerateImage({
 
       {active && !active.configured && active.locality === 'cloud' && (
         <p className="text-[10.5px] leading-relaxed text-caution">
-          No API key on this server. Set one, or run a local image server and pick it above.
+          {active.label} needs an API key — add yours under Settings, or run a local image server
+          and pick it above.
         </p>
       )}
     </section>

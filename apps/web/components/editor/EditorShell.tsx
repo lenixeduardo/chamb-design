@@ -12,6 +12,7 @@ import {
   Palette,
   ImageIcon,
   Redo2,
+  Settings,
   Smartphone,
   Sparkles,
   Square,
@@ -31,6 +32,7 @@ import { LibraryPanel } from './LibraryPanel';
 import { ThemePanel } from './ThemePanel';
 import { AssetsPanel } from './AssetsPanel';
 import { ExportDialog } from './ExportDialog';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { Button, IconButton, SegmentedControl } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +51,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [leftTab, setLeftTab] = useState<LeftTab>('layers');
   const [exporting, setExporting] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
 
   const state = useEditorState(editor);
@@ -141,6 +144,9 @@ export function EditorShell({ document }: { document: DesignDocument }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <IconButton label="Settings — API keys" onClick={() => setSettingsOpen(true)}>
+            <Settings size={13} />
+          </IconButton>
           <Button size="sm" onClick={() => setExporting(true)}>
             <Download size={12} />
             Export
@@ -208,6 +214,8 @@ export function EditorShell({ document }: { document: DesignDocument }) {
       {exporting && (
         <ExportDialog editor={editor} registry={registry} onClose={() => setExporting(false)} />
       )}
+
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

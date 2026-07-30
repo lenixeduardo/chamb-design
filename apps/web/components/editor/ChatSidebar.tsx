@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowUp,
   Cloud,
   Cpu,
   ImagePlus,
+  KeyRound,
   Loader2,
   Sparkles,
   Square,
@@ -16,6 +17,8 @@ import type { PluginRegistry } from '@opendesign/core';
 import { useEditorState, type Editor } from '@opendesign/editor';
 import { isLocalProvider, runAgent } from '@/lib/agent-client';
 import { fileToBase64, imageFilesFrom } from '@/lib/assets';
+import { hasKey, readSettings, setLastModel, subscribeToSettings } from '@/lib/settings';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { Badge, Button, Select } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
@@ -75,29 +78,74 @@ export function ChatSidebar({
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [served, setServed] = useState<ProviderInfo[]>([]);
   const [providerId, setProviderId] = useState('anthropic');
   const [model, setModel] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Bumped whenever a key is saved or removed, so the "configured" badges
+  // reflect Settings without a reload.
+  const [credentialVersion, setCredentialVersion] = useState(0);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  // The default is chosen once. After that the selection belongs to the user,
+  // including a deliberate pick of a provider they have not added a key for —
+  // that is exactly the state where the "add your key" prompt should appear.
+  const pickedDefault = useRef(false);
+
+  useEffect(() => subscribeToSettings(() => setCredentialVersion((n) => n + 1)), []);
 
   useEffect(() => {
     fetch('/api/ai')
       .then((response) => response.json())
-      .then((data: { providers: ProviderInfo[] }) => {
-        setProviders(data.providers);
-        // Prefer something that will actually work on this deployment.
-        const usable = data.providers.find((p) => p.configured) ?? data.providers[0];
-        if (usable) {
-          setProviderId(usable.id);
-          setModel(usable.models[0]?.id ?? '');
-        }
-      })
-      .catch(() => setProviders([]));
+      .then((data: { providers: ProviderInfo[] }) => setServed(data.providers ?? []))
+      .catch(() => setServed([]));
   }, []);
+
+  // A provider is usable when either this browser has a key for it or the
+  // server does. Derived rather than refetched, so saving a key updates the
+  // badges without disturbing what the user has selected.
+  const providers = useMemo(
+    () =>
+      served.map((provider) => ({
+        ...provider,
+        configured: provider.configured || hasKey(provider.id),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keys are read imperatively
+    [served, credentialVersion],
+  );
+
+  useEffect(() => {
+    if (pickedDefault.current || providers.length === 0) return;
+    pickedDefault.current = true;
+
+    const remembered = readSettings();
+    const previous = remembered.providerId
+      ? providers.find((provider) => provider.id === remembered.providerId)
+      : undefined;
+
+    // Landing on a local runtime nobody is running turns the first prompt into
+    // "Failed to fetch". Prefer something with a key; otherwise start on a
+    // cloud provider, where the UI can explain what is missing.
+    const usable =
+      previous ??
+      providers.find((provider) => provider.configured && provider.locality === 'cloud') ??
+      // A cloud provider without a key beats a local one we cannot reach:
+      // "add your key" is a fixable state, "Failed to fetch" is not.
+      providers.find((provider) => provider.locality === 'cloud') ??
+      providers[0];
+
+    if (!usable) return;
+    setProviderId(usable.id);
+    const rememberedModel = usable.models.find((entry) => entry.id === remembered.model);
+    setModel(rememberedModel?.id ?? usable.models[0]?.id ?? '');
+  }, [providers]);
+
+  useEffect(() => {
+    if (providerId && model) setLastModel(providerId, model);
+  }, [providerId, model]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -140,6 +188,8 @@ export function ChatSidebar({
 
   const activeProvider = providers.find((p) => p.id === providerId);
   const visionCapable = (activeProvider?.models ?? []).some((model) => model.vision !== false);
+  const noProviderReady =
+    providers.length > 0 && !providers.some((provider) => provider.configured);
 
   const submit = async (prompt: string) => {
     if (!prompt.trim() || busy) return;
@@ -215,21 +265,32 @@ export function ChatSidebar({
         <h2 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
           Assistant
         </h2>
-        {activeProvider && (
-          <Badge tone={activeProvider.locality === 'local' ? 'positive' : 'neutral'}>
-            {activeProvider.locality === 'local' ? (
-              <>
-                <Cpu size={9} className="mr-1" />
-                on device
-              </>
-            ) : (
-              <>
-                <Cloud size={9} className="mr-1" />
-                cloud
-              </>
-            )}
-          </Badge>
-        )}
+        <div className="flex items-center gap-1.5">
+          {activeProvider && (
+            <Badge tone={activeProvider.locality === 'local' ? 'positive' : 'neutral'}>
+              {activeProvider.locality === 'local' ? (
+                <>
+                  <Cpu size={9} className="mr-1" />
+                  on device
+                </>
+              ) : (
+                <>
+                  <Cloud size={9} className="mr-1" />
+                  cloud
+                </>
+              )}
+            </Badge>
+          )}
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="API keys and settings"
+            title="API keys and settings"
+            className="grid h-6 w-6 place-items-center rounded-md text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
+          >
+            <KeyRound size={12} />
+          </button>
+        </div>
       </header>
 
       <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3">
@@ -243,6 +304,20 @@ export function ChatSidebar({
               The assistant edits your document through validated operations, so everything it does
               lands in the same undo stack as your own edits.
             </p>
+
+            {noProviderReady && (
+              <div className="space-y-2 rounded-lg border border-brand/25 bg-brand/8 px-2.5 py-2.5">
+                <p className="text-[11.5px] leading-relaxed text-ink-muted">
+                  Add an API key to start generating. It is stored in this browser and sent only to
+                  the provider you choose.
+                </p>
+                <Button size="sm" variant="primary" onClick={() => setSettingsOpen(true)}>
+                  <KeyRound size={11} />
+                  Add your API key
+                </Button>
+              </div>
+            )}
+
             <ul className="space-y-1.5 pt-1">
               {SUGGESTIONS.map((suggestion) => (
                 <li key={suggestion}>
@@ -345,10 +420,16 @@ export function ChatSidebar({
         </div>
 
         {activeProvider && !activeProvider.configured && !isLocalProvider(activeProvider.id) && (
-          <p className="text-[11px] leading-relaxed text-caution">
-            No API key on this server. Set one in the environment, or switch to Ollama / LM Studio
-            to run a model on your own machine.
-          </p>
+          <div className="space-y-1.5 rounded-lg border border-caution/25 bg-caution/8 px-2.5 py-2">
+            <p className="text-[11px] leading-relaxed text-caution">
+              {activeProvider.label} needs an API key. Add yours — it stays in this browser — or
+              switch to Ollama / LM Studio to run a model on your own machine.
+            </p>
+            <Button size="sm" variant="primary" onClick={() => setSettingsOpen(true)}>
+              <KeyRound size={11} />
+              Add your API key
+            </Button>
+          </div>
         )}
 
         <div ref={composerRef}>
@@ -468,6 +549,8 @@ export function ChatSidebar({
           </p>
         )}
       </div>
+
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

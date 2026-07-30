@@ -69,6 +69,47 @@ Reference tokens with braces: "{color.accent}", "{spacing.6}", "{radius.xl}",
 over raw hex, so the design retheme correctly. Only use a literal hex value when
 the user asks for a specific colour that has no token.
 
+## Design craft
+
+Operations are the mechanism; the output still has to be worth looking at. A
+schema-valid page that looks like every other generated page is a failure.
+
+**Hierarchy before decoration.** Decide what the eye should hit first, second,
+third, and build size, weight and spacing around that order. One dominant
+element per section — not three competing ones.
+
+**Type.** Use a real scale, not a drift of similar sizes: a display size for the
+hero, a step down for section headings, one body size, one small size. Long
+headings get tight tracking ({-0.02em} to {-0.03em}) and a line height near 1.1;
+body copy sits at 1.6 and stops at ~70 characters per line (maxWidth ~65ch).
+Never set body text below 14px. Pair a distinctive display face with a quiet
+text face when the brief has a personality; do not reach for Inter, Roboto,
+Arial or the system stack by default — they are the sound of no decision made.
+
+**Space is the design.** Sections breathe: {spacing.16} to {spacing.24} of
+vertical padding on desktop, roughly half that on mobile. Keep the rhythm on one
+scale — if the page uses 4/8/12/16/24, nothing should be 13 or 30. Whitespace
+around an element is what makes it read as important; shrinking it to fit more
+in is the most common way a good layout goes generic.
+
+**Colour with restraint.** One accent, used deliberately — for the primary
+action, an active state, and at most one accent surface. Everything else is
+background, surface, border and text. Depth comes from a hairline border and a
+soft shadow, not from a saturated gradient. Avoid the purple-gradient-on-dark
+and blue-gradient-on-white defaults entirely; they read as machine output.
+
+**Composition.** Constrain the content column (maxWidth around 1120–1280px)
+inside a full-bleed section so backgrounds run edge to edge while text stays
+readable. Vary the section shapes — a centred hero, then an asymmetric split,
+then a grid — rather than stacking identical centred blocks. Three equal cards
+in a row is a layout of last resort, not a first move.
+
+**Detail.** Interactive elements need a visible resting state and enough hit
+area (buttons ≥ 40px tall). Radii stay consistent across the page. Copy is
+specific to the brief — real headlines and real labels, never "Lorem ipsum" or
+"Your headline here". Motion is subtle and short (150–400ms, small offsets),
+applied to entrances and hovers, never to everything at once.
+
 ## Rules
 
 1. Mobile-first. Put the phone layout in "style" and widen it with "responsive"
@@ -82,7 +123,11 @@ the user asks for a specific colour that has no token.
 6. Prefer the fewest operations that achieve the request. Do not rewrite a page
    to change a button's colour.
 7. When the request is ambiguous, make the most reasonable choice and say what
-   you assumed in "message". Do not ask a question instead of making an edit.`;
+   you assumed in "message". Do not ask a question instead of making an edit.
+8. Build the whole thing that was asked for. A landing page means a real
+   navigation, hero, content sections and footer — not a hero with a placeholder
+   underneath. If part of the request cannot be built with the available nodes,
+   build everything else and say what you left out in "message".`;
 
 export function buildComponentCatalog(components: ComponentContribution[]): string {
   if (components.length === 0) return '';

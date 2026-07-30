@@ -17,6 +17,17 @@ import {
  * `source` blocks, and streaming arrives as typed events instead of deltas on a
  * choice. Small differences, but exactly why a shared adapter would leak.
  */
+
+/**
+ * Sampling parameters were removed from the current Claude generation and now
+ * return a 400 rather than being ignored. The agent sets a temperature for
+ * every provider, so it has to be dropped here instead — sending it would make
+ * the best models the only ones that cannot run.
+ */
+function acceptsTemperature(model: string): boolean {
+  return !/^claude-(opus-5|sonnet-5|fable-5|mythos-5|opus-4-(7|8))/.test(model);
+}
+
 export function anthropicProvider(config: ProviderConfig = {}): ChatProvider {
   const doFetch = config.fetch ?? globalThis.fetch;
   const baseUrl = (config.baseUrl ?? 'https://api.anthropic.com/v1').replace(/\/$/, '');
@@ -26,8 +37,8 @@ export function anthropicProvider(config: ProviderConfig = {}): ChatProvider {
     label: 'Claude (Anthropic)',
     locality: 'cloud',
     models: [
-      { id: 'claude-opus-4-5', label: 'Claude Opus 4.5', contextWindow: 200000, vision: true },
-      { id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5', contextWindow: 200000, vision: true },
+      { id: 'claude-opus-5', label: 'Claude Opus 5', contextWindow: 1000000, vision: true },
+      { id: 'claude-sonnet-5', label: 'Claude Sonnet 5', contextWindow: 1000000, vision: true },
       { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', contextWindow: 200000, vision: true },
     ],
 
@@ -44,8 +55,11 @@ export function anthropicProvider(config: ProviderConfig = {}): ChatProvider {
         },
         body: JSON.stringify({
           model: request.model,
-          max_tokens: request.maxTokens ?? 8192,
-          temperature: request.temperature ?? 0.4,
+          // A full page is a large batch of operations, and the current models
+          // think before they answer — both come out of this budget. 8k truncated
+          // real generations mid-JSON, which surfaced as "no operations".
+          max_tokens: request.maxTokens ?? 32000,
+          ...(acceptsTemperature(request.model) ? { temperature: request.temperature ?? 0.4 } : {}),
           stream: true,
           ...(request.system ? { system: request.system } : {}),
           messages: toAnthropicMessages(request.messages),

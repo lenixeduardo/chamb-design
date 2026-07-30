@@ -102,7 +102,9 @@ export function createOpenAICompatibleProvider(options: OpenAICompatibleOptions)
           model: request.model,
           messages: toApiMessages(request.messages, request.system),
           temperature: request.temperature ?? 0.4,
-          max_tokens: request.maxTokens ?? 8192,
+          // A page-sized batch of operations does not fit in 8k; a truncated
+          // JSON block reads to the agent as "the model returned no operations".
+          max_tokens: request.maxTokens ?? 16000,
           stream: true,
           stream_options: { include_usage: true },
           ...(request.responseFormat === 'json'
@@ -182,7 +184,8 @@ export const openrouterProvider = (config: ProviderConfig = {}): ChatProvider =>
       'X-Title': 'OpenDesign',
     },
     models: [
-      { id: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5', vision: true },
+      { id: 'anthropic/claude-opus-5', label: 'Claude Opus 5', vision: true },
+      { id: 'anthropic/claude-sonnet-5', label: 'Claude Sonnet 5', vision: true },
       { id: 'openai/gpt-5', label: 'GPT-5', vision: true },
       { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', vision: true },
       { id: 'meta-llama/llama-4-maverick', label: 'Llama 4 Maverick' },

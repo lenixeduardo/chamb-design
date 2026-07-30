@@ -9,10 +9,17 @@ export const dynamic = 'force-dynamic';
 /**
  * Server-side AI endpoint.
  *
- * Cloud API keys live in server environment variables and never reach the
- * browser. Local providers (Ollama, LM Studio) are intentionally *not* proxied
- * here — the client talks to them directly, because forcing localhost traffic
- * through a server would break the case where the server is somewhere else.
+ * A key can come from two places, in this order:
+ *
+ *   1. The request headers, when the user pasted their own key into Settings.
+ *      It lives in their browser, passes through here, and is forwarded to the
+ *      provider — never logged, never stored. This is what makes the deployed
+ *      app usable by anyone rather than only by whoever set the env vars.
+ *   2. A server environment variable, for a deployment that supplies its own.
+ *
+ * Local providers (Ollama, LM Studio) are intentionally *not* proxied here —
+ * the client talks to them directly, because forcing localhost traffic through
+ * a server would break the case where the server is somewhere else.
  */
 
 const ENV_KEYS: Record<string, string> = {
@@ -22,6 +29,10 @@ const ENV_KEYS: Record<string, string> = {
   deepseek: 'DEEPSEEK_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
 };
+
+/** Header carrying a user-supplied key. Never echoed back in a response. */
+const KEY_HEADER = 'x-od-api-key';
+const BASE_URL_HEADER = 'x-od-base-url';
 
 interface AgentRequestBody {
   prompt: string;
@@ -67,21 +78,28 @@ export async function POST(request: Request) {
   }
 
   const envKey = ENV_KEYS[body.providerId];
-  const apiKey = envKey ? process.env[envKey] : undefined;
+  // The user's own key wins: they chose it explicitly, and on a shared
+  // deployment it is the only one they should be spending.
+  const apiKey =
+    request.headers.get(KEY_HEADER)?.trim() || (envKey ? process.env[envKey] : undefined);
+  const baseUrl = request.headers.get(BASE_URL_HEADER)?.trim();
 
   if (envKey && !apiKey) {
     return NextResponse.json(
       {
-        error: `${body.providerId} is not configured on this server`,
-        hint: `Set ${envKey}, or pick a local provider that runs on your machine.`,
+        error: `no API key for ${body.providerId}`,
+        hint: 'Add your key in Settings, or pick a local provider that runs on your machine.',
       },
-      { status: 503 },
+      { status: 401 },
     );
   }
 
   let provider;
   try {
-    provider = createProvider(body.providerId, apiKey ? { apiKey } : {});
+    provider = createProvider(body.providerId, {
+      ...(apiKey ? { apiKey } : {}),
+      ...(baseUrl ? { baseUrl } : {}),
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'unknown provider' },

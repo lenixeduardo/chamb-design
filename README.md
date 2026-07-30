@@ -55,7 +55,13 @@ pnpm --filter @opendesign/web dev
 Open <http://localhost:3000>. Projects are stored in your browser — no account,
 no server, nothing leaves your machine until you connect a cloud model.
 
-To use a hosted model, set a key before starting the web app:
+To use a hosted model, open **Settings** and paste your own API key. It is kept
+in that browser (with a switch to forget it when the tab closes), sent only to
+the provider you picked, and never stored on a server — so a deployed instance
+is usable by anyone who has a key of their own.
+
+A deployment that would rather supply its own key can set one before starting
+the web app instead; a user-supplied key still wins where both exist:
 
 ```bash
 export ANTHROPIC_API_KEY=...   # or OPENAI_API_KEY, GOOGLE_API_KEY, …

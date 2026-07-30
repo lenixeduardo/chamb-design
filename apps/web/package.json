@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "prettier --check \"{app,components,lib}/**/*.{ts,tsx,css}\"",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next .turbo"
   },

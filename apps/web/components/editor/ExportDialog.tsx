@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, Copy, Download, FileCode, X } from 'lucide-react';
 import type { ExporterContribution, GeneratedFile, PluginRegistry } from '@opendesign/core';
 import { useDocument, type Editor } from '@opendesign/editor';
@@ -62,6 +62,26 @@ export function ExportDialog({
     };
   }, [registry, targetId, document]);
 
+  // The backdrop covers the whole editor, so without this the only way out is
+  // finding one small button — which is a trap, not a dialog.
+  //
+  // The handler is bound once and reads the callback through a ref: `onClose`
+  // is an inline arrow at every call site, so keying the effect on it would
+  // detach and reattach the listener on each render — and a key pressed while
+  // a render is in flight would land in that gap and be swallowed. The export
+  // preview re-renders as soon as generation resolves, which is exactly when
+  // someone reaches for Escape.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeRef.current();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const active = files.find((file) => file.path === activePath);
   const totalBytes = files.reduce((sum, file) => sum + file.contents.length, 0);
 
@@ -89,8 +109,18 @@ export function ExportDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm">
-      <div className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-2xl border border-hairline bg-panel">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Export"
+        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-2xl border border-hairline bg-panel"
+      >
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
           <div className="flex items-center gap-2">
             <FileCode size={14} className="text-brand-soft" />

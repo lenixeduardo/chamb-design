@@ -8,9 +8,11 @@ import {
   Copy,
   FolderOpen,
   Code2,
+  KeyRound,
   Layers,
   Plus,
   Search,
+  Settings,
   Sparkles,
   Trash2,
 } from 'lucide-react';
@@ -22,6 +24,8 @@ import {
   searchProjects,
   type ProjectSummary,
 } from '@/lib/projects';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { getCredential, hasKey, subscribeToSettings } from '@/lib/settings';
 import { Badge, Button, EmptyState, IconButton } from '@/components/ui/primitives';
 import { cn, formatRelativeTime } from '@/lib/utils';
 
@@ -39,6 +43,8 @@ export default function WorkspacePage() {
   const [query, setQuery] = useState('');
   const [folder, setFolder] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [ready, setReady] = useState<boolean | null>(null);
 
   const refresh = () => setProjects(searchProjects(query));
 
@@ -46,6 +52,33 @@ export default function WorkspacePage() {
     setProjects(searchProjects(query));
     setLoaded(true);
   }, [query]);
+
+  // Whether *anything* can generate. Asked here rather than in the editor so
+  // the first prompt someone types is not the thing that discovers the app
+  // cannot answer it.
+  //
+  // A local provider reports itself as configured because it needs no key —
+  // but nothing proves a runtime is actually listening, so it only counts once
+  // the user has pointed at one in Settings. Otherwise a machine with no Ollama
+  // installed would look ready and then fail on the first prompt.
+  useEffect(() => {
+    const check = () =>
+      fetch('/api/ai')
+        .then((response) => response.json())
+        .then((data: { providers?: { id: string; configured: boolean; locality: string }[] }) =>
+          setReady(
+            (data.providers ?? []).some((provider) =>
+              provider.locality === 'local'
+                ? Boolean(getCredential(provider.id)?.baseUrl)
+                : provider.configured || hasKey(provider.id),
+            ),
+          ),
+        )
+        .catch(() => setReady(null));
+
+    void check();
+    return subscribeToSettings(() => void check());
+  }, []);
 
   const folders = useMemo(() => (loaded ? listFolders() : []), [loaded, projects]);
 
@@ -79,6 +112,14 @@ export default function WorkspacePage() {
             <Code2 size={14} />
             Source
           </a>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-hairline px-3 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
+          >
+            <Settings size={14} />
+            Settings
+          </button>
           <Button variant="primary" onClick={handleCreate}>
             <Plus size={14} />
             New project
@@ -96,12 +137,24 @@ export default function WorkspacePage() {
           document through validated operations — so every AI change is reviewable and undoable.
           Bring Claude, GPT, Gemini or a model running on your own machine.
         </p>
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-6 flex flex-wrap items-center gap-2">
           <Button variant="primary" onClick={handleCreate}>
             Start a blank project
             <ArrowRight size={14} />
           </Button>
+          {ready === false && (
+            <Button onClick={() => setSettingsOpen(true)}>
+              <KeyRound size={14} />
+              Add your API key
+            </Button>
+          )}
         </div>
+        {ready === false && (
+          <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
+            No model is connected yet. Paste your own API key in Settings — it stays in this browser
+            — or point the app at Ollama or LM Studio running on your machine.
+          </p>
+        )}
       </section>
 
       <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -230,9 +283,11 @@ export default function WorkspacePage() {
       </section>
 
       <footer className="mt-12 border-t border-hairline pt-5 text-[11px] text-ink-faint">
-        Projects are stored in this browser. Nothing leaves your machine unless you connect a cloud
-        model provider or a sync server.
+        Projects and API keys are stored in this browser. Nothing leaves your machine unless you
+        connect a cloud model provider or a sync server.
       </footer>
+
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </main>
   );
 }
