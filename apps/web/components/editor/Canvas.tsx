@@ -125,7 +125,7 @@ export function Canvas({ editor }: { editor: Editor }) {
 
   if (!page) {
     return (
-      <div className="canvas-surface grid flex-1 place-items-center text-ink-faint">No page</div>
+      <div className="canvas-surface grid flex-1 place-items-center text-ink-faint">Sem página</div>
     );
   }
 
@@ -243,7 +243,7 @@ function SelectionOverlay({ editor }: { editor: Editor }) {
             rect={toScreen(bounds)}
             label={
               state.selection.length === 1
-                ? (document.nodes[state.selection[0]!]?.name ?? 'Layer')
+                ? (document.nodes[state.selection[0]!]?.name ?? 'Camada')
                 : `${state.selection.length} layers`
             }
           />

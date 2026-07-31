@@ -40,8 +40,8 @@ export function Inspector({ editor }: { editor: Editor }) {
     return (
       <Panel title="Design">
         <EmptyState
-          title="Nothing selected"
-          description="Pick a layer on the canvas or in the layers panel to edit its properties."
+          title="Nada selecionado"
+          description="Escolha uma camada no canvas ou no painel de camadas para editar as propriedades."
         />
       </Panel>
     );
@@ -89,33 +89,33 @@ export function Inspector({ editor }: { editor: Editor }) {
         )}
 
         <Section title="Layout">
-          <Field label="Display">
+          <Field label="Exibição">
             <Select
               value={style.display ?? 'block'}
               onChange={(value) => set({ display: value as StyleMap['display'] })}
               options={[
-                { label: 'Block', value: 'block' },
+                { label: 'Bloco', value: 'block' },
                 { label: 'Flex', value: 'flex' },
-                { label: 'Inline flex', value: 'inline-flex' },
+                { label: 'Flex inline', value: 'inline-flex' },
                 { label: 'Grid', value: 'grid' },
-                { label: 'Hidden', value: 'none' },
+                { label: 'Oculto', value: 'none' },
               ]}
             />
           </Field>
 
           {(style.display === 'flex' || style.display === 'inline-flex') && (
             <>
-              <Field label="Direction">
+              <Field label="Direção">
                 <SegmentedControl
                   value={style.direction ?? 'row'}
                   onChange={(value) => set({ direction: value })}
                   options={[
                     { label: 'Row', value: 'row' as const },
-                    { label: 'Column', value: 'column' as const },
+                    { label: 'Coluna', value: 'column' as const },
                   ]}
                 />
               </Field>
-              <Field label="Justify">
+              <Field label="Justificar">
                 <Select
                   value={style.justify ?? 'start'}
                   onChange={(value) => set({ justify: value as StyleMap['justify'] })}
@@ -125,7 +125,7 @@ export function Inspector({ editor }: { editor: Editor }) {
                   }))}
                 />
               </Field>
-              <Field label="Align">
+              <Field label="Alinhar">
                 <Select
                   value={style.align ?? 'stretch'}
                   onChange={(value) => set({ align: value as StyleMap['align'] })}
@@ -139,7 +139,7 @@ export function Inspector({ editor }: { editor: Editor }) {
           )}
 
           {style.display === 'grid' && (
-            <Field label="Columns">
+            <Field label="Colunas">
               <TextInput
                 type="number"
                 min={1}
@@ -149,7 +149,7 @@ export function Inspector({ editor }: { editor: Editor }) {
             </Field>
           )}
 
-          <Field label="Gap">
+          <Field label="Espaço">
             <TokenSelect
               value={style.gap}
               tokens={spacingTokens}
@@ -168,14 +168,14 @@ export function Inspector({ editor }: { editor: Editor }) {
           </Field>
         </Section>
 
-        <Section title="Size">
-          <Field label="Width">
+        <Section title="Tamanho">
+          <Field label="Largura">
             <SizeInput value={style.width} onChange={(width) => set({ width })} />
           </Field>
-          <Field label="Height">
+          <Field label="Altura">
             <SizeInput value={style.height} onChange={(height) => set({ height })} />
           </Field>
-          <Field label="Max width">
+          <Field label="Largura máx.">
             <TextInput
               placeholder="auto"
               value={typeof style.maxWidth === 'string' ? style.maxWidth : (style.maxWidth ?? '')}
@@ -184,8 +184,8 @@ export function Inspector({ editor }: { editor: Editor }) {
           </Field>
         </Section>
 
-        <Section title="Appearance">
-          <Field label="Fill">
+        <Section title="Aparência">
+          <Field label="Preenchim.">
             <TokenSelect
               value={style.background}
               tokens={colorTokens}
@@ -193,7 +193,7 @@ export function Inspector({ editor }: { editor: Editor }) {
               onChange={(value) => set({ background: value })}
             />
           </Field>
-          <Field label="Text">
+          <Field label="Texto">
             <TokenSelect
               value={style.color}
               tokens={colorTokens}
@@ -201,14 +201,14 @@ export function Inspector({ editor }: { editor: Editor }) {
               onChange={(value) => set({ color: value })}
             />
           </Field>
-          <Field label="Radius">
+          <Field label="Raio">
             <TokenSelect
               value={typeof style.radius === 'object' ? undefined : style.radius}
               tokens={radiusTokens}
               onChange={(value) => set({ radius: value })}
             />
           </Field>
-          <Field label="Opacity">
+          <Field label="Opacidade">
             <input
               type="range"
               min={0}
@@ -223,15 +223,15 @@ export function Inspector({ editor }: { editor: Editor }) {
           </Field>
         </Section>
 
-        <Section title="Typography">
-          <Field label="Size">
+        <Section title="Tipografia">
+          <Field label="Tamanho">
             <TokenSelect
               value={style.font?.size}
               tokens={sizeTokens}
               onChange={(value) => set({ font: { ...style.font, size: value } })}
             />
           </Field>
-          <Field label="Weight">
+          <Field label="Peso">
             <Select
               value={String(style.font?.weight ?? 400)}
               onChange={(value) => set({ font: { ...style.font, weight: Number(value) } })}
@@ -241,7 +241,7 @@ export function Inspector({ editor }: { editor: Editor }) {
               }))}
             />
           </Field>
-          <Field label="Align">
+          <Field label="Alinhar">
             <Select
               value={style.font?.align ?? 'left'}
               onChange={(value) =>
@@ -253,7 +253,7 @@ export function Inspector({ editor }: { editor: Editor }) {
         </Section>
 
         {nodes.length > 1 && (
-          <Section title="Arrange">
+          <Section title="Organizar">
             <div className="flex flex-wrap gap-1">
               {(
                 [
@@ -267,35 +267,35 @@ export function Inspector({ editor }: { editor: Editor }) {
               ).map(([mode, Icon]) => (
                 <IconButton
                   key={mode}
-                  label={`Align ${mode}`}
+                  label={`Alinhar ${mode}`}
                   onClick={() => editor.alignSelection(mode)}
                 >
                   <Icon size={14} />
                 </IconButton>
               ))}
               <IconButton
-                label="Distribute horizontally"
+                label="Distribuir na horizontal"
                 onClick={() => editor.distributeSelection('x')}
               >
                 <AlignHorizontalJustifyCenter size={14} />
               </IconButton>
               <IconButton
-                label="Distribute vertically"
+                label="Distribuir na vertical"
                 onClick={() => editor.distributeSelection('y')}
               >
                 <AlignVerticalJustifyCenter size={14} />
               </IconButton>
             </div>
             <p className="text-[11px] leading-relaxed text-ink-faint">
-              Alignment uses on-screen geometry, so it respects auto-layout and wrapping.
+              O alinhamento usa a geometria da tela, então respeita auto-layout e quebra de linha.
             </p>
           </Section>
         )}
 
         {nodes.length === 1 && <ContentSection editor={editor} node={primary} />}
 
-        <Section title="Motion">
-          <Field label="Preset">
+        <Section title="Movimento">
+          <Field label="Predefin.">
             <Select
               value={primary.motion ? findPresetName(primary) : 'none'}
               onChange={(value) => {
@@ -308,11 +308,11 @@ export function Inspector({ editor }: { editor: Editor }) {
                       fields: { motion: value === 'none' ? undefined : preset },
                     },
                   ],
-                  { label: 'Set motion' },
+                  { label: 'Definir movimento' },
                 );
               }}
               options={[
-                { label: 'None', value: 'none' },
+                { label: 'Nenhum', value: 'none' },
                 ...Object.keys(MOTION_PRESETS).map((name) => ({ label: name, value: name })),
               ]}
             />
@@ -338,9 +338,9 @@ function ContentSection({ editor, node }: { editor: Editor; node: SceneNode }) {
   if (!hasText && !hasSrc) return null;
 
   return (
-    <Section title="Content">
+    <Section title="Conteúdo">
       {hasText && (
-        <Field label="Text">
+        <Field label="Texto">
           <TextInput
             value={typeof node.props.text === 'string' ? node.props.text : ''}
             onChange={(event) => editor.setProps({ text: event.target.value })}
@@ -349,14 +349,14 @@ function ContentSection({ editor, node }: { editor: Editor; node: SceneNode }) {
       )}
       {hasSrc && (
         <>
-          <Field label="Source">
+          <Field label="Origem">
             <TextInput
               value={typeof node.props.src === 'string' ? node.props.src : ''}
               onChange={(event) => editor.setProps({ src: event.target.value })}
             />
           </Field>
           {node.type === 'image' && (
-            <Field label="Alt" hint="Required for accessibility and SEO">
+            <Field label="Alt" hint="Obrigatório para acessibilidade e SEO">
               <TextInput
                 value={typeof node.props.alt === 'string' ? node.props.alt : ''}
                 onChange={(event) => editor.setProps({ alt: event.target.value })}
@@ -414,7 +414,7 @@ function TokenSelect({
       <Select
         value={isToken ? current : ''}
         onChange={(next) => onChange(next || undefined)}
-        options={[{ label: allowCustom && current ? 'custom' : '—', value: '' }, ...tokens]}
+        options={[{ label: allowCustom && current ? 'personalizado' : '—', value: '' }, ...tokens]}
       />
       {allowCustom && (
         <TextInput

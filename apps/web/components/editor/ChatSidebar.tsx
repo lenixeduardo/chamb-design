@@ -60,11 +60,11 @@ interface ProviderInfo {
 }
 
 const SUGGESTIONS = [
-  'Build a landing page for a dental clinic',
-  'Turn this page into a SaaS dashboard',
-  'Add a pricing section with three tiers',
-  'Make the layout feel more premium',
-  'Add subtle entrance animations',
+  'Criar uma landing page para uma clínica odontológica',
+  'Transformar esta página em um dashboard SaaS',
+  'Adicionar uma seção de preços com três planos',
+  'Deixar o layout com cara de mais premium',
+  'Adicionar animações de entrada sutis',
 ];
 
 export function ChatSidebar({
@@ -242,7 +242,7 @@ export function ChatSidebar({
           onMessage: (text) => patch({ text }),
           onOperations: (operations) => {
             // Apply through the store so AI edits share the user's undo stack.
-            editor.store.transact(operations, { label: 'AI edit', source: 'ai' });
+            editor.store.transact(operations, { label: 'Edição da IA', source: 'ai' });
             patch({ operationCount: operations.length });
           },
           onReview: (issues) => patch({ issues }),
@@ -264,7 +264,7 @@ export function ChatSidebar({
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex h-9 shrink-0 items-center justify-between px-3">
         <h2 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-          Assistant
+          Assistente
         </h2>
         <div className="flex items-center gap-1.5">
           {activeProvider && (
@@ -272,12 +272,12 @@ export function ChatSidebar({
               {activeProvider.locality === 'local' ? (
                 <>
                   <Cpu size={9} className="mr-1" />
-                  on device
+                  no dispositivo
                 </>
               ) : (
                 <>
                   <Cloud size={9} className="mr-1" />
-                  cloud
+                  nuvem
                 </>
               )}
             </Badge>
@@ -285,8 +285,8 @@ export function ChatSidebar({
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
-            aria-label="API keys and settings"
-            title="API keys and settings"
+            aria-label="Chaves de API e ajustes"
+            title="Chaves de API e ajustes"
             className="grid h-6 w-6 place-items-center rounded-md text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
           >
             <KeyRound size={12} />
@@ -299,22 +299,22 @@ export function ChatSidebar({
           <div className="space-y-3 pt-6">
             <div className="flex items-center gap-2 text-ink-muted">
               <CharmDino role="mark" size={22} />
-              <p className="text-[12px] font-medium">Describe what you want to build</p>
+              <p className="text-[12px] font-medium">Descreva o que você quer construir</p>
             </div>
             <p className="text-[11px] leading-relaxed text-ink-faint">
-              The assistant edits your document through validated operations, so everything it does
-              lands in the same undo stack as your own edits.
+              O assistente edita seu documento por operações validadas, então tudo o que ele faz cai
+              na mesma pilha de desfazer das suas próprias edições.
             </p>
 
             {noProviderReady && (
               <div className="space-y-2 rounded-2xl border border-brand/25 bg-brand/8 px-3 py-2.5">
                 <p className="text-[11.5px] leading-relaxed text-ink-muted">
-                  Add an API key to start generating. It is stored in this browser and sent only to
-                  the provider you choose.
+                  Adicione uma chave de API para começar a gerar. Ela fica neste navegador e é
+                  enviada só para o provedor que você escolher.
                 </p>
                 <Button size="sm" variant="primary" onClick={() => setSettingsOpen(true)}>
                   <KeyRound size={11} />
-                  Add your API key
+                  Adicionar sua chave de API
                 </Button>
               </div>
             )}
@@ -342,8 +342,8 @@ export function ChatSidebar({
                 {turn.attachmentCount ? (
                   <p className="mb-1 flex items-center gap-1 text-[10.5px] text-brand-soft">
                     <ImagePlus size={10} />
-                    {turn.attachmentCount} reference image
-                    {turn.attachmentCount === 1 ? '' : 's'}
+                    {turn.attachmentCount} imagem{turn.attachmentCount === 1 ? '' : 'ns'} de
+                    referência
                   </p>
                 ) : null}
                 <p className="text-[12px] leading-relaxed text-ink">{turn.text}</p>
@@ -363,17 +363,17 @@ export function ChatSidebar({
 
                 {turn.operationCount !== undefined && (
                   <p className="text-[11px] text-positive">
-                    Applied {turn.operationCount} operation
-                    {turn.operationCount === 1 ? '' : 's'} · ⌘Z to undo
+                    {turn.operationCount} opera
+                    {turn.operationCount === 1 ? 'ção aplicada' : 'ções aplicadas'} · ⌘Z para
+                    desfazer
                   </p>
                 )}
 
                 {turn.issues && turn.issues.length > 0 && (
                   <div className="rounded-md border border-caution/25 bg-caution/8 px-2 py-1.5">
                     <p className="flex items-center gap-1.5 text-[11px] font-medium text-caution">
-                      <AlertTriangle size={10} />
-                      Design review found {turn.issues.length} issue
-                      {turn.issues.length === 1 ? '' : 's'}
+                      <AlertTriangle size={10} />A revisão de design encontrou {turn.issues.length}{' '}
+                      {turn.issues.length === 1 ? 'problema' : 'problemas'}
                     </p>
                     <ul className="mt-1 space-y-0.5">
                       {turn.issues.slice(0, 4).map((issue, index) => (
@@ -406,7 +406,7 @@ export function ChatSidebar({
               setModel(provider?.models[0]?.id ?? '');
             }}
             options={providers.map((provider) => ({
-              label: provider.configured ? provider.label : `${provider.label} (not configured)`,
+              label: provider.configured ? provider.label : `${provider.label} (sem chave)`,
               value: provider.id,
             }))}
           />
@@ -423,12 +423,12 @@ export function ChatSidebar({
         {activeProvider && !activeProvider.configured && !isLocalProvider(activeProvider.id) && (
           <div className="space-y-1.5 rounded-2xl border border-caution/25 bg-caution/8 px-3 py-2.5">
             <p className="text-[11px] leading-relaxed text-caution">
-              {activeProvider.label} needs an API key. Add yours — it stays in this browser — or
-              switch to Ollama / LM Studio to run a model on your own machine.
+              {activeProvider.label} precisa de uma chave de API. Adicione a sua — ela fica neste
+              navegador — ou troque para Ollama / LM Studio e rode um modelo na sua máquina.
             </p>
             <Button size="sm" variant="primary" onClick={() => setSettingsOpen(true)}>
               <KeyRound size={11} />
-              Add your API key
+              Adicionar sua chave de API
             </Button>
           </div>
         )}
@@ -446,7 +446,7 @@ export function ChatSidebar({
                   />
                   <button
                     type="button"
-                    aria-label={`Remove ${item.name}`}
+                    aria-label={`Remover ${item.name}`}
                     onClick={() =>
                       setAttachments((current) => current.filter((entry) => entry.id !== item.id))
                     }
@@ -485,8 +485,8 @@ export function ChatSidebar({
               rows={3}
               placeholder={
                 state.selection.length > 0
-                  ? `Edit ${state.selection.length} selected layer${state.selection.length === 1 ? '' : 's'}…`
-                  : 'Describe a page, a section, or a change…'
+                  ? `Editar ${state.selection.length} camada${state.selection.length === 1 ? '' : 's'} selecionada${state.selection.length === 1 ? '' : 's'}…`
+                  : 'Descreva uma página, uma seção ou uma mudança…'
               }
               className={cn(
                 'w-full resize-none rounded-2xl border border-hairline bg-panel-raised py-2.5 pr-10 pl-3',
@@ -509,11 +509,11 @@ export function ChatSidebar({
 
             <button
               type="button"
-              aria-label="Attach a reference image"
+              aria-label="Anexar uma imagem de referência"
               title={
                 visionCapable
-                  ? 'Attach a reference image — drop or paste works too'
-                  : 'This model may not accept images'
+                  ? 'Anexar uma imagem de referência — arrastar ou colar também funciona'
+                  : 'Este modelo pode não aceitar imagens'
               }
               onClick={() => imageInputRef.current?.click()}
               className="absolute bottom-1.5 left-1.5 grid h-7 w-7 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
@@ -529,13 +529,13 @@ export function ChatSidebar({
                 onClick={() => abortRef.current?.abort()}
               >
                 <Square size={11} />
-                Stop
+                Parar
               </Button>
             ) : (
               <button
                 type="submit"
                 disabled={!input.trim()}
-                aria-label="Send"
+                aria-label="Enviar"
                 className="absolute right-1.5 bottom-1.5 grid h-7 w-7 place-items-center rounded-full bg-brand text-white transition-opacity disabled:opacity-30"
               >
                 <ArrowUp size={13} />
@@ -546,7 +546,7 @@ export function ChatSidebar({
 
         {attachments.length > 0 && (
           <p className="text-[10.5px] leading-relaxed text-ink-faint">
-            Reference images switch the assistant into reconstruction mode.
+            Imagens de referência colocam o assistente em modo de reconstrução.
           </p>
         )}
       </div>
@@ -557,8 +557,8 @@ export function ChatSidebar({
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  thinking: 'Designing…',
-  validating: 'Validating operations…',
-  reviewing: 'Running design review…',
-  repairing: 'Fixing rejected operations…',
+  thinking: 'Desenhando…',
+  validating: 'Validando operações…',
+  reviewing: 'Rodando a revisão de design…',
+  repairing: 'Corrigindo operações rejeitadas…',
 };

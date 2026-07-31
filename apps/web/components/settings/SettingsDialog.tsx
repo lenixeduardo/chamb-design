@@ -135,7 +135,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         ...current,
         [provider.id]: data.ok
           ? { status: 'ok' }
-          : { status: 'failed', message: data.error ?? 'the provider rejected the request' },
+          : { status: 'failed', message: data.error ?? 'o provedor recusou a requisição' },
       }));
     } catch (error) {
       setChecks((current) => ({
@@ -157,7 +157,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   };
 
   const forgetEverything = () => {
-    if (!window.confirm('Remove every key and preference stored in this browser?')) return;
+    if (!window.confirm('Remover todas as chaves e preferências guardadas neste navegador?'))
+      return;
     clearSettings();
     setDrafts({});
     setChecks({});
@@ -177,18 +178,18 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Settings"
+        aria-label="Ajustes"
         className="animate-fade-up flex h-[min(720px,88vh)] w-[min(620px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
       >
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
           <div className="flex items-center gap-2">
             <KeyRound size={14} className="text-brand-soft" />
-            <h2 className="text-[13px] font-medium">Settings</h2>
+            <h2 className="text-[13px] font-medium">Ajustes</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close settings"
+            aria-label="Fechar ajustes"
             className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
           >
             <X size={14} />
@@ -199,19 +200,19 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           <section className="flex gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
             <ShieldCheck size={15} className="mt-0.5 shrink-0 text-positive" />
             <div className="space-y-1">
-              <p className="text-[12px] font-medium text-ink">Your key stays yours</p>
+              <p className="text-[12px] font-medium text-ink">Sua chave continua sua</p>
               <p className="text-[11.5px] leading-relaxed text-ink-faint">
-                Keys are stored in this browser and attached to the requests that need them, which
-                forward straight to the model provider. Nothing is written to a database, and no
-                other user of this deployment can see them. On a shared computer, turn off “Remember
-                on this device” below.
+                As chaves ficam guardadas neste navegador e são anexadas às requisições que precisam
+                delas, que seguem direto para o provedor do modelo. Nada é gravado em banco de
+                dados, e nenhum outro usuário desta instalação consegue vê-las. Em um computador
+                compartilhado, desligue “Lembrar neste dispositivo” abaixo.
               </p>
             </div>
           </section>
 
           <section className="space-y-2">
             <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-              Model providers
+              Provedores de modelo
             </h3>
 
             {loading ? (
@@ -253,11 +254,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           {local.length > 0 && (
             <section className="space-y-2">
               <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-                On your machine
+                Na sua máquina
               </h3>
               <p className="text-[11.5px] leading-relaxed text-ink-faint">
-                No key needed. Point these at the port your runtime listens on — the browser talks
-                to it directly, so nothing leaves your machine.
+                Não precisa de chave. Aponte para a porta em que seu runtime escuta — o navegador
+                fala com ele direto, então nada sai da sua máquina.
               </p>
               <ul className="space-y-2">
                 {local.map((provider) => (
@@ -278,7 +279,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
 
           <section className="space-y-2">
             <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-              Storage
+              Armazenamento
             </h3>
             <label className="flex items-start gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
               <input
@@ -288,15 +289,15 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                 className="mt-0.5 h-3.5 w-3.5 accent-[var(--color-brand,#6366f1)]"
               />
               <span className="space-y-0.5">
-                <span className="block text-[12px] text-ink">Remember on this device</span>
+                <span className="block text-[12px] text-ink">Lembrar neste dispositivo</span>
                 <span className="block text-[11.5px] leading-relaxed text-ink-faint">
-                  Off means keys are kept only until this tab closes.
+                  Desligado, as chaves duram só até esta aba fechar.
                 </span>
               </span>
             </label>
             <Button size="sm" variant="danger" onClick={forgetEverything}>
               <Trash2 size={12} />
-              Forget everything in this browser
+              Esquecer tudo neste navegador
             </Button>
           </section>
         </div>
@@ -335,11 +336,11 @@ function ProviderRow({
         <div className="flex items-center gap-2">
           <span className="text-[12.5px] font-medium text-ink">{provider.label}</span>
           {saved ? (
-            <Badge tone="positive">key saved · {maskKey(saved)}</Badge>
+            <Badge tone="positive">chave salva · {maskKey(saved)}</Badge>
           ) : provider.configured ? (
-            <Badge tone="brand">using this server’s key</Badge>
+            <Badge tone="brand">usando a chave deste servidor</Badge>
           ) : (
-            <Badge>no key</Badge>
+            <Badge>sem chave</Badge>
           )}
         </div>
         {source && (
@@ -364,10 +365,10 @@ function ProviderRow({
             onKeyDown={(event) => {
               if (event.key === 'Enter' && draft.trim()) onSave();
             }}
-            placeholder={saved ? 'Replace the saved key…' : 'Paste your API key'}
+            placeholder={saved ? 'Substituir a chave salva…' : 'Cole sua chave de API'}
             autoComplete="off"
             spellCheck={false}
-            aria-label={`${provider.label} API key`}
+            aria-label={`Chave de API — ${provider.label}`}
             className={cn(
               'h-8 w-full rounded-full border border-hairline bg-panel-raised pr-8 pl-3.5 font-mono text-[12px] text-ink',
               'placeholder:font-sans placeholder:text-ink-faint',
@@ -377,7 +378,7 @@ function ProviderRow({
           <button
             type="button"
             onClick={onReveal}
-            aria-label={revealed ? 'Hide key' : 'Show key'}
+            aria-label={revealed ? 'Ocultar chave' : 'Mostrar chave'}
             className="absolute top-1/2 right-1 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-ink-faint hover:text-ink"
           >
             {revealed ? <EyeOff size={12} /> : <Eye size={12} />}
@@ -385,7 +386,7 @@ function ProviderRow({
         </div>
 
         <Button size="sm" variant="primary" disabled={!draft.trim()} onClick={onSave}>
-          Save
+          Salvar
         </Button>
         {saved && (
           <>
@@ -395,9 +396,9 @@ function ProviderRow({
               ) : check.status === 'ok' ? (
                 <Check size={11} className="text-positive" />
               ) : null}
-              Test
+              Testar
             </Button>
-            <Button size="sm" variant="ghost" onClick={onRemove} aria-label="Remove saved key">
+            <Button size="sm" variant="ghost" onClick={onRemove} aria-label="Remover chave salva">
               <Trash2 size={12} />
             </Button>
           </>
@@ -405,7 +406,9 @@ function ProviderRow({
       </div>
 
       {check.status === 'ok' && (
-        <p className="text-[11px] text-positive">Working — this key can generate designs.</p>
+        <p className="text-[11px] text-positive">
+          Funcionando — esta chave consegue gerar designs.
+        </p>
       )}
       {check.status === 'failed' && (
         <p className="text-[11px] leading-relaxed text-critical">{check.message}</p>
@@ -445,7 +448,7 @@ function LocalRow({
           }}
           placeholder={saved ?? LOCAL_DEFAULTS[provider.id] ?? 'http://localhost:11434'}
           spellCheck={false}
-          aria-label={`${provider.label} server URL`}
+          aria-label={`URL do servidor — ${provider.label}`}
           className={cn(
             'h-8 min-w-0 flex-1 rounded-full border border-hairline bg-panel-raised px-3.5 font-mono text-[12px] text-ink',
             'placeholder:font-sans placeholder:text-ink-faint',
@@ -453,10 +456,15 @@ function LocalRow({
           )}
         />
         <Button size="sm" disabled={!draft.trim()} onClick={onSave}>
-          Save
+          Salvar
         </Button>
         {saved && (
-          <Button size="sm" variant="ghost" onClick={onRemove} aria-label="Reset server URL">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onRemove}
+            aria-label="Redefinir URL do servidor"
+          >
             <Trash2 size={12} />
           </Button>
         )}

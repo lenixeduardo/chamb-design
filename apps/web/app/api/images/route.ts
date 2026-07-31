@@ -52,11 +52,11 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as GenerateBody;
   } catch {
-    return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'corpo JSON inválido' }, { status: 400 });
   }
 
   if (!body.prompt?.trim()) {
-    return NextResponse.json({ error: 'prompt is required' }, { status: 400 });
+    return NextResponse.json({ error: 'o prompt é obrigatório' }, { status: 400 });
   }
 
   const envKey = ENV_KEYS[body.providerId];
@@ -67,8 +67,8 @@ export async function POST(request: Request) {
   if (envKey && !apiKey) {
     return NextResponse.json(
       {
-        error: `no API key for ${body.providerId}`,
-        hint: 'Add your key in Settings, or run a local image server and select it instead.',
+        error: `sem chave de API para ${body.providerId}`,
+        hint: 'Adicione sua chave em Ajustes, ou rode um servidor de imagens local e selecione-o.',
       },
       { status: 401 },
     );
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'unknown image provider' },
+      { error: error instanceof Error ? error.message : 'provedor de imagens desconhecido' },
       { status: 400 },
     );
   }

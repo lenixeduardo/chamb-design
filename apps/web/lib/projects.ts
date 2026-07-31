@@ -125,11 +125,18 @@ export function deleteProject(id: string): void {
  */
 export function createProject(name: string, folder?: string): DesignDocument {
   const base = createDocument({ name });
+  const rootId = base.pages[0]!.rootId;
+  const root = base.nodes[rootId]!;
+
   const document: DesignDocument = {
     ...base,
     tokens: chambTokens(),
     themes: chambThemes(),
     activeThemeId: 'chamb-light',
+    // Core names the root frame in English. It shows up in the layers panel, so
+    // it is interface as much as it is document — translate it here rather than
+    // in core, which stays language-neutral for anyone building on it.
+    nodes: { ...base.nodes, [rootId]: { ...root, name: 'Página' } },
   };
 
   saveProject(document, folder);
@@ -143,7 +150,7 @@ export function duplicateProject(id: string): DesignDocument | null {
   const copy: DesignDocument = {
     ...structuredClone(source),
     id: `doc_${Math.random().toString(36).slice(2, 12)}`,
-    name: `${source.name} copy`,
+    name: `${source.name} (cópia)`,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

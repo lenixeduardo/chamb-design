@@ -67,7 +67,7 @@ export function LayersPanel({ editor }: { editor: Editor }) {
   visit(page.rootId, 0);
 
   return (
-    <Panel title="Layers">
+    <Panel title="Camadas">
       <ul className="pb-2">
         {rows.map(({ node, depth }) => {
           const Icon = ICONS[node.type] ?? Square;
@@ -94,7 +94,7 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                     'grid h-4 w-4 shrink-0 place-items-center',
                     !hasChildren && 'invisible',
                   )}
-                  aria-label={collapsed.has(node.id) ? 'Expand' : 'Collapse'}
+                  aria-label={collapsed.has(node.id) ? 'Expandir' : 'Recolher'}
                 >
                   {collapsed.has(node.id) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
                 </button>
@@ -108,7 +108,7 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                     else editor.select(node.id);
                   }}
                   onDoubleClick={() => {
-                    const name = window.prompt('Rename layer', node.name);
+                    const name = window.prompt('Renomear camada', node.name);
                     if (name) editor.renameNode(node.id, name);
                   }}
                   className="min-w-0 flex-1 truncate text-left"
@@ -122,7 +122,7 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                     type="button"
                     onClick={() => editor.toggleVisibility(node.id)}
                     className="grid h-5 w-5 place-items-center rounded hover:bg-hairline"
-                    aria-label={node.hidden ? 'Show layer' : 'Hide layer'}
+                    aria-label={node.hidden ? 'Mostrar camada' : 'Ocultar camada'}
                   >
                     {node.hidden ? <EyeOff size={11} /> : <Eye size={11} />}
                   </button>
@@ -130,7 +130,7 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                     type="button"
                     onClick={() => editor.toggleLock(node.id)}
                     className="grid h-5 w-5 place-items-center rounded hover:bg-hairline"
-                    aria-label={node.locked ? 'Unlock layer' : 'Lock layer'}
+                    aria-label={node.locked ? 'Desbloquear camada' : 'Bloquear camada'}
                   >
                     {node.locked ? <Lock size={11} /> : <Unlock size={11} />}
                   </button>

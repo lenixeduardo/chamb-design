@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as VerifyBody;
   } catch {
-    return NextResponse.json({ ok: false, error: 'invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ ok: false, error: 'corpo JSON inválido' }, { status: 400 });
   }
 
   const envKey = ENV_KEYS[body.providerId];
@@ -40,7 +40,10 @@ export async function POST(request: Request) {
   const baseUrl = request.headers.get('x-od-base-url')?.trim();
 
   if (envKey && !apiKey) {
-    return NextResponse.json({ ok: false, error: 'no API key to check' }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: 'nenhuma chave de API para verificar' },
+      { status: 400 },
+    );
   }
 
   let provider;
@@ -51,14 +54,17 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : 'unknown provider' },
+      { ok: false, error: error instanceof Error ? error.message : 'provedor desconhecido' },
       { status: 400 },
     );
   }
 
   const model = body.model || provider.models[0]?.id;
   if (!model) {
-    return NextResponse.json({ ok: false, error: 'provider exposes no models' }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: 'o provedor não expõe nenhum modelo' },
+      { status: 400 },
+    );
   }
 
   // Two tokens is enough to prove the credential works; anything more is the

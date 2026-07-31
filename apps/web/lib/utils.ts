@@ -11,18 +11,20 @@ export function formatRelativeTime(iso: string): string {
   if (Number.isNaN(then)) return '';
 
   const seconds = Math.round((Date.now() - then) / 1000);
-  if (seconds < 60) return 'just now';
+  if (seconds < 60) return 'agora mesmo';
 
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return `há ${minutes} min`;
 
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `há ${hours} h`;
 
   const days = Math.round(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return `há ${days} d`;
 
-  return new Date(iso).toLocaleDateString();
+  // Pinned to pt-BR rather than the visitor's locale: the rest of the line is
+  // Portuguese, and a date in another format inside it reads as a bug.
+  return new Date(iso).toLocaleDateString('pt-BR');
 }
 
 export function formatBytes(bytes: number): string {

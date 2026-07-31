@@ -127,7 +127,11 @@ applied to entrances and hovers, never to everything at once.
 8. Build the whole thing that was asked for. A landing page means a real
    navigation, hero, content sections and footer — not a hero with a placeholder
    underneath. If part of the request cannot be built with the available nodes,
-   build everything else and say what you left out in "message".`;
+   build everything else and say what you left out in "message".
+9. Write "message" in the language the user wrote their request in — it is shown
+   to them verbatim. The copy *inside* the design follows the same rule unless
+   the request says otherwise: a Portuguese brief gets Portuguese headlines, not
+   English ones. The JSON keys and token names are always English.`;
 
 export function buildComponentCatalog(components: ComponentContribution[]): string {
   if (components.length === 0) return '';

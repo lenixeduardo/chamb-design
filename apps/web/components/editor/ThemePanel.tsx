@@ -36,9 +36,9 @@ export function ThemePanel({ editor }: { editor: Editor }) {
           value={namespace}
           onChange={setNamespace}
           options={[
-            { label: 'Color', value: 'color' as const },
-            { label: 'Space', value: 'spacing' as const },
-            { label: 'Radius', value: 'radius' as const },
+            { label: 'Cor', value: 'color' as const },
+            { label: 'Espaço', value: 'spacing' as const },
+            { label: 'Raio', value: 'radius' as const },
             { label: 'Type', value: 'size' as const },
           ]}
         />
@@ -85,7 +85,7 @@ export function ThemePanel({ editor }: { editor: Editor }) {
                       type="color"
                       value={String(token.value)}
                       onChange={(event) => setToken(token.path, event.target.value)}
-                      aria-label={`${token.path} colour`}
+                      aria-label={`Cor de ${token.path}`}
                       className="h-6 w-6 shrink-0 cursor-pointer rounded border border-hairline bg-transparent p-0"
                     />
                   )}

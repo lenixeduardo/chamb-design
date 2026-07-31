@@ -60,11 +60,11 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as AgentRequestBody;
   } catch {
-    return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'corpo JSON inválido' }, { status: 400 });
   }
 
   if (!body.prompt?.trim()) {
-    return NextResponse.json({ error: 'prompt is required' }, { status: 400 });
+    return NextResponse.json({ error: 'o prompt é obrigatório' }, { status: 400 });
   }
 
   // The document arrives from a client we do not control. Validate before
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   const integrity = validateDocumentIntegrity(body.document);
   if (!integrity.ok) {
     return NextResponse.json(
-      { error: 'document failed validation', details: integrity.errors.slice(0, 10) },
+      { error: 'o documento não passou na validação', details: integrity.errors.slice(0, 10) },
       { status: 422 },
     );
   }
@@ -87,8 +87,8 @@ export async function POST(request: Request) {
   if (envKey && !apiKey) {
     return NextResponse.json(
       {
-        error: `no API key for ${body.providerId}`,
-        hint: 'Add your key in Settings, or pick a local provider that runs on your machine.',
+        error: `sem chave de API para ${body.providerId}`,
+        hint: 'Adicione sua chave em Ajustes, ou escolha um provedor local que rode na sua máquina.',
       },
       { status: 401 },
     );
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'unknown provider' },
+      { error: error instanceof Error ? error.message : 'provedor desconhecido' },
       { status: 400 },
     );
   }

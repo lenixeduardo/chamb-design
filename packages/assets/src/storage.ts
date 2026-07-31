@@ -34,7 +34,7 @@ export interface StorageAdapter {
  */
 export class DataUriStorage implements StorageAdapter {
   readonly id = 'data-uri';
-  readonly label = 'Inline in the project (no server)';
+  readonly label = 'Embutido no projeto (sem servidor)';
 
   constructor(private readonly maxBytes = 2 * 1024 * 1024) {}
 
@@ -53,7 +53,7 @@ export class DataUriStorage implements StorageAdapter {
 /** Keeps bytes in memory and hands back blob-ish URLs. Used by tests. */
 export class MemoryStorage implements StorageAdapter {
   readonly id = 'memory';
-  readonly label = 'In memory';
+  readonly label = 'Em memória';
   readonly objects = new Map<string, { bytes: Uint8Array; mimeType: string }>();
 
   private counter = 0;
@@ -91,7 +91,7 @@ export class HttpStorage implements StorageAdapter {
       fieldName?: string;
     } = {},
   ) {
-    this.label = options.label ?? `Upload to ${endpoint}`;
+    this.label = options.label ?? `Upload para ${endpoint}`;
   }
 
   async put({ bytes, mimeType, name }: { bytes: Uint8Array; mimeType: string; name: string }) {

@@ -118,32 +118,32 @@ export function ExportDialog({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Export"
+        aria-label="Exportar"
         className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
       >
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
           <div className="flex items-center gap-2">
             <FileCode size={14} className="text-brand-soft" />
-            <h2 className="text-[13px] font-medium">Export</h2>
+            <h2 className="text-[13px] font-medium">Exportar</h2>
             {files.length > 0 && (
               <Badge>
-                {files.length} files · {formatBytes(totalBytes)}
+                {files.length} arquivos · {formatBytes(totalBytes)}
               </Badge>
             )}
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" onClick={copy} disabled={!active}>
               {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? 'Copied' : 'Copy file'}
+              {copied ? 'Copiado' : 'Copiar arquivo'}
             </Button>
             <Button size="sm" variant="primary" onClick={download} disabled={files.length === 0}>
               <Download size={12} />
-              Download
+              Baixar
             </Button>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close export"
+              aria-label="Fechar exportação"
               className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
             >
               <X size={14} />

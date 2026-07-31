@@ -85,7 +85,7 @@ export default function WorkspacePage() {
   const visible = folder ? projects.filter((project) => project.folder === folder) : projects;
 
   const handleCreate = () => {
-    const document = createProject('Untitled project', folder ?? undefined);
+    const document = createProject('Projeto sem título', folder ?? undefined);
     router.push(`/editor/${document.id}`);
   };
 
@@ -97,7 +97,7 @@ export default function WorkspacePage() {
           <div>
             <h1 className="text-[15px] font-semibold tracking-tight">Charm-Design</h1>
             <p className="text-[12px] text-ink-faint">
-              The design app that pairs speed with charm.
+              O app de design que une velocidade e charme.
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function WorkspacePage() {
             className="inline-flex h-9 items-center gap-2 rounded-full border border-hairline px-4 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
           >
             <Code2 size={14} />
-            Source
+            Código-fonte
           </a>
           <button
             type="button"
@@ -118,11 +118,11 @@ export default function WorkspacePage() {
             className="inline-flex h-9 items-center gap-2 rounded-full border border-hairline px-4 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
           >
             <Settings size={14} />
-            Settings
+            Ajustes
           </button>
           <Button variant="primary" onClick={handleCreate}>
             <Plus size={14} />
-            New project
+            Novo projeto
           </Button>
         </div>
       </header>
@@ -138,35 +138,36 @@ export default function WorkspacePage() {
 
         <div className="relative flex flex-wrap items-start justify-between gap-6">
           <div className="min-w-0 flex-1">
-            <Badge tone="brand">MIT licensed · self-hostable</Badge>
+            <Badge tone="brand">Licença MIT · self-hosted</Badge>
             {/* The one place the display serif earns its keep: a single large
                 line carrying the brand's voice, with the accent on the promise. */}
             <h2 className="display mt-4 max-w-[20ch] text-[40px] leading-[0.95]">
-              Describe an interface. Edit every pixel.{' '}
-              <span className="text-brand italic">Export clean code.</span>
+              Descreva uma interface. Ajuste cada pixel.{' '}
+              <span className="text-brand italic">Exporte código limpo.</span>
             </h2>
             <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-muted">
-              A visual canvas, a real design system and a model-agnostic AI layer that edits your
-              document through validated operations — so every AI change is reviewable and undoable.
-              Bring Claude, GPT, Gemini or a model running on your own machine.
+              Um canvas visual, um design system de verdade e uma camada de IA que edita seu
+              documento por operações validadas — então toda alteração da IA é revisável e
+              reversível. Traga o Claude, o GPT, o Gemini ou um modelo rodando na sua própria
+              máquina.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-2">
               <Button variant="primary" onClick={handleCreate}>
-                Start a blank project
+                Começar um projeto em branco
                 <ArrowRight size={14} />
               </Button>
               {ready === false && (
                 <Button onClick={() => setSettingsOpen(true)}>
                   <KeyRound size={14} />
-                  Add your API key
+                  Adicionar sua chave de API
                 </Button>
               )}
             </div>
             {ready === false && (
               <p className="mt-3 max-w-[62ch] text-[12px] leading-relaxed text-ink-faint">
-                No model is connected yet. Paste your own API key in Settings — it stays in this
-                browser — or point the app at Ollama or LM Studio running on your machine.
+                Nenhum modelo conectado ainda. Cole sua própria chave de API em Ajustes — ela fica
+                neste navegador — ou aponte o app para o Ollama ou o LM Studio na sua máquina.
               </p>
             )}
           </div>
@@ -186,7 +187,7 @@ export default function WorkspacePage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search projects…"
+            placeholder="Buscar projetos…"
             className="h-9 w-full rounded-full border border-hairline bg-panel pr-4 pl-9 text-[13px] text-ink transition-colors placeholder:text-ink-faint focus:border-brand focus:outline-none"
           />
         </div>
@@ -203,7 +204,7 @@ export default function WorkspacePage() {
                   : 'border-hairline text-ink-muted hover:text-ink',
               )}
             >
-              All
+              Todos
             </button>
             {folders.map((name) => (
               <button
@@ -242,17 +243,17 @@ export default function WorkspacePage() {
               // nothing to compete with, and the dino says "start" better than
               // a stack-of-layers glyph does.
               icon={query ? <Layers size={22} /> : <CharmDino role="mark" size={52} />}
-              title={query ? 'No projects match that search' : 'No projects yet'}
+              title={query ? 'Nenhum projeto corresponde à busca' : 'Nenhum projeto ainda'}
               description={
                 query
-                  ? 'Try a different name, or clear the search to see everything.'
-                  : 'Create a project and describe what you want to build — the AI will lay out the first draft on the canvas.'
+                  ? 'Tente outro nome, ou limpe a busca para ver tudo.'
+                  : 'Crie um projeto e descreva o que você quer construir — a IA monta o primeiro rascunho no canvas.'
               }
               action={
                 !query ? (
                   <Button variant="primary" onClick={handleCreate}>
                     <Plus size={14} />
-                    New project
+                    Novo projeto
                   </Button>
                 ) : undefined
               }
@@ -271,14 +272,14 @@ export default function WorkspacePage() {
                   </div>
                   <h3 className="mt-3 truncate text-[13px] font-medium">{project.name}</h3>
                   <p className="mt-1 text-[11px] text-ink-faint">
-                    {project.pageCount} page{project.pageCount === 1 ? '' : 's'} ·{' '}
-                    {project.nodeCount} layers · {formatRelativeTime(project.updatedAt)}
+                    {project.pageCount} página{project.pageCount === 1 ? '' : 's'} ·{' '}
+                    {project.nodeCount} camadas · {formatRelativeTime(project.updatedAt)}
                   </p>
                 </Link>
 
                 <div className="absolute top-3 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                   <IconButton
-                    label="Duplicate project"
+                    label="Duplicar projeto"
                     onClick={() => {
                       duplicateProject(project.id);
                       refresh();
@@ -287,10 +288,12 @@ export default function WorkspacePage() {
                     <Copy size={13} />
                   </IconButton>
                   <IconButton
-                    label="Delete project"
+                    label="Excluir projeto"
                     className="hover:text-critical"
                     onClick={() => {
-                      if (window.confirm(`Delete “${project.name}”? This cannot be undone.`)) {
+                      if (
+                        window.confirm(`Excluir “${project.name}”? Isso não pode ser desfeito.`)
+                      ) {
                         deleteProject(project.id);
                         refresh();
                       }
@@ -308,8 +311,8 @@ export default function WorkspacePage() {
       <footer className="mt-12 flex items-start gap-2 border-t border-hairline pt-5 text-[11px] text-ink-faint">
         <CharmDino role="mark" size={16} className="mt-px shrink-0 opacity-70" />
         <span>
-          Projects and API keys are stored in this browser. Nothing leaves your machine unless you
-          connect a cloud model provider or a sync server.
+          Projetos e chaves de API ficam neste navegador. Nada sai da sua máquina a não ser que você
+          conecte um provedor de modelo na nuvem ou um servidor de sincronização.
         </span>
       </footer>
 
