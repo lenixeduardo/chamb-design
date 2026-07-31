@@ -160,7 +160,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
   };
 
   const tools = (
-    <div className="flex shrink-0 items-center gap-2 rounded-full bg-panel-raised p-1 lg:gap-0.5 lg:p-0.5">
+    <div className="rounded-chip flex shrink-0 items-center gap-2 bg-panel-raised p-1 lg:gap-0.5 lg:p-0.5">
       <IconButton
         label="Ferramenta de seleção (V)"
         active={state.tool === 'select'}
@@ -283,7 +283,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
                   onClick={() => setLeftTab(tab)}
                   aria-pressed={leftTab === tab}
                   className={cn(
-                    'flex flex-1 items-center justify-center gap-1 rounded-full py-1.5 text-[10.5px] transition-colors',
+                    'flex flex-1 items-center justify-center gap-1 rounded-[9px] py-1.5 text-[10.5px] transition-colors',
                     leftTab === tab
                       ? 'bg-panel-raised text-ink'
                       : 'text-ink-faint hover:text-ink-muted',

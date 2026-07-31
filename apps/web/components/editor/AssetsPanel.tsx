@@ -99,7 +99,7 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
       >
         <div
           className={cn(
-            'rounded-xl border border-dashed px-3 py-5 text-center transition-colors',
+            'rounded-surface border border-dashed px-3 py-5 text-center transition-colors',
             dragging ? 'border-brand bg-brand/8' : 'border-hairline',
           )}
         >
@@ -399,14 +399,14 @@ function GenerateImage({
   // wrong tile.
   if (loading) {
     return (
-      <section className="space-y-2 rounded-xl border border-hairline bg-shell p-2.5">
+      <section className="rounded-surface space-y-2 border border-hairline bg-shell p-2.5">
         <Skeleton className="skeleton-line h-2.5 w-14" />
-        <Skeleton className="h-9 w-full rounded-full sm:h-7" />
+        <Skeleton className="rounded-chip h-9 w-full sm:h-7" />
         <div className="flex gap-1.5">
-          <Skeleton className="h-9 flex-1 rounded-full sm:h-7" />
-          <Skeleton className="h-9 flex-1 rounded-full sm:h-7" />
+          <Skeleton className="rounded-chip h-9 flex-1 sm:h-7" />
+          <Skeleton className="rounded-chip h-9 flex-1 sm:h-7" />
         </div>
-        <Skeleton className="h-9 w-full rounded-full sm:h-7" />
+        <Skeleton className="rounded-chip h-9 w-full sm:h-7" />
       </section>
     );
   }
@@ -414,7 +414,7 @@ function GenerateImage({
   if (providers.length === 0) return null;
 
   return (
-    <section className="space-y-2 rounded-xl border border-hairline bg-shell p-2.5">
+    <section className="rounded-surface space-y-2 border border-hairline bg-shell p-2.5">
       <h3 className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.12em] text-ink-faint uppercase">
         <Wand2 size={10} />
         Gerar

@@ -13,16 +13,31 @@ import { cn } from '@/lib/utils';
  * `@opendesign/components`, and it produces documents rather than React.
  */
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type ButtonSize = 'sm' | 'md';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
-// Pills, not rounded rectangles. The brand pairs full-radius controls with
-// large-radius surfaces and simply has no small step in between — mixing a 4px
-// button into it is the fastest way to lose the character.
+/**
+ * Rounded rectangles on a 16px radius, not pills.
+ *
+ * A full-radius control is only ever the right shape for a two-word label; give
+ * it a sentence — "Começar um projeto em branco" — and the caps turn into
+ * half-circles wide enough to read as decoration, and the label's optical
+ * margins stop matching the padding you set. 16px keeps a wide button a
+ * rectangle while still belonging to a system whose cards sit at 24 and whose
+ * sheets sit at 32. The pill survives where the shape carries meaning: status
+ * chips and filter tags.
+ *
+ * `outline` is the system's true secondary — a 1.5px brand rule on nothing,
+ * for the second choice on a marketing surface. It is deliberately *not* the
+ * `secondary` variant, which stays a neutral panel button: an editor toolbar
+ * with eight red-outlined buttons in it has no hierarchy left to spend.
+ */
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-brand text-white hover:bg-brand-soft active:scale-[0.98]',
   secondary:
     'bg-panel text-ink border border-hairline hover:border-hairline-strong hover:bg-panel-raised',
+  outline:
+    'border-[1.5px] border-brand-soft/55 text-brand-soft bg-transparent hover:border-brand-soft hover:bg-brand/8',
   ghost: 'text-ink-muted hover:text-ink hover:bg-panel-raised',
   danger: 'bg-critical/10 text-critical border border-critical/25 hover:bg-critical/16',
 };
@@ -33,8 +48,15 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 // pointer rather than picking one compromise height is what keeps the editor
 // chrome tight without making the phone build a game of darts.
 const BUTTON_SIZES: Record<ButtonSize, string> = {
-  sm: 'h-9 px-3.5 text-[12.5px] gap-1.5 rounded-full sm:h-7 sm:px-3 sm:text-[12px]',
-  md: 'h-11 px-5 text-[14px] gap-2 rounded-full sm:h-9 sm:px-4 sm:text-[13px]',
+  // Small controls take a smaller radius: 16px on a 28px-tall button is a
+  // pill by another name, and the scale has to stay proportional to read as
+  // one system rather than as one number applied everywhere.
+  sm: 'h-9 px-3.5 text-[12.5px] gap-1.5 rounded-chip sm:h-7 sm:px-3 sm:text-[12px]',
+  md: 'h-11 px-5 text-[14px] gap-2 rounded-control sm:h-9 sm:px-4 sm:text-[13px]',
+  // The marketing size, at the reference's proportions: generous horizontal
+  // padding against a tall box, and type big enough to be the thing you read
+  // after the headline.
+  lg: 'h-13 px-8 text-[16px] gap-2.5 rounded-control sm:h-12 sm:text-[15px]',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -96,7 +118,7 @@ export function IconButton({ active, label, className, ...props }: IconButtonPro
       aria-pressed={active}
       {...props}
       className={cn(
-        'tap-target relative inline-flex h-9 w-9 items-center justify-center rounded-full',
+        'tap-target relative inline-flex h-9 w-9 items-center justify-center rounded-chip',
         'transition-colors duration-150 sm:h-8 sm:w-8',
         'disabled:pointer-events-none disabled:opacity-35',
         active
@@ -193,7 +215,7 @@ export function TextInput({ className, ...props }: InputHTMLAttributes<HTMLInput
     <input
       {...props}
       className={cn(
-        'h-9 w-full rounded-full border border-hairline bg-panel-raised px-3.5 text-[16px] text-ink',
+        'h-9 w-full rounded-chip border border-hairline bg-panel-raised px-3.5 text-[16px] text-ink',
         // 16px on touch, 12px from `sm` up. Anything under 16px makes iOS Safari
         // zoom the viewport on focus and never zoom back out, which strands the
         // user in a scaled-up editor with no obvious way home.
@@ -226,7 +248,7 @@ export function Select({
         // Tighter horizontal padding than the other pills on purpose: a native
         // select reserves room for its own arrow, and the provider names are
         // long enough that generous padding clips them.
-        'h-9 w-full min-w-0 rounded-full border border-hairline bg-panel-raised pr-1 pl-2.5 text-[16px] text-ink',
+        'h-9 w-full min-w-0 rounded-chip border border-hairline bg-panel-raised pr-1 pl-2.5 text-[16px] text-ink',
         'sm:h-7 sm:pl-2 sm:text-[12px]',
         'focus:border-brand focus:outline-none',
         className,
@@ -251,7 +273,7 @@ export function SegmentedControl<T extends string>({
   options: { label: ReactNode; value: T; title?: string }[];
 }) {
   return (
-    <div className="inline-flex rounded-full bg-panel-raised p-0.5">
+    <div className="inline-flex rounded-chip bg-panel-raised p-0.5">
       {options.map((option) => (
         <button
           key={option.value}
@@ -259,7 +281,7 @@ export function SegmentedControl<T extends string>({
           title={option.title}
           onClick={() => onChange(option.value)}
           className={cn(
-            'inline-flex h-8 min-w-9 items-center justify-center rounded-full px-3 text-[12px] font-medium',
+            'inline-flex h-8 min-w-9 items-center justify-center rounded-[8px] px-3 text-[12px] font-medium',
             'sm:h-6 sm:min-w-7 sm:px-2.5 sm:text-[11px]',
             'transition-colors duration-150',
             // The reference's segmented control inverts the active item to ink

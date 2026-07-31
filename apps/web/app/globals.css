@@ -44,11 +44,42 @@
   --color-caution: #b26a12;
   --color-critical: #c42b2b;
 
+  /**
+   * Type.
+   *
+   * The display face is Fraunces, a variable serif with an optical-size axis —
+   * which is the whole reason it is here rather than a static serif. A display
+   * cut wants tight joins and fine hairlines at 64px and neither at 24px, and
+   * `opsz` is what lets one family do both without shipping two files. Set
+   * through `font-optical-sizing: auto` below, so the axis tracks the rendered
+   * size instead of being frozen at one value.
+   *
+   * `--font-script` carries the wordmark and nothing else. A script face is a
+   * signature: used once it reads as a logo, used twice it reads as a theme.
+   */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-script: 'Yellowtail', 'Brush Script MT', cursive;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
-  --radius-panel: 14px;
+  /**
+   * Radius.
+   *
+   * Named by role rather than by size, because the whole point of the scale is
+   * that a control and the card it sits in are *related*, not that they happen
+   * to be 16 and 24. Controls land on 16px: soft enough to belong to a rounded
+   * system, square enough that a wide button still reads as a rectangle rather
+   * than as a lozenge — which is what a full-radius pill becomes once the label
+   * is longer than two words.
+   *
+   * `--radius-pill` survives for the things that genuinely are pills: status
+   * chips and filter tags, where the shape is the affordance.
+   */
+  --radius-chip: 10px;
+  --radius-control: 16px;
+  --radius-surface: 24px;
+  --radius-sheet: 32px;
+  --radius-pill: 999px;
 }
 
 :root {
@@ -84,9 +115,23 @@ body {
   height: 100%;
 }
 
+/**
+ * The page ground.
+ *
+ * A single vertical gradient across the two cream values the brand already
+ * owns — shell at the top, the raised-panel tone at the bottom. It reads as
+ * light falling on paper rather than as a colour, which is exactly the amount
+ * of gradient a working tool can carry: enough that a long page has a top and
+ * a bottom, not enough to compete with a canvas.
+ *
+ * Fixed attachment so the ground stays put while content scrolls over it —
+ * a gradient that scrolls with the page repeats its own seam at every screen
+ * height.
+ */
 body {
   margin: 0;
-  background: var(--color-shell);
+  background: linear-gradient(180deg, var(--color-shell) 0%, var(--color-panel-raised) 100%);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -112,13 +157,43 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/** Display type. The personality of the brand lives in the serif, so it is a
- * class rather than a heading default — headings in dense editor chrome stay
- * sans, and only the deliberate moments switch. */
+/**
+ * Display type.
+ *
+ * The personality of the brand lives in the serif, so it is a class rather
+ * than a heading default — headings in dense editor chrome stay sans, and only
+ * the deliberate moments switch.
+ *
+ * Weight 500 rather than 400: Fraunces at display size has enough contrast
+ * between stem and hairline that the regular weight goes thin and silvery on a
+ * cream ground. The line-height is 1.05 because a display line is set to be
+ * *read as a shape* — the leading that suits a paragraph leaves a two-line
+ * headline looking like two unrelated sentences.
+ */
 .display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 500;
+  line-height: 1.05;
   letter-spacing: -0.02em;
+  /* Let the browser drive Fraunces' `opsz` axis from the rendered size: the
+     same class then works at 64px in the hero and 24px in a dialog without a
+     second set of variation settings. */
+  font-optical-sizing: auto;
+}
+
+/**
+ * The wordmark.
+ *
+ * One script line, at the one place the product says its own name. It sets
+ * slightly large and with a touch of leading because Yellowtail's ascenders
+ * and descenders are long — at the size of the surrounding UI text it would
+ * collide with whatever sits above it.
+ */
+.wordmark {
+  font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
 }
 
 /* Panels sit on a subtle glass surface — restrained, not decorative. */

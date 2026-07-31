@@ -227,7 +227,7 @@ export function Overlay({
             'lift flex w-full flex-col overflow-hidden border border-hairline bg-panel outline-none',
             // Phone: a sheet that stops short of the status bar, so the surface
             // behind it stays visible as context. Tablet and up: a centred card.
-            'rounded-t-[28px] sm:rounded-[28px]',
+            'rounded-t-sheet sm:rounded-sheet',
             SIZES[size],
             leaving
               ? 'animate-sheet-out sm:animate-dialog-out'
@@ -276,7 +276,7 @@ export function OverlayHeader({
           type="button"
           onClick={close}
           aria-label={`Fechar ${title.toLowerCase()}`}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-8 sm:w-8"
+          className="rounded-chip grid h-9 w-9 shrink-0 place-items-center text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-8 sm:w-8"
         >
           <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden fill="none">
             <path

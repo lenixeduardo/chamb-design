@@ -33,9 +33,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             handshakes in series before any type can render. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Fraunces is requested as a variable font across its optical-size
+            axis — one file that covers the 64px hero and the 24px dialog
+            heading, rather than two static cuts that only look right at one
+            size each. Yellowtail is the wordmark and is used nowhere else. */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@300;400;500;600;700&family=Yellowtail&display=swap"
         />
       </head>
       <body>{children}</body>

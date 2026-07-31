@@ -325,12 +325,12 @@ export function Canvas({ editor }: { editor: Editor }) {
           The keyboard shortcuts and ⌘-wheel cover this on a desktop, but a
           phone has neither — and the zoom readout was already here, sitting
           inert in the corner where the buttons belong. */}
-      <div className="absolute right-3 bottom-3 flex items-center gap-0.5 rounded-full border border-hairline bg-panel/90 p-1 backdrop-blur">
+      <div className="rounded-control absolute right-3 bottom-3 flex items-center gap-0.5 border border-hairline bg-panel/90 p-1 backdrop-blur">
         <button
           type="button"
           aria-label="Reduzir zoom"
           onClick={() => editor.zoomBy(1 / 1.2, viewportCentre())}
-          className="grid h-9 w-9 place-items-center rounded-full text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
+          className="grid h-9 w-9 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
         >
           <Minus size={13} />
         </button>
@@ -338,7 +338,7 @@ export function Canvas({ editor }: { editor: Editor }) {
           type="button"
           aria-label="Restaurar zoom para 100%"
           onClick={() => editor.setZoom(1, viewportCentre())}
-          className="min-w-[46px] rounded-full px-1 font-mono text-[11px] text-ink-faint transition-colors hover:text-ink"
+          className="min-w-[46px] rounded-[10px] px-1 font-mono text-[11px] text-ink-faint transition-colors hover:text-ink"
         >
           {Math.round(zoom * 100)}%
         </button>
@@ -346,7 +346,7 @@ export function Canvas({ editor }: { editor: Editor }) {
           type="button"
           aria-label="Aumentar zoom"
           onClick={() => editor.zoomBy(1.2, viewportCentre())}
-          className="grid h-9 w-9 place-items-center rounded-full text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
+          className="grid h-9 w-9 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
         >
           <Plus size={13} />
         </button>
@@ -354,7 +354,7 @@ export function Canvas({ editor }: { editor: Editor }) {
           type="button"
           aria-label="Ajustar a página à tela"
           onClick={fit}
-          className="grid h-9 w-9 place-items-center rounded-full text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
+          className="grid h-9 w-9 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
         >
           <Maximize2 size={12} />
         </button>

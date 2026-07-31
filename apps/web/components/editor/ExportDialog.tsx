@@ -127,7 +127,7 @@ export function ExportDialog({
 
       <div className="touch-pane flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline px-3 py-2 sm:px-4">
         {exporters.length === 0
-          ? [0, 1, 2].map((key) => <Skeleton key={key} className="h-8 w-20 rounded-full" />)
+          ? [0, 1, 2].map((key) => <Skeleton key={key} className="rounded-chip h-8 w-20" />)
           : exporters.map((exporter) => (
               <button
                 key={exporter.id}
@@ -136,7 +136,7 @@ export function ExportDialog({
                 title={exporter.description}
                 aria-pressed={targetId === exporter.id}
                 className={cn(
-                  'h-8 shrink-0 rounded-full px-3.5 text-[12px] transition-colors sm:h-7 sm:px-3',
+                  'h-8 shrink-0 rounded-chip px-3.5 text-[12px] transition-colors sm:h-7 sm:px-3',
                   targetId === exporter.id
                     ? 'bg-brand/14 text-brand-soft'
                     : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
@@ -157,7 +157,7 @@ export function ExportDialog({
             value={activePath ?? ''}
             onChange={(event) => setActivePath(event.target.value)}
             disabled={files.length === 0}
-            className="h-9 w-full min-w-0 rounded-full border border-hairline bg-panel-raised px-3 font-mono text-[12px] text-ink focus:border-brand focus:outline-none disabled:opacity-50"
+            className="rounded-chip h-9 w-full min-w-0 border border-hairline bg-panel-raised px-3 font-mono text-[12px] text-ink focus:border-brand focus:outline-none disabled:opacity-50"
           >
             {files.length === 0 ? (
               <option value="">{generating ? 'Gerando…' : 'Nenhum arquivo'}</option>

@@ -74,10 +74,10 @@ export function ProjectCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
       aria-hidden
-      className="animate-fade-up stagger-item rounded-2xl border border-hairline bg-panel p-4"
+      className="animate-fade-up stagger-item rounded-surface border border-hairline bg-panel p-4"
       style={{ '--i': index } as CSSProperties}
     >
-      <Skeleton className="h-16 w-full rounded-xl" />
+      <Skeleton className="rounded-control h-16 w-full" />
       <Skeleton className="skeleton-line mt-3.5 h-3 w-1/2" />
       <Skeleton className="skeleton-line mt-2 h-2.5 w-3/4" />
     </div>
@@ -102,31 +102,31 @@ export function EditorSkeleton() {
           <Skeleton className="skeleton-line h-3 w-28" />
         </div>
         <div className="hidden items-center gap-2 lg:flex">
-          <Skeleton className="h-8 w-36 rounded-full" />
-          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="rounded-chip h-8 w-36" />
+          <Skeleton className="rounded-chip h-8 w-24" />
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <Skeleton className="h-8 w-20 rounded-full" />
+          <Skeleton className="rounded-chip h-8 w-8" />
+          <Skeleton className="rounded-chip h-8 w-20" />
         </div>
       </div>
 
       <div className="flex min-h-0 flex-1">
         <div className="hidden w-72 shrink-0 flex-col gap-2 border-r border-hairline bg-panel p-3 lg:flex">
-          <Skeleton className="h-8 w-full rounded-full" />
+          <Skeleton className="rounded-chip h-8 w-full" />
           {Array.from({ length: 7 }, (_, index) => (
             <Skeleton key={index} className="h-7 w-full rounded-md" />
           ))}
         </div>
 
         <div className="canvas-surface grid min-h-0 flex-1 place-items-center p-6">
-          <Skeleton className="h-full max-h-[520px] w-full max-w-[680px] rounded-xl" />
+          <Skeleton className="rounded-surface h-full max-h-[520px] w-full max-w-[680px]" />
         </div>
 
         <div className="hidden w-72 shrink-0 flex-col gap-3 border-l border-hairline bg-panel p-3 lg:flex">
           <Skeleton className="skeleton-line h-3 w-24" />
           {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-7 w-full rounded-full" />
+            <Skeleton key={index} className="rounded-chip h-7 w-full" />
           ))}
         </div>
       </div>
@@ -167,14 +167,14 @@ export function ProviderRowSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <LoadingRegion label="Carregando provedores de modelo" className="space-y-2">
       {Array.from({ length: rows }, (_, index) => (
-        <div key={index} className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
+        <div key={index} className="rounded-surface space-y-2 border border-hairline bg-panel p-3">
           <div className="flex items-center gap-2">
             <Skeleton className="skeleton-line h-3 w-24" />
             <Skeleton className="h-4 w-16 rounded-full" />
           </div>
           <div className="flex gap-1.5">
-            <Skeleton className="h-9 flex-1 rounded-full" />
-            <Skeleton className="h-9 w-20 rounded-full" />
+            <Skeleton className="rounded-chip h-9 flex-1" />
+            <Skeleton className="rounded-chip h-9 w-20" />
           </div>
         </div>
       ))}
@@ -186,8 +186,8 @@ export function ProviderRowSkeleton({ rows = 3 }: { rows?: number }) {
 export function ModelPickerSkeleton() {
   return (
     <div aria-hidden className="flex gap-1.5">
-      <Skeleton className="h-8 flex-1 rounded-full" />
-      <Skeleton className="h-8 flex-1 rounded-full" />
+      <Skeleton className="rounded-chip h-8 flex-1" />
+      <Skeleton className="rounded-chip h-8 flex-1" />
     </div>
   );
 }

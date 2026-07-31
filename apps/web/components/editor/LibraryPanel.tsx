@@ -75,7 +75,7 @@ export function LibraryPanel({
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar blocos…"
             aria-label="Buscar blocos"
-            className="h-9 w-full rounded-full border border-hairline bg-shell pr-3 pl-8 text-[16px] transition-colors placeholder:text-ink-faint focus:border-brand focus:outline-none sm:h-7 sm:rounded-md sm:pl-7 sm:text-[12px]"
+            className="rounded-chip h-9 w-full border border-hairline bg-shell pr-3 pl-8 text-[16px] transition-colors placeholder:text-ink-faint focus:border-brand focus:outline-none sm:h-7 sm:rounded-md sm:pl-7 sm:text-[12px]"
           />
         </div>
 

@@ -303,7 +303,7 @@ export function ChatSidebar({
             onClick={() => setSettingsOpen(true)}
             aria-label="Chaves de API e ajustes"
             title="Chaves de API e ajustes"
-            className="tap-target relative grid h-8 w-8 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink sm:h-6 sm:w-6 sm:rounded-md"
+            className="tap-target rounded-chip relative grid h-8 w-8 place-items-center text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink sm:h-6 sm:w-6 sm:rounded-md"
           >
             <KeyRound size={13} />
           </button>
@@ -312,7 +312,7 @@ export function ChatSidebar({
               type="button"
               onClick={onClose}
               aria-label="Fechar o assistente"
-              className="tap-target relative grid h-8 w-8 place-items-center rounded-full text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink"
+              className="tap-target rounded-chip relative grid h-8 w-8 place-items-center text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink"
             >
               <ChevronDown size={16} />
             </button>
@@ -336,7 +336,7 @@ export function ChatSidebar({
             </p>
 
             {noProviderReady && (
-              <div className="space-y-2 rounded-2xl border border-brand/25 bg-brand/8 px-3 py-2.5">
+              <div className="rounded-control space-y-2 border border-brand/25 bg-brand/8 px-3 py-2.5">
                 <p className="text-[11.5px] leading-relaxed text-ink-muted">
                   Adicione uma chave de API para começar a gerar. Ela fica neste navegador e é
                   enviada só para o provedor que você escolher.
@@ -354,7 +354,7 @@ export function ChatSidebar({
                   <button
                     type="button"
                     onClick={() => submit(suggestion)}
-                    className="w-full rounded-2xl border border-hairline bg-panel-raised px-3 py-2 text-left text-[11.5px] text-ink-muted transition-colors hover:border-brand/40 hover:text-ink"
+                    className="rounded-control w-full border border-hairline bg-panel-raised px-3 py-2.5 text-left text-[11.5px] text-ink-muted transition-colors hover:border-brand/40 hover:bg-panel hover:text-ink"
                   >
                     {suggestion}
                   </button>
@@ -367,7 +367,7 @@ export function ChatSidebar({
         {turns.map((turn) => (
           <article key={turn.id} className="animate-fade-up space-y-1.5">
             {turn.role === 'user' ? (
-              <div className="rounded-2xl rounded-br-md bg-brand/10 px-3 py-2">
+              <div className="rounded-control rounded-br-md bg-brand/10 px-3 py-2">
                 {turn.attachmentCount ? (
                   <p className="mb-1 flex items-center gap-1 text-[10.5px] text-brand-soft">
                     <ImagePlus size={10} />
@@ -461,7 +461,7 @@ export function ChatSidebar({
         )}
 
         {activeProvider && !activeProvider.configured && !isLocalProvider(activeProvider.id) && (
-          <div className="space-y-1.5 rounded-2xl border border-caution/25 bg-caution/8 px-3 py-2.5">
+          <div className="rounded-control space-y-1.5 border border-caution/25 bg-caution/8 px-3 py-2.5">
             <p className="text-[11px] leading-relaxed text-caution">
               {activeProvider.label} precisa de uma chave de API. Adicione a sua — ela fica neste
               navegador — ou troque para Ollama / LM Studio e rode um modelo na sua máquina.
@@ -533,7 +533,7 @@ export function ChatSidebar({
                   : 'Descreva uma página, uma seção ou uma mudança…'
               }
               className={cn(
-                'w-full resize-none rounded-2xl border border-hairline bg-panel-raised py-2.5 pr-11 pl-3',
+                'w-full resize-none rounded-control border border-hairline bg-panel-raised py-2.5 pr-11 pl-3',
                 // 16px on touch so iOS Safari does not zoom the whole editor in
                 // when the composer takes focus.
                 'text-[16px] leading-relaxed text-ink placeholder:text-ink-faint sm:text-[12px]',
@@ -562,7 +562,7 @@ export function ChatSidebar({
                   : 'Este modelo pode não aceitar imagens'
               }
               onClick={() => imageInputRef.current?.click()}
-              className="tap-target absolute bottom-1.5 left-1.5 grid h-8 w-8 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
+              className="tap-target rounded-chip absolute bottom-1.5 left-1.5 grid h-8 w-8 place-items-center text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
             >
               <ImagePlus size={13} />
             </button>
@@ -582,7 +582,7 @@ export function ChatSidebar({
                 type="submit"
                 disabled={!input.trim()}
                 aria-label="Enviar"
-                className="tap-target absolute right-1.5 bottom-1.5 grid h-8 w-8 place-items-center rounded-full bg-brand text-white transition-[opacity,transform] active:scale-95 disabled:opacity-30 sm:h-7 sm:w-7"
+                className="tap-target rounded-chip absolute right-1.5 bottom-1.5 grid h-8 w-8 place-items-center bg-brand text-white transition-[opacity,transform] active:scale-95 disabled:opacity-30 sm:h-7 sm:w-7"
               >
                 <ArrowUp size={14} />
               </button>

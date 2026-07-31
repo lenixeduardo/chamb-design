@@ -152,7 +152,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       />
 
       <div className="touch-pane min-h-0 flex-1 space-y-6 overflow-y-auto p-4 pb-safe">
-        <section className="flex gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
+        <section className="rounded-surface flex gap-2.5 border border-hairline bg-panel-raised p-3">
           <ShieldCheck size={15} className="mt-0.5 shrink-0 text-positive" />
           <div className="space-y-1">
             <p className="text-[12px] font-medium text-ink">Sua chave continua sua</p>
@@ -229,7 +229,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
             Armazenamento
           </h3>
-          <label className="flex items-start gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
+          <label className="rounded-surface flex items-start gap-2.5 border border-hairline bg-panel-raised p-3">
             <input
               type="checkbox"
               checked={remember}
@@ -278,7 +278,7 @@ function ProviderRow({
   const source = KEY_SOURCES[credentialId(provider.id)];
 
   return (
-    <li className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
+    <li className="rounded-surface space-y-2 border border-hairline bg-panel p-3">
       {/* Wraps rather than compressing: at 390px the name, the status badge and
           the "where to get a key" link do not share a line, and squeezing them
           broke provider names across two lines mid-parenthesis. */}
@@ -325,7 +325,7 @@ function ProviderRow({
             spellCheck={false}
             aria-label={`Chave de API — ${provider.label}`}
             className={cn(
-              'h-10 w-full rounded-full border border-hairline bg-panel-raised pr-10 pl-3.5 font-mono text-[16px] text-ink',
+              'h-10 w-full rounded-chip border border-hairline bg-panel-raised pr-10 pl-3.5 font-mono text-[16px] text-ink',
               'sm:h-8 sm:pr-8 sm:text-[12px]',
               'placeholder:font-sans placeholder:text-ink-faint',
               'transition-colors focus:border-brand focus:outline-none',
@@ -336,7 +336,7 @@ function ProviderRow({
             onClick={onReveal}
             aria-label={revealed ? 'Ocultar chave' : 'Mostrar chave'}
             aria-pressed={revealed}
-            className="tap-target absolute top-1/2 right-1.5 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-ink-faint hover:text-ink sm:right-1 sm:h-6 sm:w-6 sm:rounded-md"
+            className="tap-target absolute top-1/2 right-1.5 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-[9px] text-ink-faint hover:text-ink sm:right-1 sm:h-6 sm:w-6 sm:rounded-md"
           >
             {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
           </button>
@@ -392,7 +392,7 @@ function LocalRow({
   const saved = getCredential(provider.id)?.baseUrl;
 
   return (
-    <li className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
+    <li className="rounded-surface space-y-2 border border-hairline bg-panel p-3">
       <div className="flex items-center gap-2">
         <Cpu size={12} className="text-positive" />
         <span className="text-[12.5px] font-medium text-ink">{provider.label}</span>
@@ -412,7 +412,7 @@ function LocalRow({
           autoCorrect="off"
           aria-label={`URL do servidor — ${provider.label}`}
           className={cn(
-            'h-10 w-full min-w-0 rounded-full border border-hairline bg-panel-raised px-3.5 font-mono text-[16px] text-ink',
+            'h-10 w-full min-w-0 rounded-chip border border-hairline bg-panel-raised px-3.5 font-mono text-[16px] text-ink',
             'sm:h-8 sm:w-auto sm:flex-1 sm:text-[12px]',
             'placeholder:font-sans placeholder:text-ink-faint',
             'transition-colors focus:border-brand focus:outline-none',
