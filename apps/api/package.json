@@ -2,7 +2,7 @@
   "name": "@opendesign/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Optional sync, collaboration and persistence server for OpenDesign",
+  "description": "Optional sync, collaboration and persistence server for Charm-Design",
   "license": "MIT",
   "scripts": {
     "build": "prisma generate && nest build",

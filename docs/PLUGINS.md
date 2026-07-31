@@ -1,6 +1,6 @@
 # Writing plugins
 
-Everything OpenDesign ships is a plugin. The block library, the six export
+Everything Charm-Design ships is a plugin. The block library, the six export
 targets and the seven model providers all register through the API below —
 there is no privileged internal path, which is the only way to be sure the API
 is actually sufficient.

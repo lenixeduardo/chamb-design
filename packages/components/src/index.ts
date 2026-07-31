@@ -57,7 +57,7 @@ export const BUILTIN_COMPONENTS: ComponentContribution[] = [
  */
 export const componentsPlugin: OpenDesignPlugin = definePlugin({
   id: 'opendesign.components',
-  name: 'OpenDesign component library',
+  name: 'Charm-Design component library',
   version: '0.1.0',
   description: 'Buttons, heroes, pricing, FAQ, forms, dashboards, charts and CRM blocks.',
   activate(context) {

@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Image as ImageIcon, Loader2, Sparkles, Trash2, Upload, Wand2 } from 'lucide-react';
 import type { Asset } from '@opendesign/core';
 import { findOrphanAssets } from '@opendesign/assets';
 import { useDocument, type Editor } from '@opendesign/editor';
 import { getIngestor, imageFilesFrom } from '@/lib/assets';
+import { getCredential, hasKey, subscribeToSettings } from '@/lib/settings';
 import { Badge, Button, EmptyState, Panel, Select, TextInput } from '@/components/ui/primitives';
 import { cn, formatBytes } from '@/lib/utils';
 
@@ -39,7 +40,7 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
     async (files: File[]) => {
       if (files.length === 0) return;
       setError(null);
-      setBusy(`Adding ${files.length} file${files.length === 1 ? '' : 's'}…`);
+      setBusy(`Adicionando ${files.length} arquivo${files.length === 1 ? '' : 's'}…`);
 
       try {
         for (const file of files) await editor.addAssetFromFile(file);
@@ -68,7 +69,7 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
   const orphans = new Set(findOrphanAssets(document).map((asset) => asset.id));
 
   return (
-    <Panel title="Assets">
+    <Panel title="Recursos">
       <div
         className="space-y-3 px-3 pb-6"
         onDragOver={(event) => {
@@ -90,7 +91,7 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
         >
           <Upload size={16} className="mx-auto text-ink-faint" />
           <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
-            Drop images here, or paste a screenshot
+            Solte imagens aqui, ou cole um print
           </p>
           <Button
             size="sm"
@@ -98,7 +99,7 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
             onClick={() => fileInputRef.current?.click()}
             disabled={Boolean(busy)}
           >
-            Choose files
+            Escolher arquivos
           </Button>
           <input
             ref={fileInputRef}
@@ -132,8 +133,8 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
         {document.assets.length === 0 ? (
           <EmptyState
             icon={<ImageIcon size={18} />}
-            title="No assets yet"
-            description="Everything you add here can be dropped on the canvas or used to replace an existing image."
+            title="Nenhum recurso ainda"
+            description="Tudo que você adicionar aqui pode ser solto no canvas ou usado para substituir uma imagem existente."
           />
         ) : (
           <ul className="grid grid-cols-2 gap-2">
@@ -146,7 +147,7 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
                 onReplace={() => editor.replaceImageSource(asset.id)}
                 onRemove={() =>
                   editor.store.transact([{ type: 'removeAsset', assetId: asset.id }], {
-                    label: `Remove ${asset.name}`,
+                    label: `Remover ${asset.name}`,
                   })
                 }
               />
@@ -176,7 +177,7 @@ function AssetTile({
       <button
         type="button"
         onClick={onPlace}
-        title={`Place "${asset.name}" on the canvas`}
+        title={`Colocar "${asset.name}" no canvas`}
         className="block w-full"
       >
         <span className="grid h-20 place-items-center overflow-hidden bg-panel-raised">
@@ -203,7 +204,7 @@ function AssetTile({
 
       {unused && (
         <span className="absolute top-1 left-1">
-          <Badge tone="caution">unused</Badge>
+          <Badge tone="caution">sem uso</Badge>
         </span>
       )}
 
@@ -211,7 +212,7 @@ function AssetTile({
         <button
           type="button"
           onClick={onReplace}
-          title="Replace the selected image with this asset"
+          title="Substituir a imagem selecionada por este recurso"
           className="grid h-6 w-6 place-items-center rounded bg-shell/90 text-ink-muted hover:text-ink"
         >
           <ImageIcon size={11} />
@@ -219,7 +220,7 @@ function AssetTile({
         <button
           type="button"
           onClick={onRemove}
-          title="Remove from the library"
+          title="Remover da biblioteca"
           className="grid h-6 w-6 place-items-center rounded bg-shell/90 text-ink-muted hover:text-critical"
         >
           <Trash2 size={11} />
@@ -242,27 +243,47 @@ function GenerateImage({
   editor: Editor;
   onError: (message: string | null) => void;
 }) {
-  const [providers, setProviders] = useState<ImageProviderInfo[]>([]);
+  const [served, setServed] = useState<ImageProviderInfo[]>([]);
   const [providerId, setProviderId] = useState('');
   const [model, setModel] = useState('');
   const [size, setSize] = useState('1024x1024');
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [credentialVersion, setCredentialVersion] = useState(0);
+  const pickedDefault = useRef(false);
+
+  useEffect(() => subscribeToSettings(() => setCredentialVersion((n) => n + 1)), []);
 
   useEffect(() => {
     fetch('/api/images')
       .then((response) => response.json())
-      .then((data: { providers: ImageProviderInfo[] }) => {
-        setProviders(data.providers);
-        const usable = data.providers.find((p) => p.configured) ?? data.providers[0];
-        if (usable) {
-          setProviderId(usable.id);
-          setModel(usable.models[0]?.id ?? '');
-          setSize(usable.models[0]?.sizes?.[0] ?? '1024x1024');
-        }
-      })
-      .catch(() => setProviders([]));
+      .then((data: { providers: ImageProviderInfo[] }) => setServed(data.providers ?? []))
+      .catch(() => setServed([]));
   }, []);
+
+  // An image provider reuses the text provider's key, so a user who added an
+  // OpenAI key for the assistant can generate images with it too.
+  const providers = useMemo(
+    () =>
+      served.map((provider) => ({
+        ...provider,
+        configured: provider.configured || hasKey(provider.id),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keys are read imperatively
+    [served, credentialVersion],
+  );
+
+  // Chosen once; after that the picker is the user's, not ours to reset.
+  useEffect(() => {
+    if (pickedDefault.current || providers.length === 0) return;
+    pickedDefault.current = true;
+
+    const usable = providers.find((provider) => provider.configured) ?? providers[0];
+    if (!usable) return;
+    setProviderId(usable.id);
+    setModel(usable.models[0]?.id ?? '');
+    setSize(usable.models[0]?.sizes?.[0] ?? '1024x1024');
+  }, [providers]);
 
   const active = providers.find((p) => p.id === providerId);
   const activeModel = active?.models.find((m) => m.id === model);
@@ -274,9 +295,14 @@ function GenerateImage({
     onError(null);
 
     try {
+      const credential = getCredential(providerId);
       const response = await fetch('/api/images', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...(credential?.apiKey ? { 'x-od-api-key': credential.apiKey } : {}),
+          ...(credential?.baseUrl ? { 'x-od-base-url': credential.baseUrl } : {}),
+        },
         body: JSON.stringify({ prompt, providerId, model, size }),
       });
 
@@ -287,7 +313,7 @@ function GenerateImage({
       };
 
       if (!response.ok || !payload.images) {
-        onError([payload.error, payload.hint].filter(Boolean).join(' — ') || 'generation failed');
+        onError([payload.error, payload.hint].filter(Boolean).join(' — ') || 'a geração falhou');
         return;
       }
 
@@ -329,7 +355,7 @@ function GenerateImage({
     <section className="space-y-2 rounded-xl border border-hairline bg-shell p-2.5">
       <h3 className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.12em] text-ink-faint uppercase">
         <Wand2 size={10} />
-        Generate
+        Gerar
       </h3>
 
       <TextInput
@@ -338,7 +364,7 @@ function GenerateImage({
         onKeyDown={(event) => {
           if (event.key === 'Enter') void generate();
         }}
-        placeholder="A friendly red dinosaur mascot…"
+        placeholder="Um mascote dinossauro vermelho simpático…"
       />
 
       <div className="flex gap-1.5">
@@ -351,7 +377,7 @@ function GenerateImage({
             setSize(provider?.models[0]?.sizes?.[0] ?? '1024x1024');
           }}
           options={providers.map((provider) => ({
-            label: provider.configured ? provider.label : `${provider.label} (no key)`,
+            label: provider.configured ? provider.label : `${provider.label} (sem chave)`,
             value: provider.id,
           }))}
         />
@@ -382,12 +408,13 @@ function GenerateImage({
         disabled={!prompt.trim() || generating}
       >
         {generating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-        {generating ? 'Generating…' : 'Generate'}
+        {generating ? 'Gerando…' : 'Gerar'}
       </Button>
 
       {active && !active.configured && active.locality === 'cloud' && (
         <p className="text-[10.5px] leading-relaxed text-caution">
-          No API key on this server. Set one, or run a local image server and pick it above.
+          {active.label} needs an API key — add yours under Settings, or run a local image server
+          and pick it above.
         </p>
       )}
     </section>

@@ -51,7 +51,7 @@ utilities.
 component named after the layer — `<Navbar />`, `<Hero />`, `<Pricing />` — and
 the page imports them.
 
-**No runtime.** There is no OpenDesign package in the output. Nothing to
+**No runtime.** There is no Charm-Design package in the output. Nothing to
 install beyond the framework and Tailwind.
 
 **No editor leakage.** `data-od-id` and friends never appear in exported code.

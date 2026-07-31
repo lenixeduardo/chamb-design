@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, Copy, Download, FileCode, X } from 'lucide-react';
 import type { ExporterContribution, GeneratedFile, PluginRegistry } from '@opendesign/core';
 import { useDocument, type Editor } from '@opendesign/editor';
@@ -62,6 +62,26 @@ export function ExportDialog({
     };
   }, [registry, targetId, document]);
 
+  // The backdrop covers the whole editor, so without this the only way out is
+  // finding one small button — which is a trap, not a dialog.
+  //
+  // The handler is bound once and reads the callback through a ref: `onClose`
+  // is an inline arrow at every call site, so keying the effect on it would
+  // detach and reattach the listener on each render — and a key pressed while
+  // a render is in flight would land in that gap and be swallowed. The export
+  // preview re-renders as soon as generation resolves, which is exactly when
+  // someone reaches for Escape.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeRef.current();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const active = files.find((file) => file.path === activePath);
   const totalBytes = files.reduce((sum, file) => sum + file.contents.length, 0);
 
@@ -89,32 +109,42 @@ export function ExportDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm">
-      <div className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-2xl border border-hairline bg-panel">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-[#121211]/35 p-6 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Exportar"
+        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
+      >
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
           <div className="flex items-center gap-2">
             <FileCode size={14} className="text-brand-soft" />
-            <h2 className="text-[13px] font-medium">Export</h2>
+            <h2 className="text-[13px] font-medium">Exportar</h2>
             {files.length > 0 && (
               <Badge>
-                {files.length} files · {formatBytes(totalBytes)}
+                {files.length} arquivos · {formatBytes(totalBytes)}
               </Badge>
             )}
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" onClick={copy} disabled={!active}>
               {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? 'Copied' : 'Copy file'}
+              {copied ? 'Copiado' : 'Copiar arquivo'}
             </Button>
             <Button size="sm" variant="primary" onClick={download} disabled={files.length === 0}>
               <Download size={12} />
-              Download
+              Baixar
             </Button>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close export"
-              className="grid h-7 w-7 place-items-center rounded-md text-ink-muted hover:bg-panel-raised hover:text-ink"
+              aria-label="Fechar exportação"
+              className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
             >
               <X size={14} />
             </button>
@@ -129,7 +159,7 @@ export function ExportDialog({
               onClick={() => setTargetId(exporter.id)}
               title={exporter.description}
               className={cn(
-                'rounded-md px-2.5 py-1 text-[12px] transition-colors',
+                'rounded-full px-3 py-1 text-[12px] transition-colors',
                 targetId === exporter.id
                   ? 'bg-brand/14 text-brand-soft'
                   : 'text-ink-muted hover:bg-panel-raised hover:text-ink',

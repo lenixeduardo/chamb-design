@@ -14,17 +14,20 @@ import { cn } from '@/lib/utils';
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md';
 
+// Pills, not rounded rectangles. The brand pairs full-radius controls with
+// large-radius surfaces and simply has no small step in between — mixing a 4px
+// button into it is the fastest way to lose the character.
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-brand text-white hover:bg-brand-soft active:scale-[0.98]',
   secondary:
-    'bg-panel-raised text-ink border border-hairline hover:border-hairline-strong hover:bg-[#1d1d21]',
+    'bg-panel text-ink border border-hairline hover:border-hairline-strong hover:bg-panel-raised',
   ghost: 'text-ink-muted hover:text-ink hover:bg-panel-raised',
-  danger: 'bg-critical/12 text-critical border border-critical/25 hover:bg-critical/20',
+  danger: 'bg-critical/10 text-critical border border-critical/25 hover:bg-critical/16',
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
-  sm: 'h-7 px-2.5 text-[12px] gap-1.5 rounded-md',
-  md: 'h-9 px-3.5 text-[13px] gap-2 rounded-lg',
+  sm: 'h-7 px-3 text-[12px] gap-1.5 rounded-full',
+  md: 'h-9 px-4 text-[13px] gap-2 rounded-full',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -64,10 +67,10 @@ export function IconButton({ active, label, className, ...props }: IconButtonPro
       aria-pressed={active}
       {...props}
       className={cn(
-        'inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150',
+        'inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-150',
         'disabled:pointer-events-none disabled:opacity-35',
         active
-          ? 'bg-brand/16 text-brand-soft'
+          ? 'bg-brand/12 text-brand-soft'
           : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
         className,
       )}
@@ -125,7 +128,7 @@ export function TextInput({ className, ...props }: InputHTMLAttributes<HTMLInput
     <input
       {...props}
       className={cn(
-        'h-7 w-full rounded-md border border-hairline bg-shell px-2 text-[12px] text-ink',
+        'h-7 w-full rounded-full border border-hairline bg-panel-raised px-3 text-[12px] text-ink',
         'placeholder:text-ink-faint',
         'focus:border-brand focus:outline-none',
         'transition-colors duration-150',
@@ -151,7 +154,10 @@ export function Select({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       className={cn(
-        'h-7 w-full rounded-md border border-hairline bg-shell px-1.5 text-[12px] text-ink',
+        // Tighter horizontal padding than the other pills on purpose: a native
+        // select reserves room for its own arrow, and the provider names are
+        // long enough that generous padding clips them.
+        'h-7 w-full rounded-full border border-hairline bg-panel-raised pr-1 pl-2 text-[12px] text-ink',
         'focus:border-brand focus:outline-none',
         className,
       )}
@@ -175,7 +181,7 @@ export function SegmentedControl<T extends string>({
   options: { label: ReactNode; value: T; title?: string }[];
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-hairline bg-shell p-0.5">
+    <div className="inline-flex rounded-full bg-panel-raised p-0.5">
       {options.map((option) => (
         <button
           key={option.value}
@@ -183,11 +189,14 @@ export function SegmentedControl<T extends string>({
           title={option.title}
           onClick={() => onChange(option.value)}
           className={cn(
-            'inline-flex h-6 min-w-7 items-center justify-center rounded-md px-2 text-[11px] font-medium',
+            'inline-flex h-6 min-w-7 items-center justify-center rounded-full px-2.5 text-[11px] font-medium',
             'transition-colors duration-150',
+            // The reference's segmented control inverts the active item to ink
+            // rather than tinting it — the contrast is what makes it readable
+            // at 11px on a cream track.
             value === option.value
-              ? 'bg-panel-raised text-ink'
-              : 'text-ink-faint hover:text-ink-muted',
+              ? 'bg-ink text-shell shadow-sm'
+              : 'text-ink-faint hover:text-ink',
           )}
         >
           {option.label}

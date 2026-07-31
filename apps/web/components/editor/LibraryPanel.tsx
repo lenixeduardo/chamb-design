@@ -9,14 +9,14 @@ import { cn } from '@/lib/utils';
 
 const PRIMITIVES = [
   { type: 'frame', label: 'Frame' },
-  { type: 'stack', label: 'Stack' },
+  { type: 'stack', label: 'Pilha' },
   { type: 'grid', label: 'Grid' },
   { type: 'text', label: 'Text' },
-  { type: 'heading', label: 'Heading' },
-  { type: 'button', label: 'Button' },
-  { type: 'image', label: 'Image' },
+  { type: 'heading', label: 'Título' },
+  { type: 'button', label: 'Botão' },
+  { type: 'image', label: 'Imagem' },
   { type: 'input', label: 'Input' },
-  { type: 'divider', label: 'Divider' },
+  { type: 'divider', label: 'Divisor' },
 ];
 
 /**
@@ -62,7 +62,7 @@ export function LibraryPanel({
   }, [filtered]);
 
   return (
-    <Panel title="Library">
+    <Panel title="Biblioteca">
       <div className="px-3 pb-4">
         <div className="relative">
           <Search
@@ -72,7 +72,7 @@ export function LibraryPanel({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search blocks…"
+            placeholder="Buscar blocos…"
             className="h-7 w-full rounded-md border border-hairline bg-shell pr-2 pl-7 text-[12px] transition-colors placeholder:text-ink-faint focus:border-brand focus:outline-none"
           />
         </div>
@@ -100,8 +100,8 @@ export function LibraryPanel({
         {byCategory.length === 0 ? (
           <EmptyState
             icon={<Blocks size={18} />}
-            title="No blocks match"
-            description="Try another term, or install a component plugin to extend the library."
+            title="Nenhum bloco corresponde"
+            description="Tente outro termo, ou instale um plugin de componentes para ampliar a biblioteca."
           />
         ) : (
           byCategory.map(([category, list]) => (

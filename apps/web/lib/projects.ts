@@ -6,6 +6,7 @@ import {
   validateDocumentIntegrity,
   type DesignDocument,
 } from '@opendesign/core';
+import { chambThemes, chambTokens } from '@opendesign/plugin-chamb-brand';
 
 /**
  * Local-first project storage.
@@ -112,8 +113,32 @@ export function deleteProject(id: string): void {
   writeIndex(readIndex().filter((project) => project.id !== id));
 }
 
+/**
+ * A new project starts on the chamb-design system.
+ *
+ * `createDocument` is deliberately generic — core ships a neutral starter so a
+ * third party can build their own product on it. This app is not a third party:
+ * it *is* chamb-design, so a blank project should already speak the brand
+ * rather than dropping the user into indigo-on-near-black and leaving the theme
+ * as homework. The tokens are semantic, so every block and every AI edit
+ * inherits it without referencing a single hex value.
+ */
 export function createProject(name: string, folder?: string): DesignDocument {
-  const document = createDocument({ name });
+  const base = createDocument({ name });
+  const rootId = base.pages[0]!.rootId;
+  const root = base.nodes[rootId]!;
+
+  const document: DesignDocument = {
+    ...base,
+    tokens: chambTokens(),
+    themes: chambThemes(),
+    activeThemeId: 'chamb-light',
+    // Core names the root frame in English. It shows up in the layers panel, so
+    // it is interface as much as it is document — translate it here rather than
+    // in core, which stays language-neutral for anyone building on it.
+    nodes: { ...base.nodes, [rootId]: { ...root, name: 'Página' } },
+  };
+
   saveProject(document, folder);
   return document;
 }
@@ -125,7 +150,7 @@ export function duplicateProject(id: string): DesignDocument | null {
   const copy: DesignDocument = {
     ...structuredClone(source),
     id: `doc_${Math.random().toString(36).slice(2, 12)}`,
-    name: `${source.name} copy`,
+    name: `${source.name} (cópia)`,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

@@ -2,14 +2,16 @@
 
 import { DesignAgent, createProvider, type AgentEvent } from '@opendesign/ai';
 import type { DesignDocument, Operation, PluginRegistry } from '@opendesign/core';
+import { getCredential } from './settings';
 
 /**
  * Client-side agent transport.
  *
  * Two routes, chosen by where the model runs:
  *
- *   - **cloud** goes through `/api/ai`, so API keys stay in server env vars and
- *     never touch the browser.
+ *   - **cloud** goes through `/api/ai`, which holds the streaming loop and
+ *     talks to the provider. The user's own key rides along in a header when
+ *     they have set one; otherwise the server falls back to its own env var.
  *   - **local** (Ollama, LM Studio) runs the agent *in the browser* against
  *     `localhost`. Proxying that through the server would break the moment the
  *     server is not the user's own machine — and the whole point of a local
@@ -62,10 +64,9 @@ export async function runAgent(
 }
 
 async function runLocally(options: RunAgentOptions, handlers: AgentStreamHandlers): Promise<void> {
-  const provider = createProvider(
-    options.providerId,
-    options.baseUrl ? { baseUrl: options.baseUrl } : {},
-  );
+  // A local runtime has no key, but it may sit behind a custom port or host.
+  const baseUrl = options.baseUrl ?? getCredential(options.providerId)?.baseUrl;
+  const provider = createProvider(options.providerId, baseUrl ? { baseUrl } : {});
 
   const agent = new DesignAgent({
     provider,
@@ -87,9 +88,15 @@ async function runLocally(options: RunAgentOptions, handlers: AgentStreamHandler
 }
 
 async function runRemotely(options: RunAgentOptions, handlers: AgentStreamHandlers): Promise<void> {
+  const credential = getCredential(options.providerId);
+
   const response = await fetch('/api/ai', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      ...(credential?.apiKey ? { 'x-od-api-key': credential.apiKey } : {}),
+      ...(credential?.baseUrl ? { 'x-od-base-url': credential.baseUrl } : {}),
+    },
     body: JSON.stringify({
       prompt: options.prompt,
       document: options.document,

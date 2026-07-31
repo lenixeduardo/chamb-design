@@ -32,7 +32,7 @@ export default function EditorPage({ params }: { params: Promise<{ projectId: st
   if (status === 'loading') {
     return (
       <div className="grid h-screen place-items-center">
-        <p className="animate-pulse-soft text-[13px] text-ink-faint">Opening project…</p>
+        <p className="animate-pulse-soft text-[13px] text-ink-faint">Abrindo projeto…</p>
       </div>
     );
   }
@@ -41,11 +41,11 @@ export default function EditorPage({ params }: { params: Promise<{ projectId: st
     return (
       <div className="grid h-screen place-items-center">
         <EmptyState
-          title="Project not found"
-          description="It may have been deleted, or created in a different browser. Projects are stored locally on the machine that made them."
+          title="Projeto não encontrado"
+          description="Pode ter sido excluído, ou criado em outro navegador. Os projetos ficam guardados localmente na máquina que os criou."
           action={
             <Link href="/">
-              <Button variant="primary">Back to workspace</Button>
+              <Button variant="primary">Voltar para a área de trabalho</Button>
             </Link>
           }
         />

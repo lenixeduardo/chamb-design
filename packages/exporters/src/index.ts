@@ -26,7 +26,7 @@ export const BUILTIN_EXPORTERS: ExporterContribution[] = [
 /** Export targets ship as a plugin, exactly like third-party ones do. */
 export const exportersPlugin: OpenDesignPlugin = definePlugin({
   id: 'opendesign.exporters',
-  name: 'OpenDesign exporters',
+  name: 'Charm-Design exporters',
   version: '0.1.0',
   description: 'React, Next.js, HTML, Vue, Svelte and Astro export targets.',
   activate(context) {

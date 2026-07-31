@@ -51,7 +51,7 @@ export function googleProvider(config: ProviderConfig = {}): ChatProvider {
           ...(request.system ? { systemInstruction: { parts: [{ text: request.system }] } } : {}),
           generationConfig: {
             temperature: request.temperature ?? 0.4,
-            maxOutputTokens: request.maxTokens ?? 8192,
+            maxOutputTokens: request.maxTokens ?? 16000,
             ...(request.responseFormat === 'json' ? { responseMimeType: 'application/json' } : {}),
           },
         }),

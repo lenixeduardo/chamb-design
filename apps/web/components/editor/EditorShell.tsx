@@ -12,6 +12,7 @@ import {
   Palette,
   ImageIcon,
   Redo2,
+  Settings,
   Smartphone,
   Sparkles,
   Square,
@@ -31,6 +32,8 @@ import { LibraryPanel } from './LibraryPanel';
 import { ThemePanel } from './ThemePanel';
 import { AssetsPanel } from './AssetsPanel';
 import { ExportDialog } from './ExportDialog';
+import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { CharmDino } from '@/components/brand/CharmDino';
 import { Button, IconButton, SegmentedControl } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +52,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
   const [registry, setRegistry] = useState<PluginRegistry | null>(null);
   const [leftTab, setLeftTab] = useState<LeftTab>('layers');
   const [exporting, setExporting] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
 
   const state = useEditorState(editor);
@@ -82,36 +86,32 @@ export function EditorShell({ document }: { document: DesignDocument }) {
     <div className="flex h-screen flex-col overflow-hidden">
       <header className="flex h-11 shrink-0 items-center justify-between gap-3 border-b border-hairline bg-panel px-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            href="/"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand transition-opacity hover:opacity-85"
-            aria-label="Back to workspace"
-          >
-            <Sparkles size={13} className="text-white" />
+          <Link href="/" className="shrink-0" aria-label="Voltar para a área de trabalho">
+            <CharmDino role="logo" size={28} />
           </Link>
           <span className="truncate text-[13px] font-medium">{document.name}</span>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-0.5 rounded-lg border border-hairline p-0.5">
+          <div className="flex items-center gap-0.5 rounded-full bg-panel-raised p-0.5">
             <IconButton
-              label="Select tool (V)"
+              label="Ferramenta de seleção (V)"
               active={state.tool === 'select'}
               onClick={() => editor.setTool('select')}
             >
               <MousePointer2 size={13} />
             </IconButton>
             <IconButton
-              label="Hand tool (H)"
+              label="Ferramenta mão (H)"
               active={state.tool === 'hand'}
               onClick={() => editor.setTool('hand')}
             >
               <Hand size={13} />
             </IconButton>
-            <IconButton label="Insert frame (F)" onClick={() => editor.insertPrimitive('frame')}>
+            <IconButton label="Inserir frame (F)" onClick={() => editor.insertPrimitive('frame')}>
               <Square size={13} />
             </IconButton>
-            <IconButton label="Insert text (T)" onClick={() => editor.insertPrimitive('text')}>
+            <IconButton label="Inserir texto (T)" onClick={() => editor.insertPrimitive('text')}>
               <Type size={13} />
             </IconButton>
           </div>
@@ -120,18 +120,22 @@ export function EditorShell({ document }: { document: DesignDocument }) {
             value={state.activeBreakpoint}
             onChange={(breakpoint) => editor.setBreakpoint(breakpoint)}
             options={[
-              { label: <Smartphone size={12} />, value: 'base', title: 'Mobile — base styles' },
-              { label: <Tablet size={12} />, value: 'md', title: 'Tablet — md override' },
-              { label: <Monitor size={12} />, value: 'xl', title: 'Desktop — xl override' },
+              { label: <Smartphone size={12} />, value: 'base', title: 'Celular — estilos base' },
+              { label: <Tablet size={12} />, value: 'md', title: 'Tablet — override md' },
+              { label: <Monitor size={12} />, value: 'xl', title: 'Desktop — override xl' },
             ]}
           />
 
           <div className="flex items-center gap-0.5">
-            <IconButton label="Undo (⌘Z)" disabled={!history.canUndo} onClick={() => editor.undo()}>
+            <IconButton
+              label="Desfazer (⌘Z)"
+              disabled={!history.canUndo}
+              onClick={() => editor.undo()}
+            >
               <Undo2 size={13} />
             </IconButton>
             <IconButton
-              label="Redo (⌘⇧Z)"
+              label="Refazer (⌘⇧Z)"
               disabled={!history.canRedo}
               onClick={() => editor.redo()}
             >
@@ -141,9 +145,12 @@ export function EditorShell({ document }: { document: DesignDocument }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <IconButton label="Ajustes — chaves de API" onClick={() => setSettingsOpen(true)}>
+            <Settings size={13} />
+          </IconButton>
           <Button size="sm" onClick={() => setExporting(true)}>
             <Download size={12} />
-            Export
+            Exportar
           </Button>
           <Button
             size="sm"
@@ -161,10 +168,10 @@ export function EditorShell({ document }: { document: DesignDocument }) {
           <nav className="flex shrink-0 gap-0.5 border-b border-hairline p-1.5">
             {(
               [
-                ['layers', 'Layers', Layers],
-                ['library', 'Library', Blocks],
-                ['assets', 'Assets', ImageIcon],
-                ['theme', 'Theme', Palette],
+                ['layers', 'Camadas', Layers],
+                ['library', 'Biblioteca', Blocks],
+                ['assets', 'Recursos', ImageIcon],
+                ['theme', 'Tema', Palette],
               ] as const
             ).map(([tab, label, Icon]) => (
               <button
@@ -172,7 +179,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
                 type="button"
                 onClick={() => setLeftTab(tab)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-1 rounded-md py-1.5 text-[10.5px] transition-colors',
+                  'flex flex-1 items-center justify-center gap-1 rounded-full py-1.5 text-[10.5px] transition-colors',
                   leftTab === tab
                     ? 'bg-panel-raised text-ink'
                     : 'text-ink-faint hover:text-ink-muted',
@@ -208,6 +215,8 @@ export function EditorShell({ document }: { document: DesignDocument }) {
       {exporting && (
         <ExportDialog editor={editor} registry={registry} onClose={() => setExporting(false)} />
       )}
+
+      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 {
   "name": "@opendesign/core",
   "version": "0.1.0",
-  "description": "Document model, operations, history and plugin registry for OpenDesign",
+  "description": "Document model, operations, history and plugin registry for Charm-Design",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

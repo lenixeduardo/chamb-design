@@ -287,7 +287,7 @@ export const pricingTable: ComponentContribution = {
 
 const DEFAULT_FAQ = [
   {
-    q: 'Is OpenDesign really free?',
+    q: 'Is Charm-Design really free?',
     a: 'The entire platform is MIT licensed and self-hostable. Hosted collaboration is the only paid part, and you can always run it yourself instead.',
   },
   {

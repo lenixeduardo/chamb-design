@@ -93,7 +93,7 @@ export function reviewDocument(
               node,
               'contrast',
               'error',
-              `Text contrast is ${issue.ratio}:1 against ${background}; WCAG AA needs ${issue.required}:1. Pick a lighter or darker foreground token.`,
+              `O contraste do texto é ${issue.ratio}:1 sobre ${background}; a WCAG AA exige ${issue.required}:1. Escolha um token de cor mais claro ou mais escuro.`,
             );
           }
         }
@@ -103,7 +103,12 @@ export function reviewDocument(
       if (node.type === 'image') {
         const alt = node.props.alt;
         if (typeof alt !== 'string' || alt.trim().length === 0) {
-          push(node, 'alt-text', 'error', 'Image has no alt text. Add a descriptive "alt" prop.');
+          push(
+            node,
+            'alt-text',
+            'error',
+            'A imagem não tem texto alternativo. Adicione uma prop "alt" descritiva.',
+          );
         }
       }
 
@@ -115,7 +120,7 @@ export function reviewDocument(
             node,
             'empty-label',
             'error',
-            `A ${node.type} has no accessible label. Set "text" or "ariaLabel".`,
+            `O elemento ${node.type} não tem rótulo acessível. Defina "text" ou "ariaLabel".`,
           );
         }
 
@@ -125,7 +130,7 @@ export function reviewDocument(
             node,
             'tap-target',
             'warning',
-            `Interactive element is ${height}px tall; ${minTapTarget}px is the comfortable minimum on touch.`,
+            `O elemento interativo tem ${height}px de altura; ${minTapTarget}px é o mínimo confortável no toque.`,
           );
         }
       }
@@ -136,7 +141,7 @@ export function reviewDocument(
           node,
           'fixed-width',
           'warning',
-          `Fixed width of ${node.style.width}px will overflow a 390px phone. Use "fill" or add a responsive override.`,
+          `A largura fixa de ${node.style.width}px vai estourar em um celular de 390px. Use "fill" ou adicione um override responsivo.`,
         );
       }
 
@@ -144,7 +149,7 @@ export function reviewDocument(
       if (node.type === 'heading') {
         const level = node.props.level;
         if (typeof level === 'string' && !/^h[1-6]$/.test(level)) {
-          push(node, 'heading-level', 'warning', `Invalid heading level "${level}".`);
+          push(node, 'heading-level', 'warning', `Nível de título inválido: "${level}".`);
         }
       }
 
@@ -154,7 +159,7 @@ export function reviewDocument(
           node,
           'empty-frame',
           'warning',
-          'Empty frame with no explicit height will collapse to zero.',
+          'Um frame vazio sem altura explícita colapsa para zero.',
         );
       }
 
@@ -185,7 +190,7 @@ export function reviewHeadingStructure(document: DesignDocument): ReviewIssue[] 
         nodeName: first.name,
         rule: 'heading-structure',
         severity: 'warning',
-        message: `Page "${page.name}" has no h1. Promote the main headline.`,
+        message: `A página "${page.name}" não tem h1. Promova o título principal.`,
       });
     }
 
@@ -196,7 +201,7 @@ export function reviewHeadingStructure(document: DesignDocument): ReviewIssue[] 
           nodeName: extra.name,
           rule: 'heading-structure',
           severity: 'warning',
-          message: `Page "${page.name}" has ${h1s.length} h1 elements; demote this one to h2.`,
+          message: `A página "${page.name}" tem ${h1s.length} elementos h1; rebaixe este para h2.`,
         });
       }
     }

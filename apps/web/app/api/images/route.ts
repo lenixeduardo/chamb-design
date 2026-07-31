@@ -15,12 +15,18 @@ export const dynamic = 'force-dynamic';
  * Local providers are exempt from the key check because they have no key; the
  * request still routes through here so a self-hosted deployment can reach an
  * image server on its own network.
+ *
+ * Keys resolve the same way as in `/api/ai`: the user's own key from Settings
+ * first, then a server environment variable.
  */
 
 const ENV_KEYS: Record<string, string> = {
   'openai-images': 'OPENAI_API_KEY',
   'google-images': 'GOOGLE_API_KEY',
 };
+
+const KEY_HEADER = 'x-od-api-key';
+const BASE_URL_HEADER = 'x-od-base-url';
 
 interface GenerateBody {
   prompt: string;
@@ -46,32 +52,37 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as GenerateBody;
   } catch {
-    return NextResponse.json({ error: 'invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'corpo JSON inválido' }, { status: 400 });
   }
 
   if (!body.prompt?.trim()) {
-    return NextResponse.json({ error: 'prompt is required' }, { status: 400 });
+    return NextResponse.json({ error: 'o prompt é obrigatório' }, { status: 400 });
   }
 
   const envKey = ENV_KEYS[body.providerId];
-  const apiKey = envKey ? process.env[envKey] : undefined;
+  const apiKey =
+    request.headers.get(KEY_HEADER)?.trim() || (envKey ? process.env[envKey] : undefined);
+  const baseUrl = request.headers.get(BASE_URL_HEADER)?.trim();
 
   if (envKey && !apiKey) {
     return NextResponse.json(
       {
-        error: `${body.providerId} is not configured on this server`,
-        hint: `Set ${envKey}, or run a local image server and select it instead.`,
+        error: `sem chave de API para ${body.providerId}`,
+        hint: 'Adicione sua chave em Ajustes, ou rode um servidor de imagens local e selecione-o.',
       },
-      { status: 503 },
+      { status: 401 },
     );
   }
 
   let provider;
   try {
-    provider = createImageProvider(body.providerId, apiKey ? { apiKey } : {});
+    provider = createImageProvider(body.providerId, {
+      ...(apiKey ? { apiKey } : {}),
+      ...(baseUrl ? { baseUrl } : {}),
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'unknown image provider' },
+      { error: error instanceof Error ? error.message : 'provedor de imagens desconhecido' },
       { status: 400 },
     );
   }

@@ -190,7 +190,7 @@ ${motionStylesheet()}
     path: 'README.md',
     contents: `# ${document.name}
 
-Exported from OpenDesign as ${target.label}.
+Exported from Charm-Design as ${target.label}.
 
 Tokens live in \`${stylesPath}\` as a Tailwind v4 \`@theme\` block, so every
 colour and spacing value in the markup resolves through one file.

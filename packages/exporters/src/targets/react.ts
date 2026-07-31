@@ -134,7 +134,7 @@ ${motionStylesheet()}
 
   const readme = `# ${document.name}
 
-Exported from [OpenDesign](https://github.com/opendesign/opendesign).
+Exported from [Charm-Design](https://github.com/lenixeduardo/chamb-design).
 
 ## Running it
 
@@ -148,7 +148,7 @@ pnpm dev
 - \`${stylesPath}\` — the design tokens as a Tailwind v4 \`@theme\` block. Every
   colour, spacing step and radius in the markup resolves through it, so
   retheming the whole project is a single-file change.
-- Components use plain Tailwind utility classes. There is no OpenDesign runtime
+- Components use plain Tailwind utility classes. There is no Charm-Design runtime
   and nothing to install beyond React and Tailwind.
 `;
 

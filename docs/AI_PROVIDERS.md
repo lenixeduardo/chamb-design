@@ -2,7 +2,7 @@
 
 ## Supported out of the box
 
-| Provider           | Locality  | Key                  |
+| Provider           | Locality  | Server env var       |
 | ------------------ | --------- | -------------------- |
 | Claude (Anthropic) | cloud     | `ANTHROPIC_API_KEY`  |
 | OpenAI             | cloud     | `OPENAI_API_KEY`     |
@@ -12,14 +12,34 @@
 | Ollama             | **local** | none                 |
 | LM Studio          | **local** | none                 |
 
-Only providers with a key configured appear as usable in the picker; the rest
+Only providers with a key available appear as usable in the picker; the rest
 are shown but marked, rather than silently missing.
+
+## Two ways to supply a key
+
+**Settings, in the browser (bring your own key).** Anyone opening the app can
+paste their own key under **Settings → Model providers**. It is written to that
+browser's `localStorage` — or `sessionStorage`, if they turn off "Remember on
+this device" — and attached to `/api/ai` and `/api/images` requests as the
+`x-od-api-key` header, which the route forwards to the provider and never logs
+or persists. Settings also runs a two-token request against the provider so a
+wrong key is reported immediately rather than three paragraphs into a
+generation.
+
+The trade-off is the usual one for a local-first tool: a key in browser storage
+is readable by anything that can run script on the page. That is why the option
+to keep it only for the session exists, and why nothing is ever written
+server-side.
+
+**Server environment variables.** A deployment that supplies its own key sets
+the variable from the table above. A user-supplied key takes precedence when
+both are present — on a shared deployment, people should spend their own quota.
 
 ## Where the model runs
 
 Cloud providers are proxied through the server (`/api/ai` in the web app,
-`POST /api/ai/generate` in the API), so keys stay in server environment
-variables and never reach the browser.
+`POST /api/ai/generate` in the API), which is what holds the streaming agent
+loop.
 
 Local providers are **not** proxied. The agent runs in the browser against
 `localhost` directly. Routing localhost through a server would break the moment
