@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowUp,
+  ChevronDown,
   Cloud,
   Cpu,
   ImagePlus,
   KeyRound,
   Loader2,
-  Sparkles,
   Square,
   X,
 } from 'lucide-react';
@@ -18,9 +18,11 @@ import { useEditorState, type Editor } from '@opendesign/editor';
 import { isLocalProvider, runAgent } from '@/lib/agent-client';
 import { fileToBase64, imageFilesFrom } from '@/lib/assets';
 import { hasKey, readSettings, setLastModel, subscribeToSettings } from '@/lib/settings';
+import { useMediaQuery } from '@/lib/use-media-query';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
 import { CharmDino } from '@/components/brand/CharmDino';
 import { Badge, Button, Select } from '@/components/ui/primitives';
+import { ChatThinkingSkeleton, ModelPickerSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 /**
@@ -70,9 +72,12 @@ const SUGGESTIONS = [
 export function ChatSidebar({
   editor,
   registry,
+  onClose,
 }: {
   editor: Editor;
   registry: PluginRegistry | null;
+  /** Present when the assistant is a dismissible sheet rather than a column. */
+  onClose?: () => void;
 }) {
   const state = useEditorState(editor);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -80,12 +85,16 @@ export function ChatSidebar({
   const [busy, setBusy] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [served, setServed] = useState<ProviderInfo[]>([]);
+  // Distinct from `served.length === 0`: an empty list after a failed fetch is
+  // a real answer, and showing a skeleton for it would idle forever.
+  const [loadingProviders, setLoadingProviders] = useState(true);
   const [providerId, setProviderId] = useState('anthropic');
   const [model, setModel] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   // Bumped whenever a key is saved or removed, so the "configured" badges
   // reflect Settings without a reload.
   const [credentialVersion, setCredentialVersion] = useState(0);
+  const isTouch = useMediaQuery('(hover: none)');
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -102,7 +111,8 @@ export function ChatSidebar({
     fetch('/api/ai')
       .then((response) => response.json())
       .then((data: { providers: ProviderInfo[] }) => setServed(data.providers ?? []))
-      .catch(() => setServed([]));
+      .catch(() => setServed([]))
+      .finally(() => setLoadingProviders(false));
   }, []);
 
   // A provider is usable when either this browser has a key for it or the
@@ -262,39 +272,58 @@ export function ChatSidebar({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex h-9 shrink-0 items-center justify-between px-3">
+      <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-hairline px-3 sm:h-9 sm:border-b-0">
         <h2 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
           Assistente
         </h2>
-        <div className="flex items-center gap-1.5">
-          {activeProvider && (
-            <Badge tone={activeProvider.locality === 'local' ? 'positive' : 'neutral'}>
-              {activeProvider.locality === 'local' ? (
-                <>
-                  <Cpu size={9} className="mr-1" />
-                  no dispositivo
-                </>
-              ) : (
-                <>
-                  <Cloud size={9} className="mr-1" />
-                  nuvem
-                </>
-              )}
-            </Badge>
+        {/* At least 8px between targets, because the two buttons below extend
+            their hit areas by 4px a side on touch. */}
+        <div className="flex items-center gap-2">
+          {loadingProviders ? (
+            <Skeleton className="h-4 w-20 rounded-full" />
+          ) : (
+            activeProvider && (
+              <Badge tone={activeProvider.locality === 'local' ? 'positive' : 'neutral'}>
+                {activeProvider.locality === 'local' ? (
+                  <>
+                    <Cpu size={9} className="mr-1" />
+                    no dispositivo
+                  </>
+                ) : (
+                  <>
+                    <Cloud size={9} className="mr-1" />
+                    nuvem
+                  </>
+                )}
+              </Badge>
+            )
           )}
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label="Chaves de API e ajustes"
             title="Chaves de API e ajustes"
-            className="grid h-6 w-6 place-items-center rounded-md text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
+            className="tap-target relative grid h-8 w-8 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink sm:h-6 sm:w-6 sm:rounded-md"
           >
-            <KeyRound size={12} />
+            <KeyRound size={13} />
           </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar o assistente"
+              className="tap-target relative grid h-8 w-8 place-items-center rounded-full text-ink-muted transition-colors hover:bg-panel-raised hover:text-ink"
+            >
+              <ChevronDown size={16} />
+            </button>
+          )}
         </div>
       </header>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3">
+      <div
+        ref={scrollRef}
+        className="touch-pane min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3"
+      >
         {turns.length === 0 && (
           <div className="space-y-3 pt-6">
             <div className="flex items-center gap-2 text-ink-muted">
@@ -357,6 +386,13 @@ export function ChatSidebar({
                   </p>
                 )}
 
+                {/* Until the first token lands there is a status line and
+                    nothing under it, which reads as a stall. Three placeholder
+                    lines say "an answer is being written here" and are replaced
+                    by the real text the moment it streams — they are not shown
+                    once there is any text, so nothing ever double-renders. */}
+                {turn.status && !turn.text && !turn.error && <ChatThinkingSkeleton />}
+
                 {turn.text && (
                   <p className="text-[12px] leading-relaxed text-ink-muted">{turn.text}</p>
                 )}
@@ -396,29 +432,33 @@ export function ChatSidebar({
         ))}
       </div>
 
-      <div className="shrink-0 space-y-2 border-t border-hairline p-3">
-        <div className="flex gap-1.5">
-          <Select
-            value={providerId}
-            onChange={(next) => {
-              setProviderId(next);
-              const provider = providers.find((p) => p.id === next);
-              setModel(provider?.models[0]?.id ?? '');
-            }}
-            options={providers.map((provider) => ({
-              label: provider.configured ? provider.label : `${provider.label} (sem chave)`,
-              value: provider.id,
-            }))}
-          />
-          <Select
-            value={model}
-            onChange={setModel}
-            options={(activeProvider?.models ?? []).map((entry) => ({
-              label: entry.label,
-              value: entry.id,
-            }))}
-          />
-        </div>
+      <div className="pb-safe shrink-0 space-y-2 border-t border-hairline p-3">
+        {loadingProviders ? (
+          <ModelPickerSkeleton />
+        ) : (
+          <div className="flex gap-1.5">
+            <Select
+              value={providerId}
+              onChange={(next) => {
+                setProviderId(next);
+                const provider = providers.find((p) => p.id === next);
+                setModel(provider?.models[0]?.id ?? '');
+              }}
+              options={providers.map((provider) => ({
+                label: provider.configured ? provider.label : `${provider.label} (sem chave)`,
+                value: provider.id,
+              }))}
+            />
+            <Select
+              value={model}
+              onChange={setModel}
+              options={(activeProvider?.models ?? []).map((entry) => ({
+                label: entry.label,
+                value: entry.id,
+              }))}
+            />
+          </div>
+        )}
 
         {activeProvider && !activeProvider.configured && !isLocalProvider(activeProvider.id) && (
           <div className="space-y-1.5 rounded-2xl border border-caution/25 bg-caution/8 px-3 py-2.5">
@@ -450,9 +490,9 @@ export function ChatSidebar({
                     onClick={() =>
                       setAttachments((current) => current.filter((entry) => entry.id !== item.id))
                     }
-                    className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-shell text-ink-muted hover:text-critical"
+                    className="tap-target absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full border border-hairline bg-shell text-ink-muted shadow-sm hover:text-critical"
                   >
-                    <X size={9} />
+                    <X size={11} />
                   </button>
                 </li>
               ))}
@@ -477,7 +517,11 @@ export function ChatSidebar({
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
+                // Enter sends, Shift+Enter breaks the line — but only where
+                // there is a Shift key to hold. A software keyboard has no way
+                // to type a newline if Enter is bound to send, so on touch the
+                // send button is the only way to send.
+                if (event.key === 'Enter' && !event.shiftKey && !isTouch) {
                   event.preventDefault();
                   void submit(input);
                 }
@@ -489,8 +533,10 @@ export function ChatSidebar({
                   : 'Descreva uma página, uma seção ou uma mudança…'
               }
               className={cn(
-                'w-full resize-none rounded-2xl border border-hairline bg-panel-raised py-2.5 pr-10 pl-3',
-                'text-[12px] leading-relaxed text-ink placeholder:text-ink-faint',
+                'w-full resize-none rounded-2xl border border-hairline bg-panel-raised py-2.5 pr-11 pl-3',
+                // 16px on touch so iOS Safari does not zoom the whole editor in
+                // when the composer takes focus.
+                'text-[16px] leading-relaxed text-ink placeholder:text-ink-faint sm:text-[12px]',
                 'transition-colors focus:border-brand focus:outline-none',
               )}
             />
@@ -516,7 +562,7 @@ export function ChatSidebar({
                   : 'Este modelo pode não aceitar imagens'
               }
               onClick={() => imageInputRef.current?.click()}
-              className="absolute bottom-1.5 left-1.5 grid h-7 w-7 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
+              className="tap-target absolute bottom-1.5 left-1.5 grid h-8 w-8 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink sm:h-7 sm:w-7"
             >
               <ImagePlus size={13} />
             </button>
@@ -536,9 +582,9 @@ export function ChatSidebar({
                 type="submit"
                 disabled={!input.trim()}
                 aria-label="Enviar"
-                className="absolute right-1.5 bottom-1.5 grid h-7 w-7 place-items-center rounded-full bg-brand text-white transition-opacity disabled:opacity-30"
+                className="tap-target absolute right-1.5 bottom-1.5 grid h-8 w-8 place-items-center rounded-full bg-brand text-white transition-[opacity,transform] active:scale-95 disabled:opacity-30 sm:h-7 sm:w-7"
               >
-                <ArrowUp size={13} />
+                <ArrowUp size={14} />
               </button>
             )}
           </form>

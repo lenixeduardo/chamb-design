@@ -1,6 +1,8 @@
 'use client';
 
+import { createContext, useContext } from 'react';
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -25,20 +27,44 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   danger: 'bg-critical/10 text-critical border border-critical/25 hover:bg-critical/16',
 };
 
+// Controls grow on touch and shrink back at `sm`. Both sets of numbers are
+// deliberate: 13px text in a 36px pill is right for a dense desktop toolbar and
+// wrong for a thumb, and the reverse is true of the 44px version. Sizing by
+// pointer rather than picking one compromise height is what keeps the editor
+// chrome tight without making the phone build a game of darts.
 const BUTTON_SIZES: Record<ButtonSize, string> = {
-  sm: 'h-7 px-3 text-[12px] gap-1.5 rounded-full',
-  md: 'h-9 px-4 text-[13px] gap-2 rounded-full',
+  sm: 'h-9 px-3.5 text-[12.5px] gap-1.5 rounded-full sm:h-7 sm:px-3 sm:text-[12px]',
+  md: 'h-11 px-5 text-[14px] gap-2 rounded-full sm:h-9 sm:px-4 sm:text-[13px]',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /**
+   * Swaps the leading icon for a spinner and blocks input.
+   *
+   * Kept as a prop rather than left to each call site because the failure mode
+   * is always the same one: a button that looks idle while its handler is in
+   * flight invites a second click, and the second click is the one that creates
+   * the duplicate project.
+   */
+  loading?: boolean;
 }
 
-export function Button({ variant = 'secondary', size = 'md', className, ...props }: ButtonProps) {
+export function Button({
+  variant = 'secondary',
+  size = 'md',
+  loading = false,
+  className,
+  children,
+  disabled,
+  ...props
+}: ButtonProps) {
   return (
     <button
       type="button"
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
       {...props}
       className={cn(
         'inline-flex items-center justify-center font-medium whitespace-nowrap',
@@ -48,7 +74,10 @@ export function Button({ variant = 'secondary', size = 'md', className, ...props
         BUTTON_VARIANTS[variant],
         className,
       )}
-    />
+    >
+      {loading && <Loader2 size={size === 'sm' ? 11 : 14} className="animate-spin" />}
+      {children}
+    </button>
   );
 }
 
@@ -67,7 +96,8 @@ export function IconButton({ active, label, className, ...props }: IconButtonPro
       aria-pressed={active}
       {...props}
       className={cn(
-        'inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-150',
+        'tap-target relative inline-flex h-9 w-9 items-center justify-center rounded-full',
+        'transition-colors duration-150 sm:h-8 sm:w-8',
         'disabled:pointer-events-none disabled:opacity-35',
         active
           ? 'bg-brand/12 text-brand-soft'
@@ -76,6 +106,34 @@ export function IconButton({ active, label, className, ...props }: IconButtonPro
       )}
     />
   );
+}
+
+/** The one spinner. Sized to sit on a line of 12px text by default. */
+export function Spinner({ size = 12, className }: { size?: number; className?: string }) {
+  return <Loader2 size={size} aria-hidden className={cn('animate-spin', className)} />;
+}
+
+/**
+ * Where a panel is being rendered.
+ *
+ * On a phone the panels open inside a sheet that already carries their name in
+ * its title bar, so the panel's own eyebrow heading would print the word twice,
+ * one line apart. Rather than thread a `hideTitle` prop through four panel
+ * components that never asked to know about layout, the shell declares the
+ * chrome once and `Panel` reads it.
+ */
+type PanelChrome = 'docked' | 'sheet';
+
+const PanelChromeContext = createContext<PanelChrome>('docked');
+
+export function PanelChromeProvider({
+  value,
+  children,
+}: {
+  value: PanelChrome;
+  children: ReactNode;
+}) {
+  return <PanelChromeContext.Provider value={value}>{children}</PanelChromeContext.Provider>;
 }
 
 export function Panel({
@@ -89,17 +147,24 @@ export function Panel({
   children: ReactNode;
   className?: string;
 }) {
+  const chrome = useContext(PanelChromeContext);
+  const showHeader = Boolean(title) && (chrome === 'docked' || Boolean(actions));
+
   return (
     <section className={cn('flex h-full min-h-0 flex-col', className)}>
-      {title && (
+      {showHeader && (
         <header className="flex h-9 shrink-0 items-center justify-between px-3">
-          <h2 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-            {title}
-          </h2>
+          {chrome === 'docked' ? (
+            <h2 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
           {actions}
         </header>
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+      <div className="touch-pane min-h-0 flex-1 overflow-y-auto">{children}</div>
     </section>
   );
 }
@@ -128,7 +193,11 @@ export function TextInput({ className, ...props }: InputHTMLAttributes<HTMLInput
     <input
       {...props}
       className={cn(
-        'h-7 w-full rounded-full border border-hairline bg-panel-raised px-3 text-[12px] text-ink',
+        'h-9 w-full rounded-full border border-hairline bg-panel-raised px-3.5 text-[16px] text-ink',
+        // 16px on touch, 12px from `sm` up. Anything under 16px makes iOS Safari
+        // zoom the viewport on focus and never zoom back out, which strands the
+        // user in a scaled-up editor with no obvious way home.
+        'sm:h-7 sm:px-3 sm:text-[12px]',
         'placeholder:text-ink-faint',
         'focus:border-brand focus:outline-none',
         'transition-colors duration-150',
@@ -157,7 +226,8 @@ export function Select({
         // Tighter horizontal padding than the other pills on purpose: a native
         // select reserves room for its own arrow, and the provider names are
         // long enough that generous padding clips them.
-        'h-7 w-full rounded-full border border-hairline bg-panel-raised pr-1 pl-2 text-[12px] text-ink',
+        'h-9 w-full min-w-0 rounded-full border border-hairline bg-panel-raised pr-1 pl-2.5 text-[16px] text-ink',
+        'sm:h-7 sm:pl-2 sm:text-[12px]',
         'focus:border-brand focus:outline-none',
         className,
       )}
@@ -189,7 +259,8 @@ export function SegmentedControl<T extends string>({
           title={option.title}
           onClick={() => onChange(option.value)}
           className={cn(
-            'inline-flex h-6 min-w-7 items-center justify-center rounded-full px-2.5 text-[11px] font-medium',
+            'inline-flex h-8 min-w-9 items-center justify-center rounded-full px-3 text-[12px] font-medium',
+            'sm:h-6 sm:min-w-7 sm:px-2.5 sm:text-[11px]',
             'transition-colors duration-150',
             // The reference's segmented control inverts the active item to ink
             // rather than tinting it — the contrast is what makes it readable
@@ -224,7 +295,9 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
+        // Never wraps and never shrinks: a two-word badge breaking across two
+        // lines inside a flex row is what turns a status chip into a smudge.
+        'inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap',
         tones[tone],
       )}
     >
@@ -245,7 +318,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+    <div className="animate-fade-up flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
       {icon && <div className="text-ink-faint">{icon}</div>}
       <div className="space-y-1">
         <p className="text-[13px] font-medium text-ink">{title}</p>

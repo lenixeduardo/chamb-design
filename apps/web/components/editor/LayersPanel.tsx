@@ -78,7 +78,10 @@ export function LayersPanel({ editor }: { editor: Editor }) {
             <li key={node.id}>
               <div
                 className={cn(
-                  'group flex h-7 items-center gap-1 pr-2 text-[12px] transition-colors',
+                  // 36px rows on touch, 28px from `sm` up — the layer tree is
+                  // the one list in the editor people scrub through with a
+                  // finger, and 28px rows put two targets under one fingertip.
+                  'group flex h-9 items-center gap-1 pr-2 text-[12px] transition-colors sm:h-7',
                   selected
                     ? 'bg-brand/14 text-ink'
                     : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
@@ -91,9 +94,10 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                   type="button"
                   onClick={() => hasChildren && toggleCollapse(node.id)}
                   className={cn(
-                    'grid h-4 w-4 shrink-0 place-items-center',
+                    'grid h-7 w-6 shrink-0 place-items-center sm:h-4 sm:w-4',
                     !hasChildren && 'invisible',
                   )}
+                  aria-expanded={hasChildren ? !collapsed.has(node.id) : undefined}
                   aria-label={collapsed.has(node.id) ? 'Expandir' : 'Recolher'}
                 >
                   {collapsed.has(node.id) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
@@ -117,28 +121,36 @@ export function LayersPanel({ editor }: { editor: Editor }) {
                   {node.name}
                 </button>
 
-                <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                {/* Visibility and lock were hover-only, which on a touch screen
+                    meant a layer could be hidden but never shown again.
+                    `reveal-on-hover` keeps the quiet desktop behaviour and
+                    pins them open wherever there is no hover. */}
+                <div className="reveal-on-hover flex shrink-0 items-center gap-0.5">
                   <button
                     type="button"
                     onClick={() => editor.toggleVisibility(node.id)}
-                    className="grid h-5 w-5 place-items-center rounded hover:bg-hairline"
+                    className="grid h-7 w-7 place-items-center rounded-md hover:bg-hairline sm:h-5 sm:w-5 sm:rounded"
+                    aria-pressed={node.hidden}
                     aria-label={node.hidden ? 'Mostrar camada' : 'Ocultar camada'}
                   >
-                    {node.hidden ? <EyeOff size={11} /> : <Eye size={11} />}
+                    {node.hidden ? <EyeOff size={12} /> : <Eye size={12} />}
                   </button>
                   <button
                     type="button"
                     onClick={() => editor.toggleLock(node.id)}
-                    className="grid h-5 w-5 place-items-center rounded hover:bg-hairline"
+                    className="grid h-7 w-7 place-items-center rounded-md hover:bg-hairline sm:h-5 sm:w-5 sm:rounded"
+                    aria-pressed={node.locked}
                     aria-label={node.locked ? 'Desbloquear camada' : 'Bloquear camada'}
                   >
-                    {node.locked ? <Lock size={11} /> : <Unlock size={11} />}
+                    {node.locked ? <Lock size={12} /> : <Unlock size={12} />}
                   </button>
                 </div>
 
-                {/* Persistent indicators when the row is not hovered. */}
+                {/* Persistent indicators when the row is not hovered — and never
+                    on touch, where the real controls are always on show and
+                    these would duplicate them. */}
                 {(node.hidden || node.locked) && (
-                  <div className="flex shrink-0 items-center gap-1 text-ink-faint group-hover:hidden">
+                  <div className="flex shrink-0 items-center gap-1 text-ink-faint group-hover:hidden [@media(hover:none)]:hidden">
                     {node.hidden && <EyeOff size={10} />}
                     {node.locked && <Lock size={10} />}
                   </div>

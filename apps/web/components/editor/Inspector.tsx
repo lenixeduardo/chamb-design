@@ -77,14 +77,14 @@ export function Inspector({ editor }: { editor: Editor }) {
       <div className="space-y-5 px-3 pb-6">
         <header className="flex items-center justify-between gap-2 pt-1">
           <p className="min-w-0 truncate text-[12px] font-medium">
-            {nodes.length === 1 ? primary.name : `${nodes.length} layers`}
+            {nodes.length === 1 ? primary.name : `${nodes.length} camadas`}
           </p>
-          <Badge>{nodes.length === 1 ? primary.type : 'multiple'}</Badge>
+          <Badge>{nodes.length === 1 ? primary.type : 'múltiplas'}</Badge>
         </header>
 
         {state.activeBreakpoint !== 'base' && (
           <p className="rounded-md border border-caution/25 bg-caution/10 px-2.5 py-1.5 text-[11px] leading-relaxed text-caution">
-            Editing the <b>{state.activeBreakpoint}</b> override. Base styles stay untouched.
+            Editando o override <b>{state.activeBreakpoint}</b>. Os estilos base não são alterados.
           </p>
         )}
 
@@ -254,20 +254,22 @@ export function Inspector({ editor }: { editor: Editor }) {
 
         {nodes.length > 1 && (
           <Section title="Organizar">
-            <div className="flex flex-wrap gap-1">
+            {/* 8px apart on touch, because `IconButton` widens its hit area by
+                4px a side there and any tighter gap would overlap. */}
+            <div className="flex flex-wrap gap-2 sm:gap-1">
               {(
                 [
-                  ['left', AlignStartHorizontal],
-                  ['center-x', AlignCenterHorizontal],
-                  ['right', AlignEndHorizontal],
-                  ['top', AlignStartHorizontal],
-                  ['center-y', AlignCenterVertical],
-                  ['bottom', AlignEndHorizontal],
-                ] as [AlignMode, typeof AlignStartHorizontal][]
-              ).map(([mode, Icon]) => (
+                  ['left', AlignStartHorizontal, 'à esquerda'],
+                  ['center-x', AlignCenterHorizontal, 'ao centro na horizontal'],
+                  ['right', AlignEndHorizontal, 'à direita'],
+                  ['top', AlignStartHorizontal, 'ao topo'],
+                  ['center-y', AlignCenterVertical, 'ao centro na vertical'],
+                  ['bottom', AlignEndHorizontal, 'à base'],
+                ] as [AlignMode, typeof AlignStartHorizontal, string][]
+              ).map(([mode, Icon, label]) => (
                 <IconButton
                   key={mode}
-                  label={`Alinhar ${mode}`}
+                  label={`Alinhar ${label}`}
                   onClick={() => editor.alignSelection(mode)}
                 >
                   <Icon size={14} />
@@ -446,7 +448,7 @@ function SizeInput({
           { label: 'Fill', value: 'fill' },
           { label: 'Hug', value: 'hug' },
           { label: 'Auto', value: 'auto' },
-          { label: 'Fixed', value: 'custom' },
+          { label: 'Fixo', value: 'custom' },
         ]}
       />
       {keyword === 'custom' && (

@@ -8,6 +8,7 @@ import { useDocument, type Editor } from '@opendesign/editor';
 import { getIngestor, imageFilesFrom } from '@/lib/assets';
 import { getCredential, hasKey, subscribeToSettings } from '@/lib/settings';
 import { Badge, Button, EmptyState, Panel, Select, TextInput } from '@/components/ui/primitives';
+import { AssetTileSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { cn, formatBytes } from '@/lib/utils';
 
 interface ImageProviderInfo {
@@ -30,6 +31,11 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  // How many tiles are on their way in — from an upload, a paste or a
+  // generation. They are drawn as placeholders at the head of the grid so the
+  // work appears where its result will appear, rather than as a status line
+  // somewhere else on the panel.
+  const [pending, setPending] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,13 +47,21 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
       if (files.length === 0) return;
       setError(null);
       setBusy(`Adicionando ${files.length} arquivo${files.length === 1 ? '' : 's'}…`);
+      setPending((count) => count + files.length);
 
       try {
-        for (const file of files) await editor.addAssetFromFile(file);
+        // Decremented per file rather than all at once, so a batch of eight
+        // images visibly drains one placeholder at a time.
+        for (const file of files) {
+          await editor.addAssetFromFile(file);
+          setPending((count) => Math.max(0, count - 1));
+        }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : String(caught));
+        setPending(0);
       } finally {
         setBusy(null);
+        setPending(0);
       }
     },
     [editor],
@@ -115,7 +129,11 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
           <p className="mt-2 text-[10px] text-ink-faint">{getIngestor().storageLabel}</p>
         </div>
 
-        <GenerateImage editor={editor} onError={setError} />
+        <GenerateImage
+          editor={editor}
+          onError={setError}
+          onGenerating={(generating) => setPending((count) => (generating ? count + 1 : 0))}
+        />
 
         {busy && (
           <p className="flex items-center gap-1.5 text-[11px] text-ink-faint">
@@ -125,12 +143,12 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
         )}
 
         {error && (
-          <p className="rounded-md border border-critical/25 bg-critical/8 px-2 py-1.5 text-[11px] leading-relaxed text-critical">
+          <p className="animate-fade-up rounded-md border border-critical/25 bg-critical/8 px-2 py-1.5 text-[11px] leading-relaxed text-critical">
             {error}
           </p>
         )}
 
-        {document.assets.length === 0 ? (
+        {document.assets.length === 0 && pending === 0 ? (
           <EmptyState
             icon={<ImageIcon size={18} />}
             title="Nenhum recurso ainda"
@@ -138,6 +156,9 @@ export function AssetsPanel({ editor }: { editor: Editor }) {
           />
         ) : (
           <ul className="grid grid-cols-2 gap-2">
+            {Array.from({ length: pending }, (_, index) => (
+              <AssetTileSkeleton key={`pending-${index}`} label="Chegando…" />
+            ))}
             {document.assets.map((asset) => (
               <AssetTile
                 key={asset.id}
@@ -172,21 +193,35 @@ function AssetTile({
   onReplace: () => void;
   onRemove: () => void;
 }) {
+  // Assets can be remote URLs, and a lazily-loaded one paints as an empty box
+  // until it arrives. The skeleton sits *behind* the image rather than swapping
+  // with it, so the browser still gets to decode progressively and the tile
+  // never changes size.
+  const [loaded, setLoaded] = useState(false);
+
   return (
-    <li className="group relative overflow-hidden rounded-lg border border-hairline bg-shell">
+    <li className="group animate-fade-up relative overflow-hidden rounded-lg border border-hairline bg-shell">
       <button
         type="button"
         onClick={onPlace}
         title={`Colocar "${asset.name}" no canvas`}
         className="block w-full"
       >
-        <span className="grid h-20 place-items-center overflow-hidden bg-panel-raised">
+        <span className="relative grid h-20 place-items-center overflow-hidden bg-panel-raised">
+          {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={asset.url}
             alt={asset.alt ?? asset.name}
-            className="max-h-20 w-full object-contain"
+            className={cn(
+              'relative max-h-20 w-full object-contain transition-opacity duration-200',
+              loaded ? 'opacity-100' : 'opacity-0',
+            )}
             loading="lazy"
+            onLoad={() => setLoaded(true)}
+            // A broken asset should still reveal its filename and controls
+            // rather than shimmering forever.
+            onError={() => setLoaded(true)}
           />
         </span>
       </button>
@@ -208,22 +243,24 @@ function AssetTile({
         </span>
       )}
 
-      <div className="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+      <div className="reveal-on-hover absolute top-1 right-1 flex gap-1.5">
         <button
           type="button"
           onClick={onReplace}
+          aria-label={`Substituir a imagem selecionada por ${asset.name}`}
           title="Substituir a imagem selecionada por este recurso"
-          className="grid h-6 w-6 place-items-center rounded bg-shell/90 text-ink-muted hover:text-ink"
+          className="grid h-7 w-7 place-items-center rounded-md bg-shell/90 text-ink-muted backdrop-blur-sm hover:text-ink"
         >
-          <ImageIcon size={11} />
+          <ImageIcon size={12} />
         </button>
         <button
           type="button"
           onClick={onRemove}
+          aria-label={`Remover ${asset.name} da biblioteca`}
           title="Remover da biblioteca"
-          className="grid h-6 w-6 place-items-center rounded bg-shell/90 text-ink-muted hover:text-critical"
+          className="grid h-7 w-7 place-items-center rounded-md bg-shell/90 text-ink-muted backdrop-blur-sm hover:text-critical"
         >
-          <Trash2 size={11} />
+          <Trash2 size={12} />
         </button>
       </div>
     </li>
@@ -239,11 +276,15 @@ function AssetTile({
 function GenerateImage({
   editor,
   onError,
+  onGenerating,
 }: {
   editor: Editor;
   onError: (message: string | null) => void;
+  /** Lets the panel draw a placeholder tile where the result will land. */
+  onGenerating: (generating: boolean) => void;
 }) {
   const [served, setServed] = useState<ImageProviderInfo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [providerId, setProviderId] = useState('');
   const [model, setModel] = useState('');
   const [size, setSize] = useState('1024x1024');
@@ -258,7 +299,8 @@ function GenerateImage({
     fetch('/api/images')
       .then((response) => response.json())
       .then((data: { providers: ImageProviderInfo[] }) => setServed(data.providers ?? []))
-      .catch(() => setServed([]));
+      .catch(() => setServed([]))
+      .finally(() => setLoading(false));
   }, []);
 
   // An image provider reuses the text provider's key, so a user who added an
@@ -292,6 +334,7 @@ function GenerateImage({
     if (!prompt.trim() || generating) return;
 
     setGenerating(true);
+    onGenerating(true);
     onError(null);
 
     try {
@@ -346,8 +389,27 @@ function GenerateImage({
       onError(caught instanceof Error ? caught.message : String(caught));
     } finally {
       setGenerating(false);
+      onGenerating(false);
     }
   };
+
+  // While the provider list is in flight the section holds its own shape.
+  // Returning `null` and then appearing pushed the whole asset grid down a
+  // beat after the panel had settled, which on a phone is a tap landing on the
+  // wrong tile.
+  if (loading) {
+    return (
+      <section className="space-y-2 rounded-xl border border-hairline bg-shell p-2.5">
+        <Skeleton className="skeleton-line h-2.5 w-14" />
+        <Skeleton className="h-9 w-full rounded-full sm:h-7" />
+        <div className="flex gap-1.5">
+          <Skeleton className="h-9 flex-1 rounded-full sm:h-7" />
+          <Skeleton className="h-9 flex-1 rounded-full sm:h-7" />
+        </div>
+        <Skeleton className="h-9 w-full rounded-full sm:h-7" />
+      </section>
+    );
+  }
 
   if (providers.length === 0) return null;
 
@@ -405,16 +467,17 @@ function GenerateImage({
         variant="primary"
         className="w-full"
         onClick={() => void generate()}
-        disabled={!prompt.trim() || generating}
+        loading={generating}
+        disabled={!prompt.trim()}
       >
-        {generating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+        {!generating && <Sparkles size={11} />}
         {generating ? 'Gerando…' : 'Gerar'}
       </Button>
 
       {active && !active.configured && active.locality === 'cloud' && (
         <p className="text-[10.5px] leading-relaxed text-caution">
-          {active.label} needs an API key — add yours under Settings, or run a local image server
-          and pick it above.
+          {active.label} precisa de uma chave de API — adicione a sua em Ajustes, ou rode um
+          servidor de imagens na sua máquina e selecione-o acima.
         </p>
       )}
     </section>

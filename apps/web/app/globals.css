@@ -1,5 +1,15 @@
+/**
+ * The webfonts are linked from the document head, not imported here.
+ *
+ * An `@import` inside a stylesheet is the slowest way to load a font: the
+ * browser has to download and parse this file before it even learns the font
+ * exists, so the request starts one full round trip late — on a phone, the
+ * round trip that decides whether the first paint has type in it. It also
+ * broke the CSS spec's rule that `@import` precede all other rules, since
+ * `@import 'tailwindcss'` expands into rules, and the production optimizer
+ * warned that it was entitled to drop the import altogether.
+ */
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /**
  * The editor's own chrome, in the chamb-design brand.
@@ -43,6 +53,30 @@
 
 :root {
   color-scheme: light;
+
+  /**
+   * Motion tokens.
+   *
+   * Three durations and two curves, and everything in the app picks from them.
+   * The point is not tidiness — it is that a dialog, a sheet and a tab all
+   * settle at the same speed, which is what makes an interface feel like one
+   * object rather than a pile of components that each animate to taste.
+   *
+   * `--ease-exit` is deliberately faster and flatter than `--ease-enter`:
+   * something arriving should overshoot slightly and settle, something leaving
+   * should get out of the way. Symmetric timing reads as sluggish on the way
+   * out, which on a phone is the difference between "closed" and "closing".
+   */
+  --motion-fast: 130ms;
+  --motion-base: 220ms;
+  --motion-slow: 340ms;
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Safe-area insets, resolved once so utilities below stay readable. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html,
@@ -203,6 +237,24 @@ body::after {
   outline-offset: 2px;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                   Motion                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The app's motion vocabulary.
+ *
+ * Every screen change in the app is one of five things — content arriving, a
+ * dialog opening over the canvas, a sheet coming up from the bottom edge, a
+ * side panel sliding in, or a list filling in — so there are five families
+ * here and nothing else. Anything that needs a sixth is probably the wrong
+ * interaction.
+ *
+ * Enter and exit are separate keyframes rather than a reversed animation,
+ * because the exits are shorter: a dialog that takes as long to leave as it
+ * took to arrive feels stuck.
+ */
+
 @keyframes od-fade-up {
   from {
     opacity: 0;
@@ -214,8 +266,174 @@ body::after {
   }
 }
 
+@keyframes od-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes od-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Dialogs: a small rise plus a hair of scale. Scaling from much below 0.96
+   reads as a zoom effect rather than as the surface settling into place. */
+@keyframes od-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes od-dialog-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.99);
+  }
+}
+
+/* Sheets: full travel from the bottom edge, the phone-native gesture. */
+@keyframes od-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes od-sheet-out {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes od-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes od-slide-out-right {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+/* Panel tab switches: a very short, very small move. The panel body is dense,
+   and anything larger turns a tab change into a scene change. */
+@keyframes od-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .animate-fade-up {
-  animation: od-fade-up 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: od-fade-up var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-fade-in {
+  animation: od-fade-in var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-fade-out {
+  animation: od-fade-out var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-dialog-in {
+  animation: od-dialog-in var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-dialog-out {
+  animation: od-dialog-out var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-sheet-in {
+  animation: od-sheet-in var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-sheet-out {
+  animation: od-sheet-out var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-slide-in-right {
+  animation: od-slide-in-right var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-slide-out-right {
+  animation: od-slide-out-right var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-panel-in {
+  animation: od-panel-in var(--motion-fast) var(--ease-enter) both;
+}
+
+/**
+ * A whole screen arriving.
+ *
+ * Routes in this app are client-side, so there is no browser-level transition
+ * to hook — the incoming page animates itself on mount. Kept to opacity and a
+ * 8px rise: a route change that slides the full viewport costs more in
+ * perceived latency than it buys in polish.
+ */
+@keyframes od-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-page-in {
+  animation: od-page-in var(--motion-slow) var(--ease-enter) both;
+}
+
+/**
+ * Stagger.
+ *
+ * `--i` is set per item; the delay is capped by only ever setting it on the
+ * first screenful of items, so a workspace with sixty projects does not make
+ * the sixtieth wait two and a half seconds to appear.
+ */
+.stagger-item {
+  animation-delay: calc(var(--i, 0) * 45ms);
 }
 
 @keyframes od-pulse-soft {
@@ -232,11 +450,154 @@ body::after {
   animation: od-pulse-soft 1.4s ease-in-out infinite;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                  Skeletons                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The loading placeholder.
+ *
+ * A sweep rather than a pulse. Pulsing opacity says "something is here and it
+ * is blinking"; a sweep travelling in the reading direction says "this is
+ * filling in", which is the message a skeleton exists to send.
+ *
+ * The base tint is the raised panel rather than grey, so a skeleton sitting on
+ * cream still belongs to the brand's paper. The highlight is white at low
+ * alpha for the same reason — a grey-on-grey shimmer looks like a rendering
+ * bug on a warm surface.
+ */
+@keyframes od-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-panel-raised);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.75) 45%,
+    transparent 90%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: od-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Skeleton text lines round to the line box, not to the panel radius. */
+.skeleton-line {
+  border-radius: 999px;
+  height: 0.7em;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   Mobile                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Safe areas.
+ *
+ * The editor puts a control bar against the bottom edge, which on a phone with
+ * a home indicator is exactly where the system gesture area is. These pad past
+ * it without hardcoding a device's inset.
+ */
+.pb-safe {
+  padding-bottom: max(0.375rem, var(--safe-bottom));
+}
+
+.pt-safe {
+  padding-top: max(0rem, var(--safe-top));
+}
+
+/**
+ * Touch scrolling inside panels.
+ *
+ * `overscroll-behavior: none` on the body stops the page from rubber-banding,
+ * but a scrollable panel still needs momentum, and it needs to not hand its
+ * scroll to whatever is behind it once it hits an end.
+ */
+.touch-pane {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/**
+ * Hit area, without a size change.
+ *
+ * A 36px icon button is under the 44px touch minimum, but growing the visible
+ * pill to 44 would blow apart a dense toolbar. The pseudo-element extends only
+ * the *target*, 4px on each side — which is why every toolbar that uses these
+ * keeps at least an 8px gap between them on touch. Any tighter and neighbouring
+ * targets would overlap, and an overlapping target is worse than a small one:
+ * it mis-fires instead of missing.
+ */
+@media (hover: none), (pointer: coarse) {
+  .tap-target::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+  }
+}
+
+/**
+ * Where a pointer cannot hover, hover-revealed controls are simply missing.
+ *
+ * The app hides row actions until hover in four places — project cards, asset
+ * tiles, layer rows, inspector rows — and on a touch screen that made deleting
+ * a project impossible rather than merely awkward. This reveals them
+ * permanently on coarse pointers, which is why those call sites use
+ * `reveal-on-hover` instead of `opacity-0 group-hover:opacity-100`.
+ */
+.reveal-on-hover {
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease;
+}
+
+.group:hover .reveal-on-hover,
+.group:focus-within .reveal-on-hover,
+.reveal-on-hover:focus-within {
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .reveal-on-hover {
+    opacity: 1;
+  }
+}
+
+/**
+ * Motion, honestly reduced.
+ *
+ * Not `animation: none` — that would leave elements stuck at the *from* keyframe
+ * when `both` fill mode is in play, which is how a reduced-motion setting turns
+ * into an invisible dialog. Collapsing the duration instead lands every
+ * animation on its final frame immediately.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up,
-  .animate-pulse-soft,
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Ambient loops carry no information; stop them outright. */
   .animate-float,
-  .dino-bounce:hover {
-    animation: none;
+  .animate-pulse-soft {
+    animation: none !important;
+  }
+
+  /* A frozen sweep reads as a rendering artefact — drop it to a flat block. */
+  .skeleton {
+    animation: none !important;
+    background-image: none;
   }
 }
