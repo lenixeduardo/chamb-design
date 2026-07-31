@@ -1,0 +1,200 @@
+{
+  "workspace": {
+    "viewport": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "offenders": [
+      {
+        "tag": "img",
+        "cls": "pointer-events-none select-none object-contain absolute -right-14 -bottom-16 rotate-12 opa",
+        "left": 159,
+        "right": 443,
+        "text": ""
+      }
+    ],
+    "offenderCount": 1
+  },
+  "editor": {
+    "viewport": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "flex items-center gap-2",
+        "left": 352,
+        "right": 549,
+        "text": "ExportarAI"
+      },
+      {
+        "tag": "button",
+        "cls": "inline-flex items-center justify-center font-medium whitespace-nowrap transition-[backgrou",
+        "left": 392,
+        "right": 488,
+        "text": "Exportar"
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "left": 405,
+        "right": 417,
+        "text": ""
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "left": 407,
+        "right": 416,
+        "text": ""
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "left": 409,
+        "right": 414,
+        "text": ""
+      },
+      {
+        "tag": "button",
+        "cls": "inline-flex items-center justify-center font-medium whitespace-nowrap transition-[backgrou",
+        "left": 496,
+        "right": 549,
+        "text": "AI"
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "left": 508,
+        "right": 520,
+        "text": ""
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "left": 509,
+        "right": 519,
+        "text": ""
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "left": 517,
+        "right": 519,
+        "text": ""
+      },
+      {
+        "tag": "circle",
+        "cls": "[object SVGAnimatedString]",
+        "left": 509,
+        "right": 511,
+        "text": ""
+      },
+      {
+        "tag": "div",
+        "cls": "absolute top-0 left-0 origin-top-left",
+        "left": 352,
+        "right": 664,
+        "text": "HomeMobile · 390px"
+      },
+      {
+        "tag": "div",
+        "cls": "pointer-events-none absolute -top-7 left-0 flex items-center gap-2 text-[11px] whitespace-",
+        "left": 352,
+        "right": 449,
+        "text": "HomeMobile · 390px"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "left": 384,
+        "right": 449,
+        "text": "Mobile · 390px"
+      },
+      {
+        "tag": "div",
+        "cls": "relative bg-white shadow-[0_24px_80px_-24px_rgba(0,0,0,0.7)]",
+        "left": 352,
+        "right": 664,
+        "text": ""
+      },
+      {
+        "tag": "div",
+        "cls": "",
+        "left": 352,
+        "right": 664,
+        "text": ""
+      },
+      {
+        "tag": "div",
+        "cls": "",
+        "left": 352,
+        "right": 664,
+        "text": ""
+      },
+      {
+        "tag": "aside",
+        "cls": "flex w-72 shrink-0 flex-col overflow-hidden border-l border-hairline bg-panel",
+        "left": 288,
+        "right": 576,
+        "text": "DesignNada selecionadoEscolha uma camada"
+      },
+      {
+        "tag": "section",
+        "cls": "flex h-full min-h-0 flex-col",
+        "left": 289,
+        "right": 576,
+        "text": "DesignNada selecionadoEscolha uma camada"
+      },
+      {
+        "tag": "header",
+        "cls": "flex h-9 shrink-0 items-center justify-between px-3",
+        "left": 289,
+        "right": 576,
+        "text": "Design"
+      },
+      {
+        "tag": "div",
+        "cls": "min-h-0 flex-1 overflow-y-auto",
+        "left": 289,
+        "right": 576,
+        "text": "Nada selecionadoEscolha uma camada no ca"
+      },
+      {
+        "tag": "div",
+        "cls": "flex flex-col items-center justify-center gap-3 px-6 py-12 text-center",
+        "left": 289,
+        "right": 576,
+        "text": "Nada selecionadoEscolha uma camada no ca"
+      },
+      {
+        "tag": "div",
+        "cls": "space-y-1",
+        "left": 313,
+        "right": 552,
+        "text": "Nada selecionadoEscolha uma camada no ca"
+      },
+      {
+        "tag": "p",
+        "cls": "text-[13px] font-medium text-ink",
+        "left": 313,
+        "right": 552,
+        "text": "Nada selecionado"
+      },
+      {
+        "tag": "p",
+        "cls": "max-w-[36ch] text-[12px] leading-relaxed text-ink-faint",
+        "left": 313,
+        "right": 552,
+        "text": "Escolha uma camada no canvas ou no paine"
+      },
+      {
+        "tag": "aside",
+        "cls": "flex w-80 shrink-0 flex-col overflow-hidden border-l border-hairline bg-panel",
+        "left": 576,
+        "right": 896,
+        "text": "AssistentenuvemDescreva o que você quer "
+      }
+    ],
+    "offenderCount": 75
+  }
+}
