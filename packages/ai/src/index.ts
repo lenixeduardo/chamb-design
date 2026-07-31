@@ -75,7 +75,7 @@ export function listProviders(): {
 /** Providers register as plugin contributions, same as blocks and exporters. */
 export const aiProvidersPlugin: OpenDesignPlugin = definePlugin({
   id: 'opendesign.ai-providers',
-  name: 'OpenDesign model providers',
+  name: 'Charm-Design model providers',
   version: '0.1.0',
   description: 'Claude, GPT, Gemini, DeepSeek, OpenRouter, Ollama and LM Studio.',
   activate(context) {

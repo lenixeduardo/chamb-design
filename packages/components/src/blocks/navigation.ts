@@ -8,7 +8,7 @@ export const navbar: ComponentContribution = {
   keywords: ['header', 'navigation', 'menu'],
   description: 'Sticky glass navigation bar with brand, links and a call to action.',
   props: [
-    { name: 'brand', type: 'string', defaultValue: 'OpenDesign' },
+    { name: 'brand', type: 'string', defaultValue: 'Charm-Design' },
     { name: 'links', type: 'string', defaultValue: 'Product,Templates,Docs,Pricing' },
     { name: 'cta', type: 'string', defaultValue: 'Get started' },
     { name: 'sticky', type: 'boolean', defaultValue: true },
@@ -60,7 +60,7 @@ export const navbar: ComponentContribution = {
                   {
                     type: 'text',
                     name: 'Wordmark',
-                    props: { text: (props?.brand as string) ?? 'OpenDesign' },
+                    props: { text: (props?.brand as string) ?? 'Charm-Design' },
                     style: {
                       color: color('foreground'),
                       font: { size: '{size.base}', weight: 600, letterSpacing: '-0.01em' },
@@ -123,7 +123,7 @@ export const footer: ComponentContribution = {
   category: 'Footer',
   keywords: ['bottom', 'sitemap', 'legal'],
   props: [
-    { name: 'brand', type: 'string', defaultValue: 'OpenDesign' },
+    { name: 'brand', type: 'string', defaultValue: 'Charm-Design' },
     { name: 'tagline', type: 'string', defaultValue: 'The open source AI design platform.' },
   ],
   create: ({ createId, props }) => {
@@ -165,7 +165,7 @@ export const footer: ComponentContribution = {
                       {
                         type: 'text',
                         name: 'Wordmark',
-                        props: { text: (props?.brand as string) ?? 'OpenDesign' },
+                        props: { text: (props?.brand as string) ?? 'Charm-Design' },
                         style: {
                           color: color('foreground'),
                           font: { size: '{size.base}', weight: 600 },
@@ -229,7 +229,7 @@ export const footer: ComponentContribution = {
                   {
                     type: 'text',
                     name: 'Copyright',
-                    props: { text: `© ${new Date().getFullYear()} OpenDesign. MIT licensed.` },
+                    props: { text: `© ${new Date().getFullYear()} Charm-Design. MIT licensed.` },
                     style: { color: color('muted-foreground'), font: { size: '{size.xs}' } },
                   },
                   {

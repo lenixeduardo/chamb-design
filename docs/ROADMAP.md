@@ -64,7 +64,7 @@ chosen from presets rather than drawn.
 
 ## Not planned
 
-**A proprietary runtime.** Exported code will keep having no OpenDesign
+**A proprietary runtime.** Exported code will keep having no Charm-Design
 dependency. Anything that would require one belongs in a plugin.
 
 **Design-file lock-in.** The document format is plain JSON with a published

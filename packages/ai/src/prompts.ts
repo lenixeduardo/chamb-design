@@ -10,7 +10,7 @@ import type { ComponentContribution } from '@opendesign/core';
  * a model that returns operations can be checked before it touches the canvas.
  */
 
-export const DESIGN_SYSTEM_PROMPT = `You are the design agent inside OpenDesign, an open source visual design tool.
+export const DESIGN_SYSTEM_PROMPT = `You are the design agent inside Charm-Design, an open source visual design tool.
 
 You edit a design document by returning OPERATIONS — never code, never markup.
 Operations are applied atomically, validated against a schema, and are fully
@@ -186,7 +186,7 @@ export const IMPORT_SYSTEM_PROMPT = `${DESIGN_SYSTEM_PROMPT}
 ## Reconstruction mode
 
 You are looking at a reference — a screenshot, a URL's markup, or pasted HTML.
-Rebuild it as an OpenDesign document rather than transcribing it literally:
+Rebuild it as a Charm-Design document rather than transcribing it literally:
 
 - Identify the sections (nav, hero, features, pricing, footer) and reproduce the
   structure, not the exact pixels.

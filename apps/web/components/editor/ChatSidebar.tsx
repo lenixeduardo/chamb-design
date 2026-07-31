@@ -19,6 +19,7 @@ import { isLocalProvider, runAgent } from '@/lib/agent-client';
 import { fileToBase64, imageFilesFrom } from '@/lib/assets';
 import { hasKey, readSettings, setLastModel, subscribeToSettings } from '@/lib/settings';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { CharmDino } from '@/components/brand/CharmDino';
 import { Badge, Button, Select } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
@@ -297,7 +298,7 @@ export function ChatSidebar({
         {turns.length === 0 && (
           <div className="space-y-3 pt-6">
             <div className="flex items-center gap-2 text-ink-muted">
-              <Sparkles size={14} className="text-brand-soft" />
+              <CharmDino role="mark" size={22} />
               <p className="text-[12px] font-medium">Describe what you want to build</p>
             </div>
             <p className="text-[11px] leading-relaxed text-ink-faint">

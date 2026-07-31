@@ -1,7 +1,7 @@
 {
   "name": "@opendesign/components",
   "version": "0.1.0",
-  "description": "Built-in block library for OpenDesign, contributed through the public plugin API",
+  "description": "Built-in block library for Charm-Design, contributed through the public plugin API",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

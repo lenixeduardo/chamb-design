@@ -406,7 +406,7 @@ export const testimonials: ComponentContribution = {
   name: 'Testimonials',
   category: 'Landing Pages',
   keywords: ['social proof', 'quotes', 'reviews'],
-  props: [{ name: 'title', type: 'string', defaultValue: 'Teams ship faster with OpenDesign' }],
+  props: [{ name: 'title', type: 'string', defaultValue: 'Teams ship faster with Charm-Design' }],
   create: ({ createId, props }) => {
     const quotes = [
       {
@@ -441,7 +441,7 @@ export const testimonials: ComponentContribution = {
                 type: 'heading',
                 name: 'Section title',
                 props: {
-                  text: (props?.title as string) ?? 'Teams ship faster with OpenDesign',
+                  text: (props?.title as string) ?? 'Teams ship faster with Charm-Design',
                   level: 'h2',
                 },
                 style: {

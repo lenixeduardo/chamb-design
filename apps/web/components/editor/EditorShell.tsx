@@ -33,6 +33,7 @@ import { ThemePanel } from './ThemePanel';
 import { AssetsPanel } from './AssetsPanel';
 import { ExportDialog } from './ExportDialog';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { CharmDino } from '@/components/brand/CharmDino';
 import { Button, IconButton, SegmentedControl } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 
@@ -85,12 +86,8 @@ export function EditorShell({ document }: { document: DesignDocument }) {
     <div className="flex h-screen flex-col overflow-hidden">
       <header className="flex h-11 shrink-0 items-center justify-between gap-3 border-b border-hairline bg-panel px-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            href="/"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-brand transition-opacity hover:opacity-85"
-            aria-label="Back to workspace"
-          >
-            <Sparkles size={13} className="text-white" />
+          <Link href="/" className="shrink-0" aria-label="Back to workspace">
+            <CharmDino role="logo" size={28} />
           </Link>
           <span className="truncate text-[13px] font-medium">{document.name}</span>
         </div>

@@ -13,7 +13,6 @@ import {
   Plus,
   Search,
   Settings,
-  Sparkles,
   Trash2,
 } from 'lucide-react';
 import {
@@ -25,6 +24,7 @@ import {
   type ProjectSummary,
 } from '@/lib/projects';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { CharmDino } from '@/components/brand/CharmDino';
 import { getCredential, hasKey, subscribeToSettings } from '@/lib/settings';
 import { Badge, Button, EmptyState, IconButton } from '@/components/ui/primitives';
 import { cn, formatRelativeTime } from '@/lib/utils';
@@ -93,18 +93,18 @@ export default function WorkspacePage() {
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand">
-            <Sparkles size={17} strokeWidth={2.2} className="text-white" />
-          </div>
+          <CharmDino role="logo" size={38} alt="Charm-Design" />
           <div>
-            <h1 className="text-[15px] font-semibold tracking-tight">OpenDesign</h1>
-            <p className="text-[12px] text-ink-faint">Design interfaces with AI, in the open.</p>
+            <h1 className="text-[15px] font-semibold tracking-tight">Charm-Design</h1>
+            <p className="text-[12px] text-ink-faint">
+              The design app that pairs speed with charm.
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <a
-            href="https://github.com/opendesign/opendesign"
+            href="https://github.com/lenixeduardo/chamb-design"
             target="_blank"
             rel="noreferrer noopener"
             className="inline-flex h-9 items-center gap-2 rounded-full border border-hairline px-4 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
@@ -127,37 +127,54 @@ export default function WorkspacePage() {
         </div>
       </header>
 
-      <section className="lift mt-10 rounded-[28px] border border-hairline bg-panel p-8">
-        <Badge tone="brand">MIT licensed · self-hostable</Badge>
-        {/* The one place the display serif earns its keep: a single large line
-            carrying the brand's voice, with the accent on the promise. */}
-        <h2 className="display mt-4 max-w-[20ch] text-[40px] leading-[0.95]">
-          Describe an interface. Edit every pixel.{' '}
-          <span className="text-brand italic">Export clean code.</span>
-        </h2>
-        <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-muted">
-          A visual canvas, a real design system and a model-agnostic AI layer that edits your
-          document through validated operations — so every AI change is reviewable and undoable.
-          Bring Claude, GPT, Gemini or a model running on your own machine.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <Button variant="primary" onClick={handleCreate}>
-            Start a blank project
-            <ArrowRight size={14} />
-          </Button>
-          {ready === false && (
-            <Button onClick={() => setSettingsOpen(true)}>
-              <KeyRound size={14} />
-              Add your API key
-            </Button>
-          )}
+      <section className="lift relative mt-10 overflow-hidden rounded-[28px] border border-hairline bg-panel p-8">
+        {/* Watermark, at the brand's weight: large, rotated, barely there. It
+            reads as paper texture rather than as a second mascot. */}
+        <CharmDino
+          role="watermark"
+          size={240}
+          className="absolute -right-14 -bottom-16 rotate-12 opacity-[0.035]"
+        />
+
+        <div className="relative flex flex-wrap items-start justify-between gap-6">
+          <div className="min-w-0 flex-1">
+            <Badge tone="brand">MIT licensed · self-hostable</Badge>
+            {/* The one place the display serif earns its keep: a single large
+                line carrying the brand's voice, with the accent on the promise. */}
+            <h2 className="display mt-4 max-w-[20ch] text-[40px] leading-[0.95]">
+              Describe an interface. Edit every pixel.{' '}
+              <span className="text-brand italic">Export clean code.</span>
+            </h2>
+            <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-muted">
+              A visual canvas, a real design system and a model-agnostic AI layer that edits your
+              document through validated operations — so every AI change is reviewable and undoable.
+              Bring Claude, GPT, Gemini or a model running on your own machine.
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <Button variant="primary" onClick={handleCreate}>
+                Start a blank project
+                <ArrowRight size={14} />
+              </Button>
+              {ready === false && (
+                <Button onClick={() => setSettingsOpen(true)}>
+                  <KeyRound size={14} />
+                  Add your API key
+                </Button>
+              )}
+            </div>
+            {ready === false && (
+              <p className="mt-3 max-w-[62ch] text-[12px] leading-relaxed text-ink-faint">
+                No model is connected yet. Paste your own API key in Settings — it stays in this
+                browser — or point the app at Ollama or LM Studio running on your machine.
+              </p>
+            )}
+          </div>
+
+          {/* The hero character. One per screen, and only where there is room —
+              hidden below md rather than shrunk into a sticker. */}
+          <CharmDino role="float" size={132} className="hidden shrink-0 md:block" />
         </div>
-        {ready === false && (
-          <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
-            No model is connected yet. Paste your own API key in Settings — it stays in this browser
-            — or point the app at Ollama or LM Studio running on your machine.
-          </p>
-        )}
       </section>
 
       <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -221,7 +238,10 @@ export default function WorkspacePage() {
         ) : visible.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-hairline">
             <EmptyState
-              icon={<Layers size={22} />}
+              // An empty workspace is the brand's best moment for the mascot:
+              // nothing to compete with, and the dino says "start" better than
+              // a stack-of-layers glyph does.
+              icon={query ? <Layers size={22} /> : <CharmDino role="mark" size={52} />}
               title={query ? 'No projects match that search' : 'No projects yet'}
               description={
                 query
@@ -285,9 +305,12 @@ export default function WorkspacePage() {
         )}
       </section>
 
-      <footer className="mt-12 border-t border-hairline pt-5 text-[11px] text-ink-faint">
-        Projects and API keys are stored in this browser. Nothing leaves your machine unless you
-        connect a cloud model provider or a sync server.
+      <footer className="mt-12 flex items-start gap-2 border-t border-hairline pt-5 text-[11px] text-ink-faint">
+        <CharmDino role="mark" size={16} className="mt-px shrink-0 opacity-70" />
+        <span>
+          Projects and API keys are stored in this browser. Nothing leaves your machine unless you
+          connect a cloud model provider or a sync server.
+        </span>
       </footer>
 
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}

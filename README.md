@@ -1,4 +1,4 @@
-# OpenDesign
+# Charm-Design
 
 An open source, AI-first platform for designing interfaces — a visual canvas, a
 real design system, and clean code on the way out. MIT licensed and
@@ -13,7 +13,7 @@ self-hostable, with a plugin API that the built-in features themselves use.
 ## The idea in one paragraph
 
 Most AI design tools return code. Code is hard to trust, impossible to diff
-meaningfully, and can only be accepted or thrown away. OpenDesign's model
+meaningfully, and can only be accepted or thrown away. Charm-Design's model
 returns **document operations** instead: `insertSubtree`, `updateStyle`,
 `moveNode`. Every AI edit is validated against a schema, dry-run on a copy of
 the document, checked by an automated design review, and only then applied —

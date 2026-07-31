@@ -180,8 +180,8 @@ export const openrouterProvider = (config: ProviderConfig = {}): ChatProvider =>
     label: 'OpenRouter',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
     extraHeaders: {
-      'HTTP-Referer': 'https://github.com/opendesign/opendesign',
-      'X-Title': 'OpenDesign',
+      'HTTP-Referer': 'https://github.com/lenixeduardo/chamb-design',
+      'X-Title': 'Charm-Design',
     },
     models: [
       { id: 'anthropic/claude-opus-5', label: 'Claude Opus 5', vision: true },

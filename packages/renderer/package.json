@@ -1,7 +1,7 @@
 {
   "name": "@opendesign/renderer",
   "version": "0.1.0",
-  "description": "Pure React renderer for OpenDesign documents \u2014 knows nothing about the editor",
+  "description": "Pure React renderer for Charm-Design documents \u2014 knows nothing about the editor",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
