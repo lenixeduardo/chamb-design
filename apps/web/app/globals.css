@@ -1,5 +1,15 @@
+/**
+ * The webfonts are linked from the document head, not imported here.
+ *
+ * An `@import` inside a stylesheet is the slowest way to load a font: the
+ * browser has to download and parse this file before it even learns the font
+ * exists, so the request starts one full round trip late — on a phone, the
+ * round trip that decides whether the first paint has type in it. It also
+ * broke the CSS spec's rule that `@import` precede all other rules, since
+ * `@import 'tailwindcss'` expands into rules, and the production optimizer
+ * warned that it was entitled to drop the import altogether.
+ */
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /**
  * The editor's own chrome, in the chamb-design brand.
@@ -34,15 +44,70 @@
   --color-caution: #b26a12;
   --color-critical: #c42b2b;
 
+  /**
+   * Type.
+   *
+   * The display face is Fraunces, a variable serif with an optical-size axis —
+   * which is the whole reason it is here rather than a static serif. A display
+   * cut wants tight joins and fine hairlines at 64px and neither at 24px, and
+   * `opsz` is what lets one family do both without shipping two files. Set
+   * through `font-optical-sizing: auto` below, so the axis tracks the rendered
+   * size instead of being frozen at one value.
+   *
+   * `--font-script` carries the wordmark and nothing else. A script face is a
+   * signature: used once it reads as a logo, used twice it reads as a theme.
+   */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-script: 'Yellowtail', 'Brush Script MT', cursive;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
-  --radius-panel: 14px;
+  /**
+   * Radius.
+   *
+   * Named by role rather than by size, because the whole point of the scale is
+   * that a control and the card it sits in are *related*, not that they happen
+   * to be 16 and 24. Controls land on 16px: soft enough to belong to a rounded
+   * system, square enough that a wide button still reads as a rectangle rather
+   * than as a lozenge — which is what a full-radius pill becomes once the label
+   * is longer than two words.
+   *
+   * `--radius-pill` survives for the things that genuinely are pills: status
+   * chips and filter tags, where the shape is the affordance.
+   */
+  --radius-chip: 10px;
+  --radius-control: 16px;
+  --radius-surface: 24px;
+  --radius-sheet: 32px;
+  --radius-pill: 999px;
 }
 
 :root {
   color-scheme: light;
+
+  /**
+   * Motion tokens.
+   *
+   * Three durations and two curves, and everything in the app picks from them.
+   * The point is not tidiness — it is that a dialog, a sheet and a tab all
+   * settle at the same speed, which is what makes an interface feel like one
+   * object rather than a pile of components that each animate to taste.
+   *
+   * `--ease-exit` is deliberately faster and flatter than `--ease-enter`:
+   * something arriving should overshoot slightly and settle, something leaving
+   * should get out of the way. Symmetric timing reads as sluggish on the way
+   * out, which on a phone is the difference between "closed" and "closing".
+   */
+  --motion-fast: 130ms;
+  --motion-base: 220ms;
+  --motion-slow: 340ms;
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Safe-area insets, resolved once so utilities below stay readable. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html,
@@ -50,9 +115,23 @@ body {
   height: 100%;
 }
 
+/**
+ * The page ground.
+ *
+ * A single vertical gradient across the two cream values the brand already
+ * owns — shell at the top, the raised-panel tone at the bottom. It reads as
+ * light falling on paper rather than as a colour, which is exactly the amount
+ * of gradient a working tool can carry: enough that a long page has a top and
+ * a bottom, not enough to compete with a canvas.
+ *
+ * Fixed attachment so the ground stays put while content scrolls over it —
+ * a gradient that scrolls with the page repeats its own seam at every screen
+ * height.
+ */
 body {
   margin: 0;
-  background: var(--color-shell);
+  background: linear-gradient(180deg, var(--color-shell) 0%, var(--color-panel-raised) 100%);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -78,13 +157,43 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/** Display type. The personality of the brand lives in the serif, so it is a
- * class rather than a heading default — headings in dense editor chrome stay
- * sans, and only the deliberate moments switch. */
+/**
+ * Display type.
+ *
+ * The personality of the brand lives in the serif, so it is a class rather
+ * than a heading default — headings in dense editor chrome stay sans, and only
+ * the deliberate moments switch.
+ *
+ * Weight 500 rather than 400: Fraunces at display size has enough contrast
+ * between stem and hairline that the regular weight goes thin and silvery on a
+ * cream ground. The line-height is 1.05 because a display line is set to be
+ * *read as a shape* — the leading that suits a paragraph leaves a two-line
+ * headline looking like two unrelated sentences.
+ */
 .display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 500;
+  line-height: 1.05;
   letter-spacing: -0.02em;
+  /* Let the browser drive Fraunces' `opsz` axis from the rendered size: the
+     same class then works at 64px in the hero and 24px in a dialog without a
+     second set of variation settings. */
+  font-optical-sizing: auto;
+}
+
+/**
+ * The wordmark.
+ *
+ * One script line, at the one place the product says its own name. It sets
+ * slightly large and with a touch of leading because Yellowtail's ascenders
+ * and descenders are long — at the size of the surrounding UI text it would
+ * collide with whatever sits above it.
+ */
+.wordmark {
+  font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
 }
 
 /* Panels sit on a subtle glass surface — restrained, not decorative. */
@@ -203,6 +312,24 @@ body::after {
   outline-offset: 2px;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                   Motion                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The app's motion vocabulary.
+ *
+ * Every screen change in the app is one of five things — content arriving, a
+ * dialog opening over the canvas, a sheet coming up from the bottom edge, a
+ * side panel sliding in, or a list filling in — so there are five families
+ * here and nothing else. Anything that needs a sixth is probably the wrong
+ * interaction.
+ *
+ * Enter and exit are separate keyframes rather than a reversed animation,
+ * because the exits are shorter: a dialog that takes as long to leave as it
+ * took to arrive feels stuck.
+ */
+
 @keyframes od-fade-up {
   from {
     opacity: 0;
@@ -214,8 +341,174 @@ body::after {
   }
 }
 
+@keyframes od-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes od-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Dialogs: a small rise plus a hair of scale. Scaling from much below 0.96
+   reads as a zoom effect rather than as the surface settling into place. */
+@keyframes od-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes od-dialog-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.99);
+  }
+}
+
+/* Sheets: full travel from the bottom edge, the phone-native gesture. */
+@keyframes od-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes od-sheet-out {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes od-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes od-slide-out-right {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+/* Panel tab switches: a very short, very small move. The panel body is dense,
+   and anything larger turns a tab change into a scene change. */
+@keyframes od-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .animate-fade-up {
-  animation: od-fade-up 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: od-fade-up var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-fade-in {
+  animation: od-fade-in var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-fade-out {
+  animation: od-fade-out var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-dialog-in {
+  animation: od-dialog-in var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-dialog-out {
+  animation: od-dialog-out var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-sheet-in {
+  animation: od-sheet-in var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-sheet-out {
+  animation: od-sheet-out var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-slide-in-right {
+  animation: od-slide-in-right var(--motion-base) var(--ease-enter) both;
+}
+
+.animate-slide-out-right {
+  animation: od-slide-out-right var(--motion-fast) var(--ease-exit) both;
+}
+
+.animate-panel-in {
+  animation: od-panel-in var(--motion-fast) var(--ease-enter) both;
+}
+
+/**
+ * A whole screen arriving.
+ *
+ * Routes in this app are client-side, so there is no browser-level transition
+ * to hook — the incoming page animates itself on mount. Kept to opacity and a
+ * 8px rise: a route change that slides the full viewport costs more in
+ * perceived latency than it buys in polish.
+ */
+@keyframes od-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-page-in {
+  animation: od-page-in var(--motion-slow) var(--ease-enter) both;
+}
+
+/**
+ * Stagger.
+ *
+ * `--i` is set per item; the delay is capped by only ever setting it on the
+ * first screenful of items, so a workspace with sixty projects does not make
+ * the sixtieth wait two and a half seconds to appear.
+ */
+.stagger-item {
+  animation-delay: calc(var(--i, 0) * 45ms);
 }
 
 @keyframes od-pulse-soft {
@@ -232,11 +525,154 @@ body::after {
   animation: od-pulse-soft 1.4s ease-in-out infinite;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                  Skeletons                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The loading placeholder.
+ *
+ * A sweep rather than a pulse. Pulsing opacity says "something is here and it
+ * is blinking"; a sweep travelling in the reading direction says "this is
+ * filling in", which is the message a skeleton exists to send.
+ *
+ * The base tint is the raised panel rather than grey, so a skeleton sitting on
+ * cream still belongs to the brand's paper. The highlight is white at low
+ * alpha for the same reason — a grey-on-grey shimmer looks like a rendering
+ * bug on a warm surface.
+ */
+@keyframes od-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-panel-raised);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.75) 45%,
+    transparent 90%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: od-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Skeleton text lines round to the line box, not to the panel radius. */
+.skeleton-line {
+  border-radius: 999px;
+  height: 0.7em;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   Mobile                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Safe areas.
+ *
+ * The editor puts a control bar against the bottom edge, which on a phone with
+ * a home indicator is exactly where the system gesture area is. These pad past
+ * it without hardcoding a device's inset.
+ */
+.pb-safe {
+  padding-bottom: max(0.375rem, var(--safe-bottom));
+}
+
+.pt-safe {
+  padding-top: max(0rem, var(--safe-top));
+}
+
+/**
+ * Touch scrolling inside panels.
+ *
+ * `overscroll-behavior: none` on the body stops the page from rubber-banding,
+ * but a scrollable panel still needs momentum, and it needs to not hand its
+ * scroll to whatever is behind it once it hits an end.
+ */
+.touch-pane {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/**
+ * Hit area, without a size change.
+ *
+ * A 36px icon button is under the 44px touch minimum, but growing the visible
+ * pill to 44 would blow apart a dense toolbar. The pseudo-element extends only
+ * the *target*, 4px on each side — which is why every toolbar that uses these
+ * keeps at least an 8px gap between them on touch. Any tighter and neighbouring
+ * targets would overlap, and an overlapping target is worse than a small one:
+ * it mis-fires instead of missing.
+ */
+@media (hover: none), (pointer: coarse) {
+  .tap-target::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+  }
+}
+
+/**
+ * Where a pointer cannot hover, hover-revealed controls are simply missing.
+ *
+ * The app hides row actions until hover in four places — project cards, asset
+ * tiles, layer rows, inspector rows — and on a touch screen that made deleting
+ * a project impossible rather than merely awkward. This reveals them
+ * permanently on coarse pointers, which is why those call sites use
+ * `reveal-on-hover` instead of `opacity-0 group-hover:opacity-100`.
+ */
+.reveal-on-hover {
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease;
+}
+
+.group:hover .reveal-on-hover,
+.group:focus-within .reveal-on-hover,
+.reveal-on-hover:focus-within {
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .reveal-on-hover {
+    opacity: 1;
+  }
+}
+
+/**
+ * Motion, honestly reduced.
+ *
+ * Not `animation: none` — that would leave elements stuck at the *from* keyframe
+ * when `both` fill mode is in play, which is how a reduced-motion setting turns
+ * into an invisible dialog. Collapsing the duration instead lands every
+ * animation on its final frame immediately.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up,
-  .animate-pulse-soft,
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Ambient loops carry no information; stop them outright. */
   .animate-float,
-  .dino-bounce:hover {
-    animation: none;
+  .animate-pulse-soft {
+    animation: none !important;
+  }
+
+  /* A frozen sweep reads as a rendering artefact — drop it to a flat block. */
+  .skeleton {
+    animation: none !important;
+    background-image: none;
   }
 }

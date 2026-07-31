@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Check, Copy, Download, FileCode, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Copy, Download, FileCode } from 'lucide-react';
 import type { ExporterContribution, GeneratedFile, PluginRegistry } from '@opendesign/core';
 import { useDocument, type Editor } from '@opendesign/editor';
 import { Badge, Button } from '@/components/ui/primitives';
+import { Overlay, OverlayHeader } from '@/components/ui/overlay';
+import { CodePreviewSkeleton, FileListSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { cn, formatBytes } from '@/lib/utils';
 
 /**
@@ -30,6 +32,10 @@ export function ExportDialog({
   const [activePath, setActivePath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // Generation is a real wait on a large document, and it re-runs on every
+  // target switch. Without this the dialog showed an empty file list and an
+  // empty code pane — indistinguishable from an exporter that produced nothing.
+  const [generating, setGenerating] = useState(true);
 
   useEffect(() => {
     if (registry) setExporters(registry.getExporters());
@@ -43,6 +49,7 @@ export function ExportDialog({
       const exporter = registry.getExporter(targetId);
       if (!exporter) return;
 
+      setGenerating(true);
       try {
         const generated = await exporter.generate(document);
         if (cancelled) return;
@@ -53,6 +60,8 @@ export function ExportDialog({
         if (cancelled) return;
         setError(caught instanceof Error ? caught.message : String(caught));
         setFiles([]);
+      } finally {
+        if (!cancelled) setGenerating(false);
       }
     };
 
@@ -61,26 +70,6 @@ export function ExportDialog({
       cancelled = true;
     };
   }, [registry, targetId, document]);
-
-  // The backdrop covers the whole editor, so without this the only way out is
-  // finding one small button — which is a trap, not a dialog.
-  //
-  // The handler is bound once and reads the callback through a ref: `onClose`
-  // is an inline arrow at every call site, so keying the effect on it would
-  // detach and reattach the listener on each render — and a key pressed while
-  // a render is in flight would land in that gap and be swallowed. The export
-  // preview re-renders as soon as generation resolves, which is exactly when
-  // someone reaches for Escape.
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeRef.current();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
 
   const active = files.find((file) => file.path === activePath);
   const totalBytes = files.reduce((sum, file) => sum + file.contents.length, 0);
@@ -109,70 +98,94 @@ export function ExportDialog({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[#121211]/35 p-6 backdrop-blur-sm"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Exportar"
-        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
-      >
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
-          <div className="flex items-center gap-2">
-            <FileCode size={14} className="text-brand-soft" />
-            <h2 className="text-[13px] font-medium">Exportar</h2>
+    <Overlay size="lg" label="Exportar" onClose={onClose}>
+      <OverlayHeader
+        icon={<FileCode size={14} className="shrink-0 text-brand-soft" />}
+        title="Exportar"
+        actions={
+          <>
+            {/* The counts belong to the header on a desktop and to the toolbar
+                row on a phone, where the title bar has no room for them. */}
             {files.length > 0 && (
-              <Badge>
-                {files.length} arquivos · {formatBytes(totalBytes)}
-              </Badge>
+              <span className="hidden sm:inline">
+                <Badge>
+                  {files.length} arquivos · {formatBytes(totalBytes)}
+                </Badge>
+              </span>
             )}
-          </div>
-          <div className="flex items-center gap-2">
             <Button size="sm" onClick={copy} disabled={!active}>
               {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? 'Copiado' : 'Copiar arquivo'}
+              <span className="hidden sm:inline">{copied ? 'Copiado' : 'Copiar arquivo'}</span>
             </Button>
             <Button size="sm" variant="primary" onClick={download} disabled={files.length === 0}>
               <Download size={12} />
               Baixar
             </Button>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Fechar exportação"
-              className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </header>
+          </>
+        }
+      />
 
-        <div className="flex shrink-0 gap-1 border-b border-hairline px-4 py-2">
-          {exporters.map((exporter) => (
-            <button
-              key={exporter.id}
-              type="button"
-              onClick={() => setTargetId(exporter.id)}
-              title={exporter.description}
-              className={cn(
-                'rounded-full px-3 py-1 text-[12px] transition-colors',
-                targetId === exporter.id
-                  ? 'bg-brand/14 text-brand-soft'
-                  : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
-              )}
-            >
-              {exporter.label}
-            </button>
-          ))}
-        </div>
+      <div className="touch-pane flex shrink-0 items-center gap-1 overflow-x-auto border-b border-hairline px-3 py-2 sm:px-4">
+        {exporters.length === 0
+          ? [0, 1, 2].map((key) => <Skeleton key={key} className="rounded-chip h-8 w-20" />)
+          : exporters.map((exporter) => (
+              <button
+                key={exporter.id}
+                type="button"
+                onClick={() => setTargetId(exporter.id)}
+                title={exporter.description}
+                aria-pressed={targetId === exporter.id}
+                className={cn(
+                  'h-8 shrink-0 rounded-chip px-3.5 text-[12px] transition-colors sm:h-7 sm:px-3',
+                  targetId === exporter.id
+                    ? 'bg-brand/14 text-brand-soft'
+                    : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
+                )}
+              >
+                {exporter.label}
+              </button>
+            ))}
+      </div>
 
-        <div className="flex min-h-0 flex-1">
-          <nav className="w-64 shrink-0 overflow-y-auto border-r border-hairline py-2">
-            {files.map((file) => (
+      {/* A 256px file column plus a code pane does not fit on a phone, so below
+          `sm` the file list becomes a native select — one tap, a full-height
+          list of paths, and the code keeps the whole screen. */}
+      <div className="shrink-0 border-b border-hairline px-3 py-2 sm:hidden">
+        <label className="flex items-center gap-2">
+          <span className="sr-only">Arquivo gerado</span>
+          <select
+            value={activePath ?? ''}
+            onChange={(event) => setActivePath(event.target.value)}
+            disabled={files.length === 0}
+            className="rounded-chip h-9 w-full min-w-0 border border-hairline bg-panel-raised px-3 font-mono text-[12px] text-ink focus:border-brand focus:outline-none disabled:opacity-50"
+          >
+            {files.length === 0 ? (
+              <option value="">{generating ? 'Gerando…' : 'Nenhum arquivo'}</option>
+            ) : (
+              files.map((file) => (
+                <option key={file.path} value={file.path}>
+                  {file.path}
+                </option>
+              ))
+            )}
+          </select>
+          {files.length > 0 && (
+            <span className="shrink-0 text-[11px] whitespace-nowrap text-ink-faint">
+              {files.length} · {formatBytes(totalBytes)}
+            </span>
+          )}
+        </label>
+      </div>
+
+      <div className="flex min-h-0 flex-1">
+        <nav
+          aria-label="Arquivos gerados"
+          className="touch-pane hidden w-64 shrink-0 overflow-y-auto border-r border-hairline py-2 sm:block"
+        >
+          {generating && files.length === 0 ? (
+            <FileListSkeleton />
+          ) : (
+            files.map((file) => (
               <button
                 key={file.path}
                 type="button"
@@ -187,20 +200,22 @@ export function ExportDialog({
               >
                 {file.path}
               </button>
-            ))}
-          </nav>
+            ))
+          )}
+        </nav>
 
-          <div className="min-w-0 flex-1 overflow-auto bg-shell">
-            {error ? (
-              <p className="p-4 text-[12px] text-critical">{error}</p>
-            ) : (
-              <pre className="p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre text-ink-muted">
-                {active?.contents ?? ''}
-              </pre>
-            )}
-          </div>
+        <div className="touch-pane min-w-0 flex-1 overflow-auto bg-shell">
+          {error ? (
+            <p className="animate-fade-up p-4 text-[12px] leading-relaxed text-critical">{error}</p>
+          ) : generating && !active ? (
+            <CodePreviewSkeleton />
+          ) : (
+            <pre className="animate-fade-in p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre text-ink-muted">
+              {active?.contents ?? ''}
+            </pre>
+          )}
         </div>
       </div>
-    </div>
+    </Overlay>
   );
 }

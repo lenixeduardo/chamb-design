@@ -1,18 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import {
-  Check,
-  Cpu,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Loader2,
-  KeyRound,
-  ShieldCheck,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Cpu, ExternalLink, Eye, EyeOff, KeyRound, ShieldCheck, Trash2 } from 'lucide-react';
 import {
   clearSettings,
   credentialId,
@@ -22,7 +11,9 @@ import {
   setCredential,
   writeSettings,
 } from '@/lib/settings';
-import { Badge, Button } from '@/components/ui/primitives';
+import { Badge, Button, Spinner } from '@/components/ui/primitives';
+import { Overlay, OverlayHeader } from '@/components/ui/overlay';
+import { ProviderRowSkeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 /**
@@ -79,21 +70,6 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       .then((data: { providers: ProviderInfo[] }) => setProviders(data.providers ?? []))
       .catch(() => setProviders([]))
       .finally(() => setLoading(false));
-  }, []);
-
-  // Bound once, reading the callback through a ref. Keying the effect on
-  // `onClose` — an inline arrow at every call site — would detach and reattach
-  // the listener on each render, and a key pressed while a render is in flight
-  // would fall into that gap.
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeRef.current();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const save = (provider: ProviderInfo) => {
@@ -169,140 +145,111 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const local = providers.filter((provider) => provider.locality === 'local');
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[#121211]/35 p-6 backdrop-blur-sm"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Ajustes"
-        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(620px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
-      >
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
-          <div className="flex items-center gap-2">
-            <KeyRound size={14} className="text-brand-soft" />
-            <h2 className="text-[13px] font-medium">Ajustes</h2>
+    <Overlay size="md" label="Ajustes" onClose={onClose}>
+      <OverlayHeader
+        icon={<KeyRound size={14} className="shrink-0 text-brand-soft" />}
+        title="Ajustes"
+      />
+
+      <div className="touch-pane min-h-0 flex-1 space-y-6 overflow-y-auto p-4 pb-safe">
+        <section className="rounded-surface flex gap-2.5 border border-hairline bg-panel-raised p-3">
+          <ShieldCheck size={15} className="mt-0.5 shrink-0 text-positive" />
+          <div className="space-y-1">
+            <p className="text-[12px] font-medium text-ink">Sua chave continua sua</p>
+            <p className="text-[11.5px] leading-relaxed text-ink-faint">
+              As chaves ficam guardadas neste navegador e são anexadas às requisições que precisam
+              delas, que seguem direto para o provedor do modelo. Nada é gravado em banco de dados,
+              e nenhum outro usuário desta instalação consegue vê-las. Em um computador
+              compartilhado, desligue “Lembrar neste dispositivo” abaixo.
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar ajustes"
-            className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
-          >
-            <X size={14} />
-          </button>
-        </header>
+        </section>
 
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
-          <section className="flex gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
-            <ShieldCheck size={15} className="mt-0.5 shrink-0 text-positive" />
-            <div className="space-y-1">
-              <p className="text-[12px] font-medium text-ink">Sua chave continua sua</p>
-              <p className="text-[11.5px] leading-relaxed text-ink-faint">
-                As chaves ficam guardadas neste navegador e são anexadas às requisições que precisam
-                delas, que seguem direto para o provedor do modelo. Nada é gravado em banco de
-                dados, e nenhum outro usuário desta instalação consegue vê-las. Em um computador
-                compartilhado, desligue “Lembrar neste dispositivo” abaixo.
-              </p>
-            </div>
-          </section>
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
+            Provedores de modelo
+          </h3>
 
-          <section className="space-y-2">
-            <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-              Provedores de modelo
-            </h3>
-
-            {loading ? (
-              <div className="space-y-2">
-                {[0, 1, 2].map((key) => (
-                  <div
-                    key={key}
-                    className="h-[86px] animate-pulse-soft rounded-2xl border border-hairline bg-panel-raised"
-                  />
-                ))}
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {cloud.map((provider) => (
-                  <ProviderRow
-                    key={`${provider.id}-${version}`}
-                    provider={provider}
-                    draft={drafts[provider.id] ?? ''}
-                    revealed={Boolean(revealed[provider.id])}
-                    check={checks[provider.id] ?? { status: 'idle' }}
-                    onDraft={(value) =>
-                      setDrafts((current) => ({ ...current, [provider.id]: value }))
-                    }
-                    onReveal={() =>
-                      setRevealed((current) => ({
-                        ...current,
-                        [provider.id]: !current[provider.id],
-                      }))
-                    }
-                    onSave={() => save(provider)}
-                    onRemove={() => remove(provider)}
-                    onCheck={() => void check(provider)}
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
-
-          {local.length > 0 && (
-            <section className="space-y-2">
-              <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-                Na sua máquina
-              </h3>
-              <p className="text-[11.5px] leading-relaxed text-ink-faint">
-                Não precisa de chave. Aponte para a porta em que seu runtime escuta — o navegador
-                fala com ele direto, então nada sai da sua máquina.
-              </p>
-              <ul className="space-y-2">
-                {local.map((provider) => (
-                  <LocalRow
-                    key={`${provider.id}-${version}`}
-                    provider={provider}
-                    draft={drafts[provider.id] ?? ''}
-                    onDraft={(value) =>
-                      setDrafts((current) => ({ ...current, [provider.id]: value }))
-                    }
-                    onSave={() => save(provider)}
-                    onRemove={() => remove(provider)}
-                  />
-                ))}
-              </ul>
-            </section>
+          {loading ? (
+            <ProviderRowSkeleton rows={3} />
+          ) : (
+            <ul className="space-y-2">
+              {cloud.map((provider) => (
+                <ProviderRow
+                  key={`${provider.id}-${version}`}
+                  provider={provider}
+                  draft={drafts[provider.id] ?? ''}
+                  revealed={Boolean(revealed[provider.id])}
+                  check={checks[provider.id] ?? { status: 'idle' }}
+                  onDraft={(value) =>
+                    setDrafts((current) => ({ ...current, [provider.id]: value }))
+                  }
+                  onReveal={() =>
+                    setRevealed((current) => ({
+                      ...current,
+                      [provider.id]: !current[provider.id],
+                    }))
+                  }
+                  onSave={() => save(provider)}
+                  onRemove={() => remove(provider)}
+                  onCheck={() => void check(provider)}
+                />
+              ))}
+            </ul>
           )}
+        </section>
 
+        {local.length > 0 && (
           <section className="space-y-2">
             <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
-              Armazenamento
+              Na sua máquina
             </h3>
-            <label className="flex items-start gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(event) => toggleRemember(event.target.checked)}
-                className="mt-0.5 h-3.5 w-3.5 accent-[var(--color-brand,#6366f1)]"
-              />
-              <span className="space-y-0.5">
-                <span className="block text-[12px] text-ink">Lembrar neste dispositivo</span>
-                <span className="block text-[11.5px] leading-relaxed text-ink-faint">
-                  Desligado, as chaves duram só até esta aba fechar.
-                </span>
-              </span>
-            </label>
-            <Button size="sm" variant="danger" onClick={forgetEverything}>
-              <Trash2 size={12} />
-              Esquecer tudo neste navegador
-            </Button>
+            <p className="text-[11.5px] leading-relaxed text-ink-faint">
+              Não precisa de chave. Aponte para a porta em que seu runtime escuta — o navegador fala
+              com ele direto, então nada sai da sua máquina.
+            </p>
+            <ul className="space-y-2">
+              {local.map((provider) => (
+                <LocalRow
+                  key={`${provider.id}-${version}`}
+                  provider={provider}
+                  draft={drafts[provider.id] ?? ''}
+                  onDraft={(value) =>
+                    setDrafts((current) => ({ ...current, [provider.id]: value }))
+                  }
+                  onSave={() => save(provider)}
+                  onRemove={() => remove(provider)}
+                />
+              ))}
+            </ul>
           </section>
-        </div>
+        )}
+
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
+            Armazenamento
+          </h3>
+          <label className="rounded-surface flex items-start gap-2.5 border border-hairline bg-panel-raised p-3">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(event) => toggleRemember(event.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]"
+            />
+            <span className="space-y-0.5">
+              <span className="block text-[12px] text-ink">Lembrar neste dispositivo</span>
+              <span className="block text-[11.5px] leading-relaxed text-ink-faint">
+                Desligado, as chaves duram só até esta aba fechar.
+              </span>
+            </span>
+          </label>
+          <Button size="sm" variant="danger" onClick={forgetEverything}>
+            <Trash2 size={12} />
+            Esquecer tudo neste navegador
+          </Button>
+        </section>
       </div>
-    </div>
+    </Overlay>
   );
 }
 
@@ -331,10 +278,15 @@ function ProviderRow({
   const source = KEY_SOURCES[credentialId(provider.id)];
 
   return (
-    <li className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-[12.5px] font-medium text-ink">{provider.label}</span>
+    <li className="rounded-surface space-y-2 border border-hairline bg-panel p-3">
+      {/* Wraps rather than compressing: at 390px the name, the status badge and
+          the "where to get a key" link do not share a line, and squeezing them
+          broke provider names across two lines mid-parenthesis. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-[12.5px] font-medium whitespace-nowrap text-ink">
+            {provider.label}
+          </span>
           {saved ? (
             <Badge tone="positive">chave salva · {maskKey(saved)}</Badge>
           ) : provider.configured ? (
@@ -348,7 +300,7 @@ function ProviderRow({
             href={source.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex items-center gap-1 text-[11px] text-ink-faint transition-colors hover:text-brand-soft"
+            className="inline-flex shrink-0 items-center gap-1 py-0.5 text-[11px] whitespace-nowrap text-ink-faint transition-colors hover:text-brand-soft"
           >
             {source.hint}
             <ExternalLink size={10} />
@@ -356,8 +308,11 @@ function ProviderRow({
         )}
       </div>
 
-      <div className="flex gap-1.5">
-        <div className="relative min-w-0 flex-1">
+      {/* Wraps on a phone: the key field, Salvar, Testar and the delete button
+          do not fit on one 360px line, and a horizontally squeezed key field is
+          the one control here that has to be readable. */}
+      <div className="flex flex-wrap gap-1.5">
+        <div className="relative w-full min-w-0 sm:flex-1">
           <input
             type={revealed ? 'text' : 'password'}
             value={draft}
@@ -370,7 +325,8 @@ function ProviderRow({
             spellCheck={false}
             aria-label={`Chave de API — ${provider.label}`}
             className={cn(
-              'h-8 w-full rounded-full border border-hairline bg-panel-raised pr-8 pl-3.5 font-mono text-[12px] text-ink',
+              'h-10 w-full rounded-chip border border-hairline bg-panel-raised pr-10 pl-3.5 font-mono text-[16px] text-ink',
+              'sm:h-8 sm:pr-8 sm:text-[12px]',
               'placeholder:font-sans placeholder:text-ink-faint',
               'transition-colors focus:border-brand focus:outline-none',
             )}
@@ -379,9 +335,10 @@ function ProviderRow({
             type="button"
             onClick={onReveal}
             aria-label={revealed ? 'Ocultar chave' : 'Mostrar chave'}
-            className="absolute top-1/2 right-1 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-ink-faint hover:text-ink"
+            aria-pressed={revealed}
+            className="tap-target absolute top-1/2 right-1.5 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-[9px] text-ink-faint hover:text-ink sm:right-1 sm:h-6 sm:w-6 sm:rounded-md"
           >
-            {revealed ? <EyeOff size={12} /> : <Eye size={12} />}
+            {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
           </button>
         </div>
 
@@ -390,12 +347,8 @@ function ProviderRow({
         </Button>
         {saved && (
           <>
-            <Button size="sm" onClick={onCheck} disabled={check.status === 'checking'}>
-              {check.status === 'checking' ? (
-                <Loader2 size={11} className="animate-spin" />
-              ) : check.status === 'ok' ? (
-                <Check size={11} className="text-positive" />
-              ) : null}
+            <Button size="sm" onClick={onCheck} loading={check.status === 'checking'}>
+              {check.status === 'ok' && <Check size={11} className="text-positive" />}
               Testar
             </Button>
             <Button size="sm" variant="ghost" onClick={onRemove} aria-label="Remover chave salva">
@@ -405,13 +358,19 @@ function ProviderRow({
         )}
       </div>
 
+      {check.status === 'checking' && (
+        <p className="flex items-center gap-1.5 text-[11px] text-ink-faint">
+          <Spinner size={11} />
+          Falando com {provider.label}…
+        </p>
+      )}
       {check.status === 'ok' && (
-        <p className="text-[11px] text-positive">
+        <p className="animate-fade-up text-[11px] text-positive">
           Funcionando — esta chave consegue gerar designs.
         </p>
       )}
       {check.status === 'failed' && (
-        <p className="text-[11px] leading-relaxed text-critical">{check.message}</p>
+        <p className="animate-fade-up text-[11px] leading-relaxed text-critical">{check.message}</p>
       )}
     </li>
   );
@@ -433,13 +392,13 @@ function LocalRow({
   const saved = getCredential(provider.id)?.baseUrl;
 
   return (
-    <li className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
+    <li className="rounded-surface space-y-2 border border-hairline bg-panel p-3">
       <div className="flex items-center gap-2">
         <Cpu size={12} className="text-positive" />
         <span className="text-[12.5px] font-medium text-ink">{provider.label}</span>
         {saved && <Badge tone="positive">{saved}</Badge>}
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex flex-wrap gap-1.5">
         <input
           value={draft}
           onChange={(event) => onDraft(event.target.value)}
@@ -448,9 +407,13 @@ function LocalRow({
           }}
           placeholder={saved ?? LOCAL_DEFAULTS[provider.id] ?? 'http://localhost:11434'}
           spellCheck={false}
+          inputMode="url"
+          autoCapitalize="off"
+          autoCorrect="off"
           aria-label={`URL do servidor — ${provider.label}`}
           className={cn(
-            'h-8 min-w-0 flex-1 rounded-full border border-hairline bg-panel-raised px-3.5 font-mono text-[12px] text-ink',
+            'h-10 w-full min-w-0 rounded-chip border border-hairline bg-panel-raised px-3.5 font-mono text-[16px] text-ink',
+            'sm:h-8 sm:w-auto sm:flex-1 sm:text-[12px]',
             'placeholder:font-sans placeholder:text-ink-faint',
             'transition-colors focus:border-brand focus:outline-none',
           )}

@@ -45,7 +45,7 @@ export function ThemePanel({ editor }: { editor: Editor }) {
 
         <section className="space-y-2">
           <h3 className="text-[10px] font-medium tracking-[0.12em] text-ink-faint uppercase">
-            Theme
+            Tema
           </h3>
           <div className="flex gap-1.5">
             {document.themes.map((theme) => (
@@ -100,8 +100,9 @@ export function ThemePanel({ editor }: { editor: Editor }) {
         </section>
 
         <p className="text-[11px] leading-relaxed text-ink-faint">
-          Tokens become CSS custom properties and a Tailwind <code>@theme</code> block on export —
-          so retheming an exported project is still a one-file change.
+          Os tokens viram custom properties CSS e um bloco <code>@theme</code> do Tailwind na
+          exportação — então retematizar um projeto exportado continua sendo uma mudança em um
+          arquivo só.
         </p>
       </div>
     </Panel>
