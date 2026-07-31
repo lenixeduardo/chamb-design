@@ -110,7 +110,7 @@ export function ExportDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center bg-[#121211]/35 p-6 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -119,7 +119,7 @@ export function ExportDialog({
         role="dialog"
         aria-modal="true"
         aria-label="Export"
-        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-2xl border border-hairline bg-panel"
+        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(1100px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
       >
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
           <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function ExportDialog({
               type="button"
               onClick={onClose}
               aria-label="Close export"
-              className="grid h-7 w-7 place-items-center rounded-md text-ink-muted hover:bg-panel-raised hover:text-ink"
+              className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
             >
               <X size={14} />
             </button>
@@ -159,7 +159,7 @@ export function ExportDialog({
               onClick={() => setTargetId(exporter.id)}
               title={exporter.description}
               className={cn(
-                'rounded-md px-2.5 py-1 text-[12px] transition-colors',
+                'rounded-full px-3 py-1 text-[12px] transition-colors',
                 targetId === exporter.id
                   ? 'bg-brand/14 text-brand-soft'
                   : 'text-ink-muted hover:bg-panel-raised hover:text-ink',

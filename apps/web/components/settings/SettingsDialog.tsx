@@ -169,7 +169,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center bg-[#121211]/35 p-6 backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -178,7 +178,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-label="Settings"
-        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(620px,94vw)] flex-col overflow-hidden rounded-2xl border border-hairline bg-panel"
+        className="animate-fade-up flex h-[min(720px,88vh)] w-[min(620px,94vw)] flex-col overflow-hidden rounded-[28px] border border-hairline bg-panel lift"
       >
         <header className="flex h-12 shrink-0 items-center justify-between border-b border-hairline px-4">
           <div className="flex items-center gap-2">
@@ -189,14 +189,14 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="grid h-7 w-7 place-items-center rounded-md text-ink-muted hover:bg-panel-raised hover:text-ink"
+            className="grid h-7 w-7 place-items-center rounded-full text-ink-muted hover:bg-panel-raised hover:text-ink"
           >
             <X size={14} />
           </button>
         </header>
 
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4">
-          <section className="flex gap-2.5 rounded-xl border border-hairline bg-shell p-3">
+          <section className="flex gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
             <ShieldCheck size={15} className="mt-0.5 shrink-0 text-positive" />
             <div className="space-y-1">
               <p className="text-[12px] font-medium text-ink">Your key stays yours</p>
@@ -219,7 +219,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                 {[0, 1, 2].map((key) => (
                   <div
                     key={key}
-                    className="h-[86px] animate-pulse-soft rounded-xl border border-hairline bg-shell"
+                    className="h-[86px] animate-pulse-soft rounded-2xl border border-hairline bg-panel-raised"
                   />
                 ))}
               </div>
@@ -280,7 +280,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             <h3 className="text-[10px] font-medium tracking-[0.14em] text-ink-faint uppercase">
               Storage
             </h3>
-            <label className="flex items-start gap-2.5 rounded-xl border border-hairline bg-shell p-3">
+            <label className="flex items-start gap-2.5 rounded-2xl border border-hairline bg-panel-raised p-3">
               <input
                 type="checkbox"
                 checked={remember}
@@ -330,7 +330,7 @@ function ProviderRow({
   const source = KEY_SOURCES[credentialId(provider.id)];
 
   return (
-    <li className="space-y-2 rounded-xl border border-hairline bg-shell p-3">
+    <li className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-[12.5px] font-medium text-ink">{provider.label}</span>
@@ -369,7 +369,7 @@ function ProviderRow({
             spellCheck={false}
             aria-label={`${provider.label} API key`}
             className={cn(
-              'h-8 w-full rounded-lg border border-hairline bg-panel pr-8 pl-2.5 font-mono text-[12px] text-ink',
+              'h-8 w-full rounded-full border border-hairline bg-panel-raised pr-8 pl-3.5 font-mono text-[12px] text-ink',
               'placeholder:font-sans placeholder:text-ink-faint',
               'transition-colors focus:border-brand focus:outline-none',
             )}
@@ -430,7 +430,7 @@ function LocalRow({
   const saved = getCredential(provider.id)?.baseUrl;
 
   return (
-    <li className="space-y-2 rounded-xl border border-hairline bg-shell p-3">
+    <li className="space-y-2 rounded-2xl border border-hairline bg-panel p-3">
       <div className="flex items-center gap-2">
         <Cpu size={12} className="text-positive" />
         <span className="text-[12.5px] font-medium text-ink">{provider.label}</span>
@@ -447,7 +447,7 @@ function LocalRow({
           spellCheck={false}
           aria-label={`${provider.label} server URL`}
           className={cn(
-            'h-8 min-w-0 flex-1 rounded-lg border border-hairline bg-panel px-2.5 font-mono text-[12px] text-ink',
+            'h-8 min-w-0 flex-1 rounded-full border border-hairline bg-panel-raised px-3.5 font-mono text-[12px] text-ink',
             'placeholder:font-sans placeholder:text-ink-faint',
             'transition-colors focus:border-brand focus:outline-none',
           )}

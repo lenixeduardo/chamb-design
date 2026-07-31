@@ -306,7 +306,7 @@ export function ChatSidebar({
             </p>
 
             {noProviderReady && (
-              <div className="space-y-2 rounded-lg border border-brand/25 bg-brand/8 px-2.5 py-2.5">
+              <div className="space-y-2 rounded-2xl border border-brand/25 bg-brand/8 px-3 py-2.5">
                 <p className="text-[11.5px] leading-relaxed text-ink-muted">
                   Add an API key to start generating. It is stored in this browser and sent only to
                   the provider you choose.
@@ -324,7 +324,7 @@ export function ChatSidebar({
                   <button
                     type="button"
                     onClick={() => submit(suggestion)}
-                    className="w-full rounded-lg border border-hairline bg-shell px-2.5 py-2 text-left text-[11.5px] text-ink-muted transition-colors hover:border-brand/40 hover:text-ink"
+                    className="w-full rounded-2xl border border-hairline bg-panel-raised px-3 py-2 text-left text-[11.5px] text-ink-muted transition-colors hover:border-brand/40 hover:text-ink"
                   >
                     {suggestion}
                   </button>
@@ -337,7 +337,7 @@ export function ChatSidebar({
         {turns.map((turn) => (
           <article key={turn.id} className="animate-fade-up space-y-1.5">
             {turn.role === 'user' ? (
-              <div className="rounded-lg rounded-br-sm bg-brand/14 px-2.5 py-1.5">
+              <div className="rounded-2xl rounded-br-md bg-brand/10 px-3 py-2">
                 {turn.attachmentCount ? (
                   <p className="mb-1 flex items-center gap-1 text-[10.5px] text-brand-soft">
                     <ImagePlus size={10} />
@@ -420,7 +420,7 @@ export function ChatSidebar({
         </div>
 
         {activeProvider && !activeProvider.configured && !isLocalProvider(activeProvider.id) && (
-          <div className="space-y-1.5 rounded-lg border border-caution/25 bg-caution/8 px-2.5 py-2">
+          <div className="space-y-1.5 rounded-2xl border border-caution/25 bg-caution/8 px-3 py-2.5">
             <p className="text-[11px] leading-relaxed text-caution">
               {activeProvider.label} needs an API key. Add yours — it stays in this browser — or
               switch to Ollama / LM Studio to run a model on your own machine.
@@ -488,7 +488,7 @@ export function ChatSidebar({
                   : 'Describe a page, a section, or a change…'
               }
               className={cn(
-                'w-full resize-none rounded-lg border border-hairline bg-shell py-2 pr-10 pl-2.5',
+                'w-full resize-none rounded-2xl border border-hairline bg-panel-raised py-2.5 pr-10 pl-3',
                 'text-[12px] leading-relaxed text-ink placeholder:text-ink-faint',
                 'transition-colors focus:border-brand focus:outline-none',
               )}
@@ -515,7 +515,7 @@ export function ChatSidebar({
                   : 'This model may not accept images'
               }
               onClick={() => imageInputRef.current?.click()}
-              className="absolute bottom-1.5 left-1.5 grid h-7 w-7 place-items-center rounded-md text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
+              className="absolute bottom-1.5 left-1.5 grid h-7 w-7 place-items-center rounded-full text-ink-faint transition-colors hover:bg-panel-raised hover:text-ink"
             >
               <ImagePlus size={13} />
             </button>
@@ -535,7 +535,7 @@ export function ChatSidebar({
                 type="submit"
                 disabled={!input.trim()}
                 aria-label="Send"
-                className="absolute right-1.5 bottom-1.5 grid h-7 w-7 place-items-center rounded-md bg-brand text-white transition-opacity disabled:opacity-30"
+                className="absolute right-1.5 bottom-1.5 grid h-7 w-7 place-items-center rounded-full bg-brand text-white transition-opacity disabled:opacity-30"
               >
                 <ArrowUp size={13} />
               </button>

@@ -6,6 +6,7 @@ import {
   validateDocumentIntegrity,
   type DesignDocument,
 } from '@opendesign/core';
+import { chambThemes, chambTokens } from '@opendesign/plugin-chamb-brand';
 
 /**
  * Local-first project storage.
@@ -112,8 +113,25 @@ export function deleteProject(id: string): void {
   writeIndex(readIndex().filter((project) => project.id !== id));
 }
 
+/**
+ * A new project starts on the chamb-design system.
+ *
+ * `createDocument` is deliberately generic — core ships a neutral starter so a
+ * third party can build their own product on it. This app is not a third party:
+ * it *is* chamb-design, so a blank project should already speak the brand
+ * rather than dropping the user into indigo-on-near-black and leaving the theme
+ * as homework. The tokens are semantic, so every block and every AI edit
+ * inherits it without referencing a single hex value.
+ */
 export function createProject(name: string, folder?: string): DesignDocument {
-  const document = createDocument({ name });
+  const base = createDocument({ name });
+  const document: DesignDocument = {
+    ...base,
+    tokens: chambTokens(),
+    themes: chambThemes(),
+    activeThemeId: 'chamb-light',
+  };
+
   saveProject(document, folder);
   return document;
 }

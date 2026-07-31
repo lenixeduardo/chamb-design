@@ -87,7 +87,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href="/"
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand transition-opacity hover:opacity-85"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-brand transition-opacity hover:opacity-85"
             aria-label="Back to workspace"
           >
             <Sparkles size={13} className="text-white" />
@@ -96,7 +96,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-0.5 rounded-lg border border-hairline p-0.5">
+          <div className="flex items-center gap-0.5 rounded-full bg-panel-raised p-0.5">
             <IconButton
               label="Select tool (V)"
               active={state.tool === 'select'}
@@ -178,7 +178,7 @@ export function EditorShell({ document }: { document: DesignDocument }) {
                 type="button"
                 onClick={() => setLeftTab(tab)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-1 rounded-md py-1.5 text-[10.5px] transition-colors',
+                  'flex flex-1 items-center justify-center gap-1 rounded-full py-1.5 text-[10.5px] transition-colors',
                   leftTab === tab
                     ? 'bg-panel-raised text-ink'
                     : 'text-ink-faint hover:text-ink-muted',

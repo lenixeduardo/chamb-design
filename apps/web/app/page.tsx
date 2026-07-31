@@ -107,7 +107,7 @@ export default function WorkspacePage() {
             href="https://github.com/opendesign/opendesign"
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-hairline px-3 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-hairline px-4 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
           >
             <Code2 size={14} />
             Source
@@ -115,7 +115,7 @@ export default function WorkspacePage() {
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-hairline px-3 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-hairline px-4 text-[13px] text-ink-muted transition-colors hover:border-hairline-strong hover:text-ink"
           >
             <Settings size={14} />
             Settings
@@ -127,10 +127,13 @@ export default function WorkspacePage() {
         </div>
       </header>
 
-      <section className="mt-10 rounded-2xl border border-hairline bg-gradient-to-br from-brand/10 via-transparent to-transparent p-8">
+      <section className="lift mt-10 rounded-[28px] border border-hairline bg-panel p-8">
         <Badge tone="brand">MIT licensed · self-hostable</Badge>
-        <h2 className="mt-4 max-w-[22ch] text-[30px] leading-[1.1] font-semibold tracking-[-0.03em]">
-          Describe an interface. Edit every pixel. Export clean code.
+        {/* The one place the display serif earns its keep: a single large line
+            carrying the brand's voice, with the accent on the promise. */}
+        <h2 className="display mt-4 max-w-[20ch] text-[40px] leading-[0.95]">
+          Describe an interface. Edit every pixel.{' '}
+          <span className="text-brand italic">Export clean code.</span>
         </h2>
         <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-muted">
           A visual canvas, a real design system and a model-agnostic AI layer that edits your
@@ -167,7 +170,7 @@ export default function WorkspacePage() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search projects…"
-            className="h-9 w-full rounded-lg border border-hairline bg-panel pr-3 pl-9 text-[13px] text-ink transition-colors placeholder:text-ink-faint focus:border-brand focus:outline-none"
+            className="h-9 w-full rounded-full border border-hairline bg-panel pr-4 pl-9 text-[13px] text-ink transition-colors placeholder:text-ink-faint focus:border-brand focus:outline-none"
           />
         </div>
 
@@ -211,12 +214,12 @@ export default function WorkspacePage() {
             {[0, 1, 2].map((key) => (
               <div
                 key={key}
-                className="h-[132px] animate-pulse-soft rounded-xl border border-hairline bg-panel"
+                className="h-[132px] animate-pulse-soft rounded-2xl border border-hairline bg-panel"
               />
             ))}
           </div>
         ) : visible.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-hairline">
+          <div className="rounded-2xl border border-dashed border-hairline">
             <EmptyState
               icon={<Layers size={22} />}
               title={query ? 'No projects match that search' : 'No projects yet'}
@@ -240,10 +243,10 @@ export default function WorkspacePage() {
             {visible.map((project) => (
               <li
                 key={project.id}
-                className="group animate-fade-up relative rounded-xl border border-hairline bg-panel transition-colors hover:border-hairline-strong"
+                className="group animate-fade-up lift relative rounded-2xl border border-hairline bg-panel transition-colors hover:border-hairline-strong"
               >
                 <Link href={`/editor/${project.id}`} className="block p-4">
-                  <div className="flex h-16 items-center justify-center rounded-lg border border-hairline bg-shell">
+                  <div className="flex h-16 items-center justify-center rounded-xl border border-hairline bg-panel-raised">
                     <Layers size={18} className="text-ink-faint" />
                   </div>
                   <h3 className="mt-3 truncate text-[13px] font-medium">{project.name}</h3>
