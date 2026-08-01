@@ -2,8 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # The default branch is what Vercel deploys to production, so it has to be
+    # verified on push and not only through pull requests.
+    branches: [main, claude/opendesign-ai-platform-a93toq]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,9 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # No `version:` here on purpose. `packageManager` in package.json is the
+      # single source of truth; specifying both makes the action abort with
+      # "Multiple versions of pnpm specified".
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v5
         with:

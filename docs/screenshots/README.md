@@ -19,20 +19,20 @@ deixar rastro de scroll.
 
 ## As telas
 
-| # | Arquivo | Tela |
-| --- | --- | --- |
-| 01 | [`01-workspace-vazio.png`](mobile/01-workspace-vazio.png) | Área de trabalho, sem projetos |
-| 02 | [`02-workspace-projetos.png`](mobile/02-workspace-projetos.png) | Área de trabalho com projetos e pastas |
-| 03 | [`03-workspace-busca-vazia.png`](mobile/03-workspace-busca-vazia.png) | Busca sem resultado |
-| 04 | [`04-ajustes.png`](mobile/04-ajustes.png) · [`04b-ajustes-rolado.png`](mobile/04b-ajustes-rolado.png) | Diálogo de Ajustes (topo e rolado) |
-| 05 | [`05-editor-camadas.png`](mobile/05-editor-camadas.png) | Editor — aba Camadas |
-| 06 | [`06-editor-biblioteca.png`](mobile/06-editor-biblioteca.png) | Editor — aba Biblioteca |
-| 07 | [`07-editor-recursos.png`](mobile/07-editor-recursos.png) | Editor — aba Recursos |
-| 08 | [`08-editor-tema.png`](mobile/08-editor-tema.png) | Editor — aba Tema |
-| 09 | [`09-editor-selecao.png`](mobile/09-editor-selecao.png) | Editor — camada selecionada |
-| 10 | [`10-editor-sem-chat.png`](mobile/10-editor-sem-chat.png) | Editor rolado na horizontal — o Inspector |
-| 11 | [`11-editor-exportar.png`](mobile/11-editor-exportar.png) | Diálogo de Exportação |
-| 12 | [`12-editor-overflow-real.png`](mobile/12-editor-overflow-real.png) | Editor com `overflow` liberado — a largura real do layout |
+| #   | Arquivo                                                                                               | Tela                                                      |
+| --- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 01  | [`01-workspace-vazio.png`](mobile/01-workspace-vazio.png)                                             | Área de trabalho, sem projetos                            |
+| 02  | [`02-workspace-projetos.png`](mobile/02-workspace-projetos.png)                                       | Área de trabalho com projetos e pastas                    |
+| 03  | [`03-workspace-busca-vazia.png`](mobile/03-workspace-busca-vazia.png)                                 | Busca sem resultado                                       |
+| 04  | [`04-ajustes.png`](mobile/04-ajustes.png) · [`04b-ajustes-rolado.png`](mobile/04b-ajustes-rolado.png) | Diálogo de Ajustes (topo e rolado)                        |
+| 05  | [`05-editor-camadas.png`](mobile/05-editor-camadas.png)                                               | Editor — aba Camadas                                      |
+| 06  | [`06-editor-biblioteca.png`](mobile/06-editor-biblioteca.png)                                         | Editor — aba Biblioteca                                   |
+| 07  | [`07-editor-recursos.png`](mobile/07-editor-recursos.png)                                             | Editor — aba Recursos                                     |
+| 08  | [`08-editor-tema.png`](mobile/08-editor-tema.png)                                                     | Editor — aba Tema                                         |
+| 09  | [`09-editor-selecao.png`](mobile/09-editor-selecao.png)                                               | Editor — camada selecionada                               |
+| 10  | [`10-editor-sem-chat.png`](mobile/10-editor-sem-chat.png)                                             | Editor rolado na horizontal — o Inspector                 |
+| 11  | [`11-editor-exportar.png`](mobile/11-editor-exportar.png)                                             | Diálogo de Exportação                                     |
+| 12  | [`12-editor-overflow-real.png`](mobile/12-editor-overflow-real.png)                                   | Editor com `overflow` liberado — a largura real do layout |
 
 ## O que a validação mostrou
 
@@ -52,7 +52,7 @@ Consequências concretas nas capturas 05–10:
   (x = 392 px) e AI (x = 496 px) estão fora da tela; o `overflow-hidden` impede
   qualquer scroll para alcançá-los.
 - **O chat da IA é inalcançável**, mesmo aberto por padrão (`chatOpen = true`)
-   — ele começa depois dos 900 px.
+  — ele começa depois dos 900 px.
 - O Inspector (captura 10) só apareceu porque um `focus` rolou o contêiner na
   horizontal. Não é navegação, é acidente — e mesmo assim o canvas continua
   invisível.
