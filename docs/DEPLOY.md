@@ -67,6 +67,12 @@ The API needs:
 | `REDIS_URL`    | no       | Enables the realtime/presence path.                                        |
 | `PORT`         | no       | Defaults to `4000`; Vercel sets this for you.                              |
 
+Run `pnpm --filter @opendesign/api exec prisma migrate deploy` against a fresh
+database before the first request. The migration history is committed under
+`apps/api/prisma/migrations`, so this creates the schema; without it the app
+starts against empty tables and every persistence route fails at the first
+query.
+
 Without `DATABASE_URL` the API still boots — `/api/health` returns
 `{"status":"ok","database":"unavailable"}` — but the project endpoints fail.
 That is deliberate: liveness and full functionality are reported separately so a
