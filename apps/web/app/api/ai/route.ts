@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { DesignAgent, createProvider, listProviders } from '@opendesign/ai';
 import { validateDocumentIntegrity, type DesignDocument } from '@opendesign/core';
 import { getRegistry } from '@/lib/registry';
+import { CredentialError, providerSignal, resolveCredentials } from '@/lib/provider-credentials';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,10 +30,6 @@ const ENV_KEYS: Record<string, string> = {
   deepseek: 'DEEPSEEK_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
 };
-
-/** Header carrying a user-supplied key. Never echoed back in a response. */
-const KEY_HEADER = 'x-od-api-key';
-const BASE_URL_HEADER = 'x-od-base-url';
 
 interface AgentRequestBody {
   prompt: string;
@@ -78,11 +75,23 @@ export async function POST(request: Request) {
   }
 
   const envKey = ENV_KEYS[body.providerId];
-  // The user's own key wins: they chose it explicitly, and on a shared
-  // deployment it is the only one they should be spending.
-  const apiKey =
-    request.headers.get(KEY_HEADER)?.trim() || (envKey ? process.env[envKey] : undefined);
-  const baseUrl = request.headers.get(BASE_URL_HEADER)?.trim();
+  const locality =
+    listProviders().find((provider) => provider.id === body.providerId)?.locality ?? 'cloud';
+
+  let apiKey: string | undefined;
+  let baseUrl: string | undefined;
+  try {
+    ({ apiKey, baseUrl } = await resolveCredentials({
+      headers: request.headers,
+      envKey,
+      locality,
+    }));
+  } catch (error) {
+    if (error instanceof CredentialError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    throw error;
+  }
 
   if (envKey && !apiKey) {
     return NextResponse.json(
@@ -126,7 +135,7 @@ export async function POST(request: Request) {
           ...(body.selection ? { selection: body.selection } : {}),
           ...(body.images ? { images: body.images } : {}),
           ...(body.mode ? { mode: body.mode } : {}),
-          signal: request.signal,
+          signal: providerSignal(request),
         })) {
           // The full document is echoed on every operations event; strip it to
           // keep the stream small — the client applies ops to its own copy.

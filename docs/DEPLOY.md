@@ -42,6 +42,22 @@ The editor needs **none**. Model API keys are entered in the app's Settings
 panel, kept in the visitor's own browser, and sent straight to the provider —
 a deployed instance never holds anyone's key.
 
+It will use one if you give it one (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
+`GOOGLE_API_KEY`, `DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`), as a fallback for
+visitors who have not set their own. Understand what that means before you do
+it: the routes have no authentication and no rate limit, so **anyone who finds
+the URL spends that key**. A public deployment should leave them unset.
+
+`OPENDESIGN_PROVIDER_TIMEOUT_MS` (default `120000`) bounds how long a provider
+call may hold a connection open.
+
+Requests may also carry an `x-od-base-url` header to point a provider at a
+different endpoint. It is only honoured for a key the request itself supplied —
+never for a key that came from the environment above — and it may not resolve to
+a link-local address, nor to a private one unless the provider is a local model
+server. That is what stops a request from redirecting your own credential, or
+using the deployment to reach its cloud metadata endpoint.
+
 The API needs:
 
 | Variable       | Required | Notes                                                                      |

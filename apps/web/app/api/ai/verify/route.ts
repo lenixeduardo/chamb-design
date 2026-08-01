@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createProvider } from '@opendesign/ai';
+import { createProvider, listProviders } from '@opendesign/ai';
+import { CredentialError, resolveCredentials } from '@/lib/provider-credentials';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,9 +36,23 @@ export async function POST(request: Request) {
   }
 
   const envKey = ENV_KEYS[body.providerId];
-  const apiKey =
-    request.headers.get('x-od-api-key')?.trim() || (envKey ? process.env[envKey] : undefined);
-  const baseUrl = request.headers.get('x-od-base-url')?.trim();
+  const locality =
+    listProviders().find((provider) => provider.id === body.providerId)?.locality ?? 'cloud';
+
+  let apiKey: string | undefined;
+  let baseUrl: string | undefined;
+  try {
+    ({ apiKey, baseUrl } = await resolveCredentials({
+      headers: request.headers,
+      envKey,
+      locality,
+    }));
+  } catch (error) {
+    if (error instanceof CredentialError) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: error.status });
+    }
+    throw error;
+  }
 
   if (envKey && !apiKey) {
     return NextResponse.json(

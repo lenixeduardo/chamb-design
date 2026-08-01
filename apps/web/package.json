@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "prettier --check \"{app,components,lib}/**/*.{ts,tsx,css}\"",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next .turbo"
   },
@@ -35,6 +36,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10"
   }
 }
