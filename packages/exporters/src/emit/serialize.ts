@@ -42,6 +42,16 @@ function escapeHtmlText(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/**
+ * Vue, Svelte and Astro all read braces in template text as an expression —
+ * `{{ user.first_name }}` interpolates, and a bare `{name}` is a compile error.
+ * Ordinary marketing copy contains both, so the braces are emitted as entities,
+ * which every one of those compilers renders back as the literal character.
+ */
+function escapeTemplateText(text: string): string {
+  return escapeHtmlText(text).replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
+}
+
 function escapeAttribute(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
@@ -52,9 +62,16 @@ function escapeAttribute(value: string): string {
  */
 function escapeJsxText(text: string): string {
   return text
+    .replace(/&/g, '&amp;')
     .replace(/[{}]/g, (c) => `{'${c}'}`)
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function textEscaper(dialect: Dialect): (text: string) => string {
+  if (dialect === 'jsx') return escapeJsxText;
+  if (dialect === 'html') return escapeHtmlText;
+  return escapeTemplateText;
 }
 
 function renameAttribute(name: string, dialect: Dialect): string {
@@ -107,7 +124,7 @@ export function serializeElement(element: EmitElement, options: SerializeOptions
   }
 
   const attributes = serializeAttributes(element, dialect);
-  const escapeText = dialect === 'jsx' ? escapeJsxText : escapeHtmlText;
+  const escapeText = textEscaper(dialect);
 
   if (element.selfClosing) {
     // HTML void elements must not be written `<img ... />` in strict HTML5

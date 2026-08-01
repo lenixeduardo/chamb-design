@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   applyOperations,
@@ -37,8 +39,33 @@ export class ProjectsService {
     }
   }
 
-  async list(ownerId: string) {
+  private static requireUser(userId: string | undefined): string {
+    const id = userId?.trim();
+    if (!id) throw new UnauthorizedException('the x-user-id header is required');
+    return id;
+  }
+
+  /**
+   * Ownership check for every per-project route.
+   *
+   * A missing project and a project belonging to someone else get the *same*
+   * 404. Distinguishing them would turn this into an oracle for which project
+   * ids exist, which is the first half of the attack it is here to prevent.
+   */
+  private async assertAccess(projectId: string, userId: string): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { ownerId: true, memberships: { where: { userId }, select: { id: true } } },
+    });
+
+    if (!project || (project.ownerId !== userId && project.memberships.length === 0)) {
+      throw new NotFoundException(`project ${projectId} not found`);
+    }
+  }
+
+  async list(rawOwnerId: string) {
     this.assertDatabase();
+    const ownerId = ProjectsService.requireUser(rawOwnerId);
     return this.prisma.project.findMany({
       where: { OR: [{ ownerId }, { memberships: { some: { userId: ownerId } } }] },
       orderBy: { updatedAt: 'desc' },
@@ -46,8 +73,9 @@ export class ProjectsService {
     });
   }
 
-  async get(id: string): Promise<DesignDocument> {
+  async get(id: string, rawUserId: string): Promise<DesignDocument> {
     this.assertDatabase();
+    await this.assertAccess(id, ProjectsService.requireUser(rawUserId));
 
     const cached = await this.cache.get<DesignDocument>(`project:${id}`);
     if (cached) return cached;
@@ -60,8 +88,9 @@ export class ProjectsService {
     return document;
   }
 
-  async create(ownerId: string, name: string, document: DesignDocument, folder?: string) {
+  async create(rawOwnerId: string, name: string, document: DesignDocument, folder?: string) {
     this.assertDatabase();
+    const ownerId = ProjectsService.requireUser(rawOwnerId);
     this.validate(document);
 
     return this.prisma.project.create({
@@ -81,6 +110,14 @@ export class ProjectsService {
    *
    * Rejected wholesale rather than partially: a half-applied batch is how a
    * shared document ends up in a state no client can reconcile.
+   *
+   * The read is deliberately not the cached one. Replaying operations against
+   * the authoritative copy is only convergent if the copy really is
+   * authoritative, and a per-instance cache is not — two serverless instances
+   * hold different ideas of "current". So the row is read directly, and the
+   * write is conditional on the `version` that read returned: whoever loses the
+   * race gets a 409 and replays, instead of both reporting success while one
+   * edit quietly disappears.
    */
   async applyOperations(
     projectId: string,
@@ -88,6 +125,7 @@ export class ProjectsService {
     options: { authorId?: string; label?: string; branchId?: string; source?: 'USER' | 'AI' } = {},
   ): Promise<{ document: DesignDocument; commitId: string }> {
     this.assertDatabase();
+    await this.assertAccess(projectId, ProjectsService.requireUser(options.authorId));
 
     const parsed = parseOperations(rawOperations);
     if (!parsed.ok) {
@@ -97,7 +135,13 @@ export class ProjectsService {
       });
     }
 
-    const current = await this.get(projectId);
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { document: true, version: true },
+    });
+    if (!project) throw new NotFoundException(`project ${projectId} not found`);
+
+    const current = project.document as unknown as DesignDocument;
 
     let result;
     try {
@@ -110,12 +154,22 @@ export class ProjectsService {
 
     this.validate(result.document);
 
-    const [, commit] = await this.prisma.$transaction([
-      this.prisma.project.update({
-        where: { id: projectId },
-        data: { document: result.document as never },
-      }),
-      this.prisma.commit.create({
+    const commit = await this.prisma.$transaction(async (tx) => {
+      const written = await tx.project.updateMany({
+        where: { id: projectId, version: project.version },
+        data: {
+          document: result.document as never,
+          schemaVersion: result.document.schemaVersion,
+          version: { increment: 1 },
+        },
+      });
+
+      // Nothing matched: someone else wrote between our read and here. Return
+      // without creating the commit so the log never records an edit the
+      // document does not contain.
+      if (written.count === 0) return null;
+
+      return tx.commit.create({
         data: {
           projectId,
           label: options.label ?? 'Remote edit',
@@ -125,33 +179,72 @@ export class ProjectsService {
           operations: parsed.value as never,
           inverse: result.inverse as never,
         },
-      }),
-    ]);
+      });
+    });
+
+    if (!commit) {
+      await this.cache.del(`project:${projectId}`);
+      throw new ConflictException(
+        'the project changed while these operations were being applied — re-read it and replay them',
+      );
+    }
 
     await this.cache.set(`project:${projectId}`, result.document);
     return { document: result.document, commitId: commit.id };
   }
 
-  async history(projectId: string, limit = 50) {
+  async history(projectId: string, rawUserId: string, limit?: number) {
     this.assertDatabase();
+    await this.assertAccess(projectId, ProjectsService.requireUser(rawUserId));
+
     return this.prisma.commit.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 200),
+      take: ProjectsService.clampLimit(limit),
       select: { id: true, label: true, source: true, createdAt: true, authorId: true },
     });
   }
 
-  async createSnapshot(projectId: string, name: string, message?: string) {
+  /**
+   * `?limit=abc` used to reach Prisma as `take: NaN` and come back a 500.
+   * Anything that is not a usable count falls back to the default.
+   */
+  private static clampLimit(limit: number | undefined): number {
+    if (limit === undefined || !Number.isFinite(limit) || limit < 1) return 50;
+    return Math.min(Math.floor(limit), 200);
+  }
+
+  async createSnapshot(projectId: string, rawUserId: string, name: string, message?: string) {
     this.assertDatabase();
-    const document = await this.get(projectId);
+    await this.assertAccess(projectId, ProjectsService.requireUser(rawUserId));
+    return this.writeSnapshot(projectId, name, message);
+  }
+
+  /** Snapshot write with the access check already done by the caller. */
+  private async writeSnapshot(projectId: string, name: string, message?: string) {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { document: true },
+    });
+    if (!project) throw new NotFoundException(`project ${projectId} not found`);
+
     return this.prisma.snapshot.create({
-      data: { projectId, name, message: message ?? null, document: document as never },
+      data: {
+        projectId,
+        name,
+        message: message ?? null,
+        document: project.document as never,
+      },
     });
   }
 
-  async restoreSnapshot(projectId: string, snapshotId: string): Promise<DesignDocument> {
+  async restoreSnapshot(
+    projectId: string,
+    rawUserId: string,
+    snapshotId: string,
+  ): Promise<DesignDocument> {
     this.assertDatabase();
+    await this.assertAccess(projectId, ProjectsService.requireUser(rawUserId));
 
     const snapshot = await this.prisma.snapshot.findUnique({ where: { id: snapshotId } });
     if (!snapshot || snapshot.projectId !== projectId) {
@@ -160,20 +253,24 @@ export class ProjectsService {
 
     // Capture the pre-restore state first — restoring must not be the one
     // action in the system that loses work.
-    await this.createSnapshot(projectId, `Before restoring "${snapshot.name}"`);
+    await this.writeSnapshot(projectId, `Before restoring "${snapshot.name}"`);
 
     const document = snapshot.document as unknown as DesignDocument;
     await this.prisma.project.update({
       where: { id: projectId },
-      data: { document: document as never },
+      // A restore replaces the document, so it has to move the version too —
+      // otherwise an operation batch that read the pre-restore document would
+      // still be accepted and undo the restore.
+      data: { document: document as never, version: { increment: 1 } },
     });
     await this.cache.set(`project:${projectId}`, document);
 
     return document;
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, rawUserId: string): Promise<void> {
     this.assertDatabase();
+    await this.assertAccess(id, ProjectsService.requireUser(rawUserId));
     await this.prisma.project.delete({ where: { id } });
     await this.cache.del(`project:${id}`);
   }

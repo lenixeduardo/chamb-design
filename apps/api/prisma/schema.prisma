@@ -53,6 +53,11 @@ model Project {
   /// Schema version of the stored document, for migrations on read.
   schemaVersion Int @default(1)
 
+  /// Bumped on every write to `document`. Two clients that read the same
+  /// version and both try to write it are a lost update; the second one is
+  /// rejected with a 409 so it can re-read and replay instead.
+  version Int @default(0)
+
   owner       User         @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   memberships Membership[]
   branches    Branch[]

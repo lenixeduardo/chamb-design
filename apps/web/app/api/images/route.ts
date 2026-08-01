@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createImageProvider, listImageProviders } from '@opendesign/ai';
+import { CredentialError, providerSignal, resolveCredentials } from '@/lib/provider-credentials';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,9 +25,6 @@ const ENV_KEYS: Record<string, string> = {
   'openai-images': 'OPENAI_API_KEY',
   'google-images': 'GOOGLE_API_KEY',
 };
-
-const KEY_HEADER = 'x-od-api-key';
-const BASE_URL_HEADER = 'x-od-base-url';
 
 interface GenerateBody {
   prompt: string;
@@ -59,10 +57,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'o prompt é obrigatório' }, { status: 400 });
   }
 
+  if (!body.model?.trim()) {
+    return NextResponse.json({ error: 'o modelo é obrigatório' }, { status: 400 });
+  }
+
   const envKey = ENV_KEYS[body.providerId];
-  const apiKey =
-    request.headers.get(KEY_HEADER)?.trim() || (envKey ? process.env[envKey] : undefined);
-  const baseUrl = request.headers.get(BASE_URL_HEADER)?.trim();
+  const locality =
+    listImageProviders().find((provider) => provider.id === body.providerId)?.locality ?? 'cloud';
+
+  let apiKey: string | undefined;
+  let baseUrl: string | undefined;
+  try {
+    ({ apiKey, baseUrl } = await resolveCredentials({
+      headers: request.headers,
+      envKey,
+      locality,
+    }));
+  } catch (error) {
+    if (error instanceof CredentialError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    throw error;
+  }
 
   if (envKey && !apiKey) {
     return NextResponse.json(
@@ -92,9 +108,12 @@ export async function POST(request: Request) {
       prompt: body.prompt,
       model: body.model,
       ...(body.size ? { size: body.size } : {}),
-      ...(body.count ? { count: Math.min(body.count, 4) } : {}),
+      // Clamped at both ends: the ceiling is what the deployment is willing to
+      // pay for, and the floor is because a provider handed `n: -5` answers
+      // with something unhelpful rather than an error.
+      ...(body.count ? { count: Math.max(1, Math.min(Math.floor(body.count), 4)) } : {}),
       ...(body.negativePrompt ? { negativePrompt: body.negativePrompt } : {}),
-      signal: request.signal,
+      signal: providerSignal(request),
     });
 
     return NextResponse.json({ images });

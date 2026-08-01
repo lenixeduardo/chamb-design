@@ -59,7 +59,10 @@ export function buildElementTree(
   if (typeof node.props.id === 'string') attributes.id = node.props.id;
   if (typeof node.props.ariaLabel === 'string') attributes['aria-label'] = node.props.ariaLabel;
 
-  const selfClosing = Boolean(spec?.selfClosing) || VOID_ELEMENTS.has(tag);
+  // Void-ness is a property of the tag, not of whether the primitive happens to
+  // have children. Deriving it from the spec flag is what let `<textarea>` and
+  // `<span>` be emitted unclosed, which the HTML dialect writes literally.
+  const selfClosing = VOID_ELEMENTS.has(tag);
 
   const element: EmitElement = {
     tag,

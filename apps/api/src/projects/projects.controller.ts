@@ -21,6 +21,10 @@ interface ApplyOperationsBody {
  * Identity arrives as `x-user-id` here. That is the seam where a real auth
  * provider plugs in — Clerk, Better Auth, or an existing SSO — and keeping it
  * a single header means swapping one guard rather than rewriting controllers.
+ *
+ * Every route passes it through, including the ones that do not otherwise need
+ * it: the service refuses to act on a project the caller cannot reach, and it
+ * can only do that if it is told who is asking.
  */
 @Controller('projects')
 export class ProjectsController {
@@ -32,8 +36,8 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  get(@Param('id') id: string) {
-    return this.projects.get(id);
+  get(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    return this.projects.get(id, userId);
   }
 
   @Post()
@@ -56,23 +60,35 @@ export class ProjectsController {
   }
 
   @Get(':id/history')
-  history(@Param('id') id: string, @Query('limit') limit?: string) {
-    return this.projects.history(id, limit ? Number(limit) : undefined);
+  history(
+    @Param('id') id: string,
+    @Headers('x-user-id') userId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.projects.history(id, userId, limit === undefined ? undefined : Number(limit));
   }
 
   @Post(':id/snapshots')
-  createSnapshot(@Param('id') id: string, @Body() body: { name: string; message?: string }) {
-    return this.projects.createSnapshot(id, body.name, body.message);
+  createSnapshot(
+    @Param('id') id: string,
+    @Headers('x-user-id') userId: string,
+    @Body() body: { name: string; message?: string },
+  ) {
+    return this.projects.createSnapshot(id, userId, body.name, body.message);
   }
 
   @Post(':id/snapshots/:snapshotId/restore')
-  restoreSnapshot(@Param('id') id: string, @Param('snapshotId') snapshotId: string) {
-    return this.projects.restoreSnapshot(id, snapshotId);
+  restoreSnapshot(
+    @Param('id') id: string,
+    @Param('snapshotId') snapshotId: string,
+    @Headers('x-user-id') userId: string,
+  ) {
+    return this.projects.restoreSnapshot(id, userId, snapshotId);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.projects.remove(id);
+  async remove(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+    await this.projects.remove(id, userId);
     return { ok: true };
   }
 }

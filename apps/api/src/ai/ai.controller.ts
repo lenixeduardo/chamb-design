@@ -72,7 +72,16 @@ export class AiController {
       );
     }
 
-    const provider = createProvider(body.providerId, apiKey ? { apiKey } : {});
+    // `createProvider` throws a plain Error naming the providers that do
+    // exist — genuinely the most useful sentence available here, and it used
+    // to be discarded into an anonymous 500.
+    let provider;
+    try {
+      provider = createProvider(body.providerId, apiKey ? { apiKey } : {});
+    } catch (error) {
+      throw new BadRequestException(error instanceof Error ? error.message : 'unknown provider');
+    }
+
     const agent = new DesignAgent({
       provider,
       model: body.model,

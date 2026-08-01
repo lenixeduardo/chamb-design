@@ -23,18 +23,79 @@ export interface PrimitiveSpec {
 const str = (value: unknown, fallback = ''): string =>
   typeof value === 'string' ? value : fallback;
 
+/**
+ * A prop that becomes a tag name is not free text.
+ *
+ * `props` is `z.record(z.unknown())` in the schema, so a document that arrived
+ * from an import, a plugin or a model can put anything in `props.as`. It ends up
+ * interpolated straight into `<…>` by the exporters, which is how
+ * `as: 'div onmouseover="…"'` or `level: 'script'` becomes executable code in
+ * every generated project. Anything not on the list falls back.
+ */
+const oneOf = (value: unknown, allowed: ReadonlySet<string>, fallback: string): string =>
+  typeof value === 'string' && allowed.has(value) ? value : fallback;
+
+const TEXT_ELEMENTS: ReadonlySet<string> = new Set([
+  'p',
+  'span',
+  'div',
+  'strong',
+  'em',
+  'b',
+  'i',
+  'small',
+  'label',
+  'blockquote',
+  'figcaption',
+  'caption',
+  'li',
+  'dt',
+  'dd',
+  'code',
+  'pre',
+  'address',
+  'time',
+]);
+
+const HEADING_ELEMENTS: ReadonlySet<string> = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+
+const BUTTON_TYPES: ReadonlySet<string> = new Set(['button', 'submit', 'reset']);
+
+const INPUT_TYPES: ReadonlySet<string> = new Set([
+  'text',
+  'email',
+  'password',
+  'search',
+  'tel',
+  'url',
+  'number',
+  'date',
+  'time',
+  'datetime-local',
+  'month',
+  'week',
+  'color',
+  'checkbox',
+  'radio',
+  'file',
+  'range',
+  'hidden',
+]);
+
+const LOADING_VALUES: ReadonlySet<string> = new Set(['lazy', 'eager']);
+
 export const PRIMITIVES: Record<string, PrimitiveSpec> = {
   frame: { element: 'div' },
   stack: { element: 'div', baseClassName: 'flex' },
   grid: { element: 'div', baseClassName: 'grid' },
 
   text: {
-    element: (node) => str(node.props.as, 'p'),
+    element: (node) => oneOf(node.props.as, TEXT_ELEMENTS, 'p'),
     textContent: true,
   },
 
   heading: {
-    element: (node) => str(node.props.level, 'h2'),
+    element: (node) => oneOf(node.props.level, HEADING_ELEMENTS, 'h2'),
     textContent: true,
   },
 
@@ -53,7 +114,7 @@ export const PRIMITIVES: Record<string, PrimitiveSpec> = {
     attributes: (node) =>
       node.props.href
         ? { href: str(node.props.href) }
-        : { type: str(node.props.buttonType, 'button') },
+        : { type: oneOf(node.props.buttonType, BUTTON_TYPES, 'button') },
   },
 
   image: {
@@ -62,7 +123,7 @@ export const PRIMITIVES: Record<string, PrimitiveSpec> = {
     attributes: (node) => ({
       src: str(node.props.src),
       alt: str(node.props.alt),
-      ...(node.props.loading ? { loading: str(node.props.loading) } : { loading: 'lazy' }),
+      loading: oneOf(node.props.loading, LOADING_VALUES, 'lazy'),
     }),
   },
 
@@ -82,16 +143,17 @@ export const PRIMITIVES: Record<string, PrimitiveSpec> = {
     element: 'input',
     selfClosing: true,
     attributes: (node) => ({
-      type: str(node.props.inputType, 'text'),
+      type: oneOf(node.props.inputType, INPUT_TYPES, 'text'),
       placeholder: str(node.props.placeholder),
       name: str(node.props.name),
       ...(node.props.required ? { required: true } : {}),
     }),
   },
 
+  // Not self-closing: `<textarea>` is a raw-text element, and leaving it
+  // unclosed swallows the rest of the page into its value.
   textarea: {
     element: 'textarea',
-    selfClosing: true,
     attributes: (node) => ({
       placeholder: str(node.props.placeholder),
       name: str(node.props.name),
@@ -100,18 +162,16 @@ export const PRIMITIVES: Record<string, PrimitiveSpec> = {
   },
 
   divider: { element: 'hr', selfClosing: true, baseClassName: 'border-0 border-t' },
-  spacer: { element: 'div', selfClosing: true, baseClassName: 'shrink-0' },
+  spacer: { element: 'div', baseClassName: 'shrink-0' },
 
   icon: {
     element: 'span',
-    selfClosing: true,
     attributes: (node) => ({ 'data-icon': str(node.props.name, 'circle'), 'aria-hidden': true }),
     baseClassName: 'inline-flex items-center justify-center',
   },
 
   embed: {
     element: 'iframe',
-    selfClosing: true,
     attributes: (node) => ({
       src: str(node.props.src),
       title: str(node.props.title, 'Embedded content'),
@@ -133,7 +193,15 @@ export function resolveElement(node: SceneNode): string {
   return typeof spec.element === 'function' ? spec.element(node) : spec.element;
 }
 
-/** Elements that must never receive children, in HTML terms. */
+/**
+ * Elements that must never receive children, in HTML terms.
+ *
+ * This is the authority on whether a tag may be written unclosed. A primitive
+ * that renders no children is *not* the same thing as a void element —
+ * `<span>`, `<textarea>` and `<iframe>` all still need a closing tag, and
+ * conflating the two produced HTML exports where everything after a `<textarea>`
+ * was swallowed into it.
+ */
 export const VOID_ELEMENTS = new Set([
   'img',
   'input',
