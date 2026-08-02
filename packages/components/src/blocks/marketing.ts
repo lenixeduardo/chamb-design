@@ -12,6 +12,12 @@ import {
   space,
   type NodeSpec,
 } from '../builder.js';
+import {
+  avatarPlaceholder,
+  paletteFromTokens,
+  photoPlaceholder,
+  screenshotPlaceholder,
+} from '../placeholders.js';
 
 /** Marketing sections: the blocks a landing page is actually made of. */
 
@@ -168,9 +174,30 @@ export const heroSplit: ComponentContribution = {
     { name: 'primaryCta', type: 'string', defaultValue: 'Start free' },
     { name: 'secondaryCta', type: 'string', defaultValue: 'Book a demo' },
     { name: 'image', type: 'image', defaultValue: '' },
+    {
+      name: 'visual',
+      type: 'enum',
+      defaultValue: 'screenshot',
+      options: [
+        { label: 'Screenshot', value: 'screenshot' },
+        { label: 'Photo', value: 'photo' },
+      ],
+      description: 'Which placeholder to draw while there is no image.',
+    },
   ],
-  create: ({ createId, props }) =>
-    buildTree(
+  create: ({ createId, props, tokens }) => {
+    // An empty visual slot is the block's worst first impression, and it is
+    // its default state. The placeholder is drawn from the project's own
+    // tokens, so it arrives already wearing the theme — and a page selling a
+    // jacket gets a photo rather than a dashboard.
+    const palette = paletteFromTokens(tokens);
+    const image =
+      (props?.image as string) ||
+      (props?.visual === 'photo'
+        ? photoPlaceholder(palette, String(props?.title ?? 'hero'))
+        : screenshotPlaceholder(palette));
+
+    return buildTree(
       {
         type: 'frame',
         name: 'Hero split',
@@ -247,19 +274,14 @@ export const heroSplit: ComponentContribution = {
                   background: color('muted'),
                   shadow: shadow('xl'),
                 },
-                // No image yet means an empty frame, not an `<img>` with an
-                // empty `src` — which every browser draws as a broken-image
-                // icon, and which is the *default* state of this block.
-                children: props?.image
-                  ? [
-                      {
-                        type: 'image',
-                        name: 'Screenshot',
-                        props: { src: props.image as string, alt: 'Product screenshot' },
-                        style: { width: 'fill', height: 'fill' },
-                      },
-                    ]
-                  : [],
+                children: [
+                  {
+                    type: 'image',
+                    name: 'Screenshot',
+                    props: { src: image, alt: 'Product screenshot' },
+                    style: { width: 'fill', height: 'fill' },
+                  },
+                ],
                 motion: {
                   engine: 'css',
                   trigger: 'in-view',
@@ -273,7 +295,8 @@ export const heroSplit: ComponentContribution = {
         ],
       },
       createId,
-    ),
+    );
+  },
 };
 
 export const featureGrid: ComponentContribution = {
@@ -414,7 +437,8 @@ export const testimonials: ComponentContribution = {
   category: 'Landing Pages',
   keywords: ['social proof', 'quotes', 'reviews'],
   props: [{ name: 'title', type: 'string', defaultValue: 'Teams ship faster with Charm-Design' }],
-  create: ({ createId, props }) => {
+  create: ({ createId, props, tokens }) => {
+    const palette = paletteFromTokens(tokens);
     const quotes = [
       {
         quote: 'We replaced three tools with one canvas and the handoff meeting disappeared.',
@@ -487,8 +511,9 @@ export const testimonials: ComponentContribution = {
                       style: row(3),
                       children: [
                         {
-                          type: 'frame',
+                          type: 'image',
                           name: 'Avatar',
+                          props: { src: avatarPlaceholder(item.name, palette), alt: item.name },
                           style: {
                             width: 36,
                             height: 36,
@@ -663,4 +688,134 @@ export const logoCloud: ComponentContribution = {
       },
       createId,
     ),
+};
+
+/**
+ * An image grid: work samples, product shots, a case-study wall.
+ *
+ * The library had no block whose subject *is* a picture, which is why a
+ * portfolio built from it read as a list of paragraphs. Captions are optional
+ * because half the uses of this block are a wall of images with no text at all.
+ */
+export const gallery: ComponentContribution = {
+  id: 'lib:gallery',
+  name: 'Gallery',
+  category: 'Landing Pages',
+  keywords: ['images', 'work', 'projects', 'portfolio', 'photos', 'showcase'],
+  description: 'A grid of images with optional captions; three across on desktop.',
+  props: [
+    { name: 'title', type: 'string', defaultValue: 'Selected work' },
+    { name: 'columns', type: 'number', defaultValue: 3 },
+    {
+      name: 'items',
+      type: 'string',
+      defaultValue: 'Northwind — design system,Kestrel — mobile app,Lumen — brand and site',
+      description: 'One caption per image, comma separated.',
+    },
+  ],
+  create: ({ createId, props, tokens }) => {
+    const palette = paletteFromTokens(tokens);
+    const columns = typeof props?.columns === 'number' ? props.columns : 3;
+    const items = String(
+      props?.items ?? 'Northwind — design system,Kestrel — mobile app,Lumen — brand and site',
+    )
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return buildTree(
+      {
+        type: 'frame',
+        name: 'Gallery',
+        style: section({ padding: pad(20, 6), background: color('background') }),
+        children: [
+          {
+            type: 'frame',
+            name: 'Content',
+            style: container(column(10)),
+            children: [
+              {
+                type: 'heading',
+                name: 'Section title',
+                props: { text: (props?.title as string) ?? 'Selected work', level: 'h2' },
+                style: {
+                  color: color('foreground'),
+                  font: { size: '{size.3xl}', weight: 600, letterSpacing: '-0.02em' },
+                },
+              },
+              {
+                type: 'frame',
+                name: 'Grid',
+                style: { display: 'grid', gridColumns: 1, gap: space(6), width: 'fill' },
+                responsive: {
+                  md: { gridColumns: Math.min(columns, 2) },
+                  lg: { gridColumns: columns },
+                },
+                children: items.map((caption, index) => ({
+                  type: 'frame',
+                  name: caption,
+                  // One column means one wide image, and a 4:3 tile at the
+                  // container's full width is two screens tall on a laptop.
+                  style:
+                    columns === 1
+                      ? {
+                          ...column(3),
+                          width: 'fill',
+                          maxWidth: '860px',
+                          margin: { left: 'auto', right: 'auto' },
+                        }
+                      : column(3),
+                  children: [
+                    {
+                      type: 'frame',
+                      name: 'Frame',
+                      style: {
+                        width: 'fill',
+                        aspectRatio: '4/3',
+                        radius: radius('xl'),
+                        overflow: 'hidden',
+                        border: { width: 1, style: 'solid', color: color('border') },
+                        background: color('muted'),
+                      },
+                      children: [
+                        {
+                          type: 'image',
+                          name: 'Image',
+                          // Seeded per position: six identical tiles would read
+                          // as a rendering bug rather than as placeholders.
+                          props: {
+                            src: photoPlaceholder(palette, `${caption}-${index}`),
+                            alt: caption,
+                          },
+                          style: { width: 'fill', height: 'fill' },
+                        },
+                      ],
+                      motion: {
+                        engine: 'css',
+                        trigger: 'in-view',
+                        from: { opacity: 0, y: 20 },
+                        to: { opacity: 1, y: 0 },
+                        duration: 600,
+                        delay: index * 60,
+                      },
+                    },
+                    {
+                      type: 'text',
+                      name: 'Caption',
+                      props: { text: caption },
+                      style: {
+                        color: color('muted-foreground'),
+                        font: { size: '{size.sm}' },
+                      },
+                    },
+                  ],
+                })),
+              },
+            ],
+          },
+        ],
+      },
+      createId,
+    );
+  },
 };

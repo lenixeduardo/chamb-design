@@ -21,7 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createId, seededRng, setIdRng, validateDocumentIntegrity } from '@opendesign/core';
-import { BUILTIN_COMPONENTS } from '@opendesign/components';
+import { BUILTIN_COMPONENTS, paletteFromTokens, screenshotPlaceholder } from '@opendesign/components';
 import { chambThemes, chambTokens } from '@opendesign/plugin-chamb-brand';
 import { TEMPLATE_BLUEPRINTS, buildTemplate } from '@opendesign/templates';
 import { generateHeroSection } from '@opendesign/mcp';
@@ -30,31 +30,44 @@ import { htmlExporter } from '@opendesign/exporters';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = process.env.OUT ?? path.join(root, 'examples/templates');
 
-/** A recorded 21st.dev answer, trimmed to the component it returns. */
-const RECORDED_21ST_ANSWER = `Here is a hero section for your product.
+/**
+ * A recorded 21st.dev answer, trimmed to the component it returns.
+ *
+ * Catalog components are usually image-led, and this one is: copy on the left,
+ * a visual on the right. A live answer carries a remote URL there; the example
+ * inlines a placeholder instead so the committed page renders with no network.
+ * The conversion is identical either way — `packages/mcp` has tests covering a
+ * remote `<img>`, a `next/image` element and a data URI.
+ */
+const recordedAnswer = (palette) => `Here is a hero section for your product.
 
 \`\`\`tsx
 export function Hero() {
   return (
-    <section className="w-full bg-background py-24 px-6 flex flex-col items-center">
-      <div className="max-w-3xl flex flex-col items-center gap-6">
-        <span className="text-xs uppercase tracking-wide text-muted-foreground">
-          Financeiro para clínicas
-        </span>
-        <h1 className="text-4xl md:text-6xl font-semibold text-foreground text-center">
-          O fechamento do mês em uma tarde
-        </h1>
-        <p className="text-lg text-muted-foreground text-center max-w-xl">
-          Conciliação automática, repasses por profissional e relatórios que o contador aceita
-          sem pedir a planilha de volta.
-        </p>
-        <div className="flex gap-3">
-          <button className="bg-primary text-primary-foreground rounded-md px-6 py-3 font-medium">
-            Testar grátis
-          </button>
-          <a href="/demo" className="border border-border rounded-md px-6 py-3 text-foreground">
-            Ver demonstração
-          </a>
+    <section className="w-full bg-background py-24 px-6">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="flex flex-col gap-6">
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Financeiro para clínicas
+          </span>
+          <h1 className="text-4xl md:text-6xl font-semibold text-foreground">
+            O fechamento do mês em uma tarde
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-xl">
+            Conciliação automática, repasses por profissional e relatórios que o contador aceita
+            sem pedir a planilha de volta.
+          </p>
+          <div className="flex gap-3">
+            <button className="bg-primary text-primary-foreground rounded-md px-6 py-3 font-medium">
+              Testar grátis
+            </button>
+            <a href="/demo" className="border border-border rounded-md px-6 py-3 text-foreground">
+              Ver demonstração
+            </a>
+          </div>
+        </div>
+        <div className="w-full rounded-2xl overflow-hidden border border-border shadow-xl">
+          <img className="w-full h-full" src="${screenshotPlaceholder(palette)}" alt="Painel financeiro" />
         </div>
       </div>
     </section>
@@ -104,7 +117,8 @@ async function main() {
   // The 21st.dev variant: same blueprint, generated above-the-fold section.
   setIdRng(seededRng(200));
   const saas = TEMPLATE_BLUEPRINTS.find((entry) => entry.id === 'tpl:saas');
-  const client = { generateComponent: async () => ({ text: RECORDED_21ST_ANSWER, tool: 'generate' }) };
+  const answer = recordedAnswer(paletteFromTokens(chambTokens()));
+  const client = { generateComponent: async () => ({ text: answer, tool: 'generate' }) };
   const hero = await generateHeroSection({
     request: 'saas de gestão financeira para clínicas',
     client,

@@ -167,6 +167,39 @@ describe('parseJsx', () => {
     expect(flat.some((node) => node.type === 'icon')).toBe(false);
   });
 
+  /**
+   * Catalog components are frequently image-led — a screenshot beside the copy,
+   * a photo behind it. The conversion has to carry the asset through, or the
+   * generated section arrives as text on an empty box.
+   */
+  it('keeps images, remote or inline, with their alt text', () => {
+    const { spec } = parseJsx(
+      '<section><img className="w-full rounded-xl" src="https://cdn.21st.dev/hero.png" alt="Painel" /></section>',
+    );
+
+    const image = flatten(spec!).find((node) => node.type === 'image');
+    expect(image?.props?.src).toBe('https://cdn.21st.dev/hero.png');
+    expect(image?.props?.alt).toBe('Painel');
+    expect(image?.style?.width).toBe('fill');
+    expect(image?.style?.radius).toBe('{radius.xl}');
+  });
+
+  it('reads a next/image element as an image too', () => {
+    const { spec } = parseJsx(
+      '<div><Image src="/product.png" alt="Produto" width={1200} height={800} /></div>',
+    );
+
+    const image = flatten(spec!).find((node) => node.type === 'image');
+    expect(image?.props?.src).toBe('/product.png');
+    expect(image?.props?.alt).toBe('Produto');
+  });
+
+  it('keeps a data URI intact through the parser', () => {
+    const uri = 'data:image/svg+xml;base64,PHN2Zy8+';
+    const { spec } = parseJsx(`<figure><img src="${uri}" alt="Mock" /></figure>`);
+    expect(flatten(spec!).find((node) => node.type === 'image')?.props?.src).toBe(uri);
+  });
+
   it('gives elements a real style instead of relying on browser defaults', () => {
     const { spec } = parseJsx('<button className="px-6">Go</button>');
     expect(spec?.style).toMatchObject({ display: 'inline-flex', cursor: 'pointer' });

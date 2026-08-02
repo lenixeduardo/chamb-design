@@ -50,7 +50,12 @@ request → 21st.dev MCP → JSX snippet → node tree → quality gate → inse
    passed through on `className`, which the renderer appends after generated
    utilities — an exotic gradient still renders, it simply is not editable in
    the inspector.
-5. **The quality gate** — `assessHero` requires a headline, a call to action and
+5. **Images survive.** Catalog components are frequently image-led, and an
+   `<img>`, a `next/image` element or a data URI all become an `image` node with
+   its `src` and `alt` intact — so the section arrives with its visual, not as
+   text on an empty box. The asset itself stays where 21st.dev put it; it is not
+   downloaded or inlined.
+6. **The quality gate** — `assessHero` requires a headline, a call to action and
    at least five nodes. "High quality" has to mean something checkable; a hero
    that fails goes to the built-in block instead of onto the canvas.
 

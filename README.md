@@ -152,7 +152,7 @@ agent switches to reconstruction mode and rebuilds it as real nodes.
 pnpm test
 ```
 
-549 tests across the packages. The suites that matter most: operation
+572 tests across the packages. The suites that matter most: operation
 invertibility (every edit must undo exactly), export output (no editor
 attributes leak, void elements stay void, responsive overrides become media
 queries), the AI repair loop (a malformed batch must never half-apply), the

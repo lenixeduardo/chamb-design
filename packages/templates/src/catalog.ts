@@ -123,6 +123,14 @@ const landing: TemplateBlueprint = {
       },
     },
     { block: 'lib:logo-cloud', props: { title: 'Já usado por' } },
+    {
+      block: 'lib:gallery',
+      props: {
+        title: 'O produto em uma tela',
+        columns: 1,
+        items: 'Tudo o que a página promete, em funcionamento',
+      },
+    },
     { block: 'lib:feature-grid', props: { title: 'Por que funciona', columns: 3 } },
     { block: 'lib:testimonials', props: { title: 'Resultados reais' } },
     {
@@ -223,7 +231,15 @@ const portfolio: TemplateBlueprint = {
         secondaryCta: 'Falar comigo',
       },
     },
-    { block: 'lib:feature-grid', props: { title: 'Trabalhos selecionados', columns: 3 } },
+    {
+      block: 'lib:gallery',
+      props: {
+        title: 'Trabalhos selecionados',
+        columns: 3,
+        items:
+          'Northwind — design system,Kestrel — app de campo,Lumen — marca e site,Vireo — painel de operações,Halcyon — editorial,Aster — identidade',
+      },
+    },
     { block: 'lib:testimonials', props: { title: 'O que dizem os clientes' } },
     {
       block: 'lib:contact-form',
@@ -277,6 +293,14 @@ const agency: TemplateBlueprint = {
     },
     { block: 'lib:logo-cloud', props: { title: 'Clientes' } },
     { block: 'lib:feature-grid', props: { title: 'O que fazemos', columns: 3 } },
+    {
+      block: 'lib:gallery',
+      props: {
+        title: 'Cases',
+        columns: 3,
+        items: 'Northwind — plataforma,Kestrel — rebrand,Lumen — e-commerce',
+      },
+    },
     { block: 'lib:testimonials', props: { title: 'O que dizem sobre o trabalho' } },
     {
       block: 'lib:contact-form',
@@ -326,9 +350,18 @@ const store: TemplateBlueprint = {
           'Materiais escolhidos um a um, produção em série curta e envio em até dois dias úteis.',
         primaryCta: 'Comprar agora',
         secondaryCta: 'Ver detalhes',
+        visual: 'photo',
       },
     },
-    { block: 'lib:feature-grid', props: { title: 'Por dentro do produto', columns: 3 } },
+    {
+      block: 'lib:gallery',
+      props: {
+        title: 'Por dentro do produto',
+        columns: 3,
+        items: 'Costura reforçada,Tecido certificado,Acabamento à mão',
+      },
+    },
+    { block: 'lib:feature-grid', props: { title: 'Feito para o dia a dia', columns: 3 } },
     { block: 'lib:testimonials', props: { title: 'Quem já comprou' } },
     { block: 'lib:faq', props: { title: 'Entrega, troca e garantia' } },
     {

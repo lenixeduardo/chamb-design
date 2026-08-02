@@ -69,6 +69,31 @@ the style compiler. The last example is the SaaS blueprint with its hero
 converted from a recorded 21st.dev answer, so the conversion is visible without
 an API key.
 
+## Imagery
+
+A template with no pictures reads as a wireframe, so every blueprint that
+should show something does. The images are **inline SVG data URIs generated
+from the project's own tokens** — `screenshotPlaceholder`, `photoPlaceholder`
+and `avatarPlaceholder` in
+[`packages/components`](../packages/components/src/placeholders.ts):
+
+- `lib:hero-split` fills its visual slot by default, and takes `visual:
+'screenshot' | 'photo'` so a page selling a jacket does not open on a
+  dashboard mock.
+- `lib:gallery` is a new block whose subject _is_ a picture — work samples,
+  product shots, a case wall. Each tile is seeded by its caption, so six of them
+  are six different arrangements rather than one tile repeated.
+- `lib:testimonials` gives each quote an initials portrait.
+
+Why generated rather than stock photography: they render offline (a document
+stays one portable JSON file, the same promise the asset pipeline makes for
+dropped images), they retheme with the project, and they read as placeholders —
+where a photograph of a real office reads as content someone forgot to replace.
+Pass a real `image` prop and it wins.
+
+Images coming _from_ 21st.dev are kept as they arrive, remote URL and all; see
+[the MCP doc](MCP_21ST.md).
+
 ## Matching a request
 
 ```ts
