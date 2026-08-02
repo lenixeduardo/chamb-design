@@ -313,3 +313,66 @@ describe('block vs primitive insertion', () => {
     expect(getNode(editor.getDocument(), textId)!.parent).toBe(frameId);
   });
 });
+
+describe('inserting a generated subtree', () => {
+  /** The seam an external generator (21st.dev, an importer) writes through. */
+  function subtree() {
+    const rootId = 'gen_root';
+    const childId = 'gen_child';
+    return {
+      rootId,
+      nodes: [
+        {
+          id: rootId,
+          type: 'frame',
+          name: 'Hero — 21st.dev',
+          parent: null,
+          children: [childId],
+          props: {},
+          style: {},
+        },
+        {
+          id: childId,
+          type: 'heading',
+          name: 'Headline',
+          parent: rootId,
+          children: [],
+          props: { text: 'Olá', level: 'h1' },
+          style: {},
+        },
+      ],
+    };
+  }
+
+  it('lands at the block insertion point and selects itself', () => {
+    const { editor, rootId } = makeEditor();
+    const navbarId = editor.insertBlock('lib:navbar')!;
+    const footerId = editor.insertBlock('lib:footer')!;
+    editor.select(navbarId);
+
+    const { nodes, rootId: heroId } = subtree();
+    expect(editor.insertSubtree(nodes, heroId)).toBe(heroId);
+
+    const root = getNode(editor.getDocument(), rootId)!;
+    expect(root.children).toEqual([navbarId, heroId, footerId]);
+    expect(editor.getState().selection).toEqual([heroId]);
+    expect(validateDocumentIntegrity(editor.getDocument()).ok).toBe(true);
+  });
+
+  it('is one undo away, like any other insertion', () => {
+    const { editor, rootId } = makeEditor();
+    const { nodes, rootId: heroId } = subtree();
+
+    editor.insertSubtree(nodes, heroId, 'Hero 21st.dev');
+    expect(getNode(editor.getDocument(), rootId)!.children).toEqual([heroId]);
+
+    editor.undo();
+    expect(getNode(editor.getDocument(), rootId)!.children).toEqual([]);
+    expect(getNode(editor.getDocument(), heroId)).toBeUndefined();
+  });
+
+  it('refuses an empty subtree rather than writing an empty operation', () => {
+    const { editor } = makeEditor();
+    expect(editor.insertSubtree([], 'nope')).toBeNull();
+  });
+});

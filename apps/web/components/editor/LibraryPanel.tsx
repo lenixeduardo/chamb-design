@@ -5,6 +5,7 @@ import { Search, Blocks } from 'lucide-react';
 import type { ComponentContribution, PluginRegistry } from '@opendesign/core';
 import type { Editor } from '@opendesign/editor';
 import { EmptyState, Panel } from '@/components/ui/primitives';
+import { HeroGenerator } from '@/components/editor/HeroGenerator';
 import { BlockListSkeleton, PrimitiveGridSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -110,6 +111,8 @@ export function LibraryPanel({
                 </div>
               </section>
             )}
+
+            {!query && <HeroGenerator editor={editor} />}
 
             {byCategory.length === 0 ? (
               <EmptyState

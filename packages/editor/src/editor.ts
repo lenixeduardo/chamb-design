@@ -292,6 +292,38 @@ export class Editor {
     return this.insertComponent(component, props);
   }
 
+  /**
+   * Inserts a subtree that was built somewhere else.
+   *
+   * A generated section (21st.dev, a paste, an importer) arrives as nodes, not
+   * as a component contribution, and it deserves the same treatment as a block
+   * dropped from the library: same insertion point, same undo entry, same
+   * selection afterwards. Without this it would have to reach into the store
+   * directly and would land outside the history.
+   */
+  insertSubtree(nodes: SceneNode[], rootId: NodeId, label = 'Insert section'): NodeId | null {
+    if (nodes.length === 0) return null;
+
+    const target = this.insertionTarget('block');
+    if (!target) return null;
+
+    this.store.transact(
+      [
+        {
+          type: 'insertSubtree',
+          nodes,
+          rootId,
+          parentId: target.parentId,
+          index: target.index,
+        },
+      ],
+      { label },
+    );
+
+    this.select(rootId);
+    return rootId;
+  }
+
   insertComponent(
     component: ComponentContribution,
     props?: Record<string, unknown>,

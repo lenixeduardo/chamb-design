@@ -4,6 +4,8 @@ import { exportersPlugin } from '@opendesign/exporters';
 import { aiProvidersPlugin } from '@opendesign/ai';
 import { chartsPlugin } from '@opendesign/plugin-charts';
 import { chambBrandPlugin } from '@opendesign/plugin-chamb-brand';
+import { templatesPlugin } from '@opendesign/templates';
+import { twentyFirstPlugin } from '@opendesign/mcp';
 import { remotionPlugin } from '@opendesign/plugin-remotion';
 
 /**
@@ -24,6 +26,11 @@ const CORE_PLUGINS: OpenDesignPlugin[] = [
   // third-party pack — which is the whole reason they stay separate packages.
   chartsPlugin,
   chambBrandPlugin,
+  // Model templates, and the MCP integration that generates their hero. Both
+  // register through the same public API — `registerTemplate` and
+  // `registerIntegration` needed no change to host them.
+  templatesPlugin,
+  twentyFirstPlugin,
   // Video export. The target only emits code, so Remotion itself stays an
   // optional peer dependency and nothing here pulls in its licence.
   remotionPlugin,
