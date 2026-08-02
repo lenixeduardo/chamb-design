@@ -234,6 +234,10 @@ export const newsletterForm: ComponentContribution = {
                   display: 'flex',
                   justify: 'center',
                   align: 'center',
+                  // `hug` keeps the label on one line. In the row layout the
+                  // input takes the remaining space, and a submit button that
+                  // stretches to fill instead wraps "Entrar na lista" in two.
+                  width: 'hug',
                   padding: pad(3, 5),
                   radius: radius('md'),
                   background: color('accent'),

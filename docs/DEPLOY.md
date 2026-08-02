@@ -48,6 +48,11 @@ visitors who have not set their own. Understand what that means before you do
 it: the routes have no authentication and no rate limit, so **anyone who finds
 the URL spends that key**. A public deployment should leave them unset.
 
+`TWENTY_FIRST_API_KEY` (or `API_KEY_21ST`) is the same bargain for generated
+hero sections via [21st.dev](MCP_21ST.md): unset, visitors paste their own key
+or get the library's hero block instead; set, everyone who finds the URL spends
+yours.
+
 `OPENDESIGN_PROVIDER_TIMEOUT_MS` (default `120000`) bounds how long a provider
 call may hold a connection open.
 

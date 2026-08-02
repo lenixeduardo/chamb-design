@@ -3,6 +3,7 @@ import { avatar, badge, button, card, statTile } from './blocks/primitives.js';
 import {
   ctaBanner,
   featureGrid,
+  gallery,
   heroCentered,
   heroSplit,
   logoCloud,
@@ -14,6 +15,7 @@ import { authForm, contactForm, newsletterForm } from './blocks/forms.js';
 import { chartCard, crmPipeline, dataTable, statGrid } from './blocks/application.js';
 
 export * from './builder.js';
+export * from './placeholders.js';
 
 /** Every block shipped in the box, in library display order. */
 export const BUILTIN_COMPONENTS: ComponentContribution[] = [
@@ -28,6 +30,7 @@ export const BUILTIN_COMPONENTS: ComponentContribution[] = [
   heroSplit,
   // Landing pages
   featureGrid,
+  gallery,
   testimonials,
   logoCloud,
   ctaBanner,
@@ -76,6 +79,7 @@ export {
   heroCentered,
   heroSplit,
   featureGrid,
+  gallery,
   testimonials,
   logoCloud,
   ctaBanner,

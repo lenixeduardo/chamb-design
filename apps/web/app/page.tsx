@@ -10,6 +10,7 @@ import {
   Code2,
   KeyRound,
   Layers,
+  LayoutTemplate,
   Plus,
   Search,
   Settings,
@@ -24,6 +25,7 @@ import {
   type ProjectSummary,
 } from '@/lib/projects';
 import { SettingsDialog } from '@/components/settings/SettingsDialog';
+import { TemplateDialog } from '@/components/templates/TemplateDialog';
 import { CharmDino } from '@/components/brand/CharmDino';
 import { getCredential, hasKey, subscribeToSettings } from '@/lib/settings';
 import { Badge, Button, EmptyState, IconButton } from '@/components/ui/primitives';
@@ -45,6 +47,7 @@ export default function WorkspacePage() {
   const [folder, setFolder] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const [ready, setReady] = useState<boolean | null>(null);
   // Creating a project writes to storage and then routes. Both are fast, but
   // "fast" on a cold phone is still long enough to tap twice — and twice means
@@ -197,6 +200,19 @@ export default function WorkspacePage() {
               >
                 Começar um projeto em branco
                 {!creating && <ArrowRight size={16} />}
+              </Button>
+
+              {/* A template is the other honest starting point, and it needs
+                  no model configured — so it sits next to the blank project
+                  rather than behind the key prompt. */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => setTemplatesOpen(true)}
+              >
+                <LayoutTemplate size={16} />
+                Começar por um modelo
               </Button>
 
               {/* The provider check is a network round trip, so the slot it will
@@ -381,6 +397,12 @@ export default function WorkspacePage() {
       </footer>
 
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {templatesOpen && (
+        <TemplateDialog
+          onClose={() => setTemplatesOpen(false)}
+          onCreated={(projectId) => router.push(`/editor/${projectId}`)}
+        />
+      )}
     </main>
   );
 }
