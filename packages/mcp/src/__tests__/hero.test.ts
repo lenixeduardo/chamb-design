@@ -258,8 +258,10 @@ describe('generateHeroSection', () => {
       createId,
     });
 
-    expect(withShot.nodes.some((node) => node.type === 'image')).toBe(true);
-    expect(plain.nodes.some((node) => node.type === 'image')).toBe(false);
+    // The split hero is the one with a visual slot beside the copy; it holds
+    // no `image` node until someone drops a screenshot into it.
+    expect(withShot.nodes.some((node) => node.name === 'Visual')).toBe(true);
+    expect(plain.nodes.some((node) => node.name === 'Visual')).toBe(false);
   });
 });
 

@@ -184,7 +184,7 @@ export async function generateHeroSection(options: GenerateHeroOptions): Promise
     return { ...buildFallback(options, createId), source: 'builtin', warnings, code, tool };
   }
 
-  const built = buildTree(heroShell(parsed.spec), createId);
+  const built = buildTree(heroSection(parsed.spec), createId);
   const quality = assessHero(built.nodes, options.minimumNodes ?? DEFAULT_MINIMUM_NODES);
 
   if (!quality.ok) {
@@ -228,13 +228,38 @@ export function assessHero(nodes: SceneNode[], minimumNodes = DEFAULT_MINIMUM_NO
 }
 
 /**
- * Wraps a generated element in a section shell.
+ * Gives a generated element the shape of a page section.
  *
- * Snippets are written to sit inside a page that already has a container, so
- * they often come back with no vertical rhythm of their own. The shell gives
- * the section the same padding and full-width behaviour every built-in block
- * has, and leaves the generated tree untouched inside it.
+ * Some snippets already are one — `<section className="w-full py-24">` — and
+ * wrapping those in a second padded frame doubles the vertical rhythm, which
+ * is exactly the "AI section that is three screens tall" everyone recognises.
+ * So a spec that already owns its full width and vertical padding is only
+ * normalised, and just the ones written to sit inside someone else's container
+ * get a shell.
  */
+export function heroSection(spec: NodeSpec): NodeSpec {
+  const style = spec.style ?? {};
+  const fullWidth = style.width === 'fill' || style.width === '100%';
+  const ownsRhythm = Boolean(style.padding?.top ?? style.padding?.bottom);
+
+  if (fullWidth && ownsRhythm) {
+    return {
+      ...spec,
+      name: 'Hero — 21st.dev',
+      style: {
+        display: 'flex',
+        direction: 'column',
+        align: 'center',
+        background: '{color.background}',
+        color: '{color.foreground}',
+        ...style,
+      },
+    };
+  }
+
+  return heroShell(spec);
+}
+
 function heroShell(spec: NodeSpec): NodeSpec {
   return {
     type: 'frame',

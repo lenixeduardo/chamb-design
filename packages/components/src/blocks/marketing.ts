@@ -165,6 +165,8 @@ export const heroSplit: ComponentContribution = {
       defaultValue:
         'Every element on the canvas is real code you can export the moment it looks right.',
     },
+    { name: 'primaryCta', type: 'string', defaultValue: 'Start free' },
+    { name: 'secondaryCta', type: 'string', defaultValue: 'Book a demo' },
     { name: 'image', type: 'image', defaultValue: '' },
   ],
   create: ({ createId, props }) =>
@@ -227,8 +229,8 @@ export const heroSplit: ComponentContribution = {
                     name: 'Actions',
                     style: { ...row(3), wrap: true },
                     children: [
-                      ctaButton('Start free', 'primary'),
-                      ctaButton('Book a demo', 'ghost'),
+                      ctaButton((props?.primaryCta as string) ?? 'Start free', 'primary'),
+                      ctaButton((props?.secondaryCta as string) ?? 'Book a demo', 'ghost'),
                     ],
                   },
                 ],
@@ -245,14 +247,19 @@ export const heroSplit: ComponentContribution = {
                   background: color('muted'),
                   shadow: shadow('xl'),
                 },
-                children: [
-                  {
-                    type: 'image',
-                    name: 'Screenshot',
-                    props: { src: (props?.image as string) ?? '', alt: 'Product screenshot' },
-                    style: { width: 'fill', height: 'fill' },
-                  },
-                ],
+                // No image yet means an empty frame, not an `<img>` with an
+                // empty `src` — which every browser draws as a broken-image
+                // icon, and which is the *default* state of this block.
+                children: props?.image
+                  ? [
+                      {
+                        type: 'image',
+                        name: 'Screenshot',
+                        props: { src: props.image as string, alt: 'Product screenshot' },
+                        style: { width: 'fill', height: 'fill' },
+                      },
+                    ]
+                  : [],
                 motion: {
                   engine: 'css',
                   trigger: 'in-view',

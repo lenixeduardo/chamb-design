@@ -136,7 +136,8 @@ agent switches to reconstruction mode and rebuilds it as real nodes.
 
 - [Architecture](docs/ARCHITECTURE.md) — the document model, operations, and why
   the layers are split the way they are
-- [Templates](docs/TEMPLATES.md) — blueprints, request matching, and adding your own
+- [Templates](docs/TEMPLATES.md) — blueprints, request matching, and adding your
+  own; one exported example per template in [`examples/templates`](examples/templates)
 - [Hero sections via 21st.dev](docs/MCP_21ST.md) — the MCP client, the JSX→nodes
   pipeline, and how to configure a key
 - [Writing plugins](docs/PLUGINS.md) — contribution points, with runnable examples

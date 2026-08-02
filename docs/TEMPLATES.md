@@ -39,6 +39,36 @@ carries `hero: true` — that is the slot an external generator may replace.
 The seven that ship: `tpl:saas`, `tpl:landing`, `tpl:waitlist`,
 `tpl:portfolio`, `tpl:agency`, `tpl:store`, `tpl:app`.
 
+Two more flags exist, and both were added because the generated examples showed
+the page was wrong without them:
+
+- **`wrap: true`** — the library holds _sections_ (a hero, a pricing table: they
+  own their padding) and _widgets_ (a newsletter field, a contact form: 480px
+  wide, meant to sit inside something else). A widget placed straight on the
+  page root sits flush against the viewport edge. `wrap` puts it in a padded,
+  centred section without forking the block.
+- **`slot: 'aside'`** — the block goes _beside_ the rest of the page rather than
+  above it. `tpl:app` needs it: a dashboard is a sidebar and a content column
+  side by side, and without it an app shell renders as a nav list with the
+  tables underneath.
+
+## Examples
+
+One exported page per template lives in
+[`examples/templates`](../examples/templates), with screenshots in
+[`docs/screenshots/templates`](screenshots/templates). They are generated, not
+written:
+
+```bash
+pnpm build && node scripts/generate-template-examples.mjs
+```
+
+Node ids come from a seeded RNG, so regenerating an unchanged template produces
+a byte-identical file — a diff there is a real change in a blueprint, a block or
+the style compiler. The last example is the SaaS blueprint with its hero
+converted from a recorded 21st.dev answer, so the conversion is visible without
+an API key.
+
 ## Matching a request
 
 ```ts

@@ -1,6 +1,7 @@
 import {
   applyOperations,
   createDocument,
+  createNode,
   createId as defaultCreateId,
   type ComponentContribution,
   type DesignDocument,
@@ -91,43 +92,50 @@ export function buildTemplate(
   };
 
   const rootId = document.pages[0]!.rootId;
-  const operations: Operation[] = [];
   const skipped: string[] = [];
   let heroReplaced = false;
 
+  const aside: SubtreeInput[] = [];
+  const stacked: SubtreeInput[] = [];
+
   for (const section of blueprint.sections) {
+    let built: SubtreeInput | null = null;
+
     if (section.hero && options.hero) {
-      operations.push({
-        type: 'insertSubtree',
-        nodes: options.hero.nodes,
-        rootId: options.hero.rootId,
-        parentId: rootId,
-        index: operations.length,
-      });
+      built = options.hero;
       heroReplaced = true;
+    } else {
+      const block = lookup(section.block);
+      if (!block) {
+        skipped.push(section.block);
+        continue;
+      }
+
+      built = block.create({
+        createId,
+        tokens: document.tokens,
+        ...(section.props ? { props: section.props } : {}),
+      });
+    }
+
+    if (section.slot === 'aside') {
+      aside.push(built);
       continue;
     }
 
-    const block = lookup(section.block);
-    if (!block) {
-      skipped.push(section.block);
-      continue;
-    }
-
-    const built = block.create({
-      createId,
-      tokens: document.tokens,
-      ...(section.props ? { props: section.props } : {}),
-    });
-
-    operations.push({
-      type: 'insertSubtree',
-      nodes: built.nodes,
-      rootId: built.rootId,
-      parentId: rootId,
-      index: operations.length,
-    });
+    stacked.push(section.wrap ? wrapInSection(built, createId) : built);
   }
+
+  const operations: Operation[] =
+    aside.length > 0
+      ? [shellOperation(aside, stacked, createId, rootId)]
+      : stacked.map((subtree, index) => ({
+          type: 'insertSubtree',
+          nodes: subtree.nodes,
+          rootId: subtree.rootId,
+          parentId: rootId,
+          index,
+        }));
 
   return {
     document: applyOperations(document, operations).document,
@@ -135,6 +143,114 @@ export function buildTemplate(
     skipped,
     heroReplaced,
   };
+}
+
+/**
+ * Puts a widget-sized block on the page as a section.
+ *
+ * Nothing about the block changes — it keeps its own max width and centres
+ * inside the wrapper, which is what a section does for it.
+ */
+function wrapInSection(subtree: SubtreeInput, createId: (prefix?: string) => string): SubtreeInput {
+  const wrapper = createNode({
+    id: createId(),
+    type: 'frame',
+    name: 'Section',
+    style: {
+      display: 'flex',
+      direction: 'column',
+      align: 'center',
+      width: 'fill',
+      padding: {
+        top: '{spacing.16}',
+        bottom: '{spacing.16}',
+        left: '{spacing.6}',
+        right: '{spacing.6}',
+      },
+      background: '{color.background}',
+    },
+  });
+
+  wrapper.children = [subtree.rootId];
+  wrapper.responsive = {
+    md: {
+      padding: {
+        top: '{spacing.20}',
+        bottom: '{spacing.20}',
+        left: '{spacing.10}',
+        right: '{spacing.10}',
+      },
+    },
+  };
+
+  return { rootId: wrapper.id, nodes: [wrapper, ...reparent(subtree, wrapper.id)] };
+}
+
+/**
+ * The app-shell layout: an aside beside a scrolling content column.
+ *
+ * Built as a single subtree rather than a series of appends, because the
+ * sections are no longer siblings of the page root — the row and the content
+ * column sit between them, and `insertSubtree` wants the whole tree at once.
+ */
+function shellOperation(
+  aside: SubtreeInput[],
+  stacked: SubtreeInput[],
+  createId: (prefix?: string) => string,
+  parentId: string,
+): Operation {
+  const row = createNode({
+    id: createId(),
+    type: 'frame',
+    name: 'App shell',
+    style: { display: 'flex', direction: 'row', width: 'fill', minHeight: '100vh' },
+  });
+
+  const content = createNode({
+    id: createId(),
+    type: 'frame',
+    name: 'Content',
+    style: {
+      display: 'flex',
+      direction: 'column',
+      width: 'fill',
+      gap: '{spacing.6}',
+      padding: {
+        top: '{spacing.6}',
+        bottom: '{spacing.6}',
+        left: '{spacing.6}',
+        right: '{spacing.6}',
+      },
+      background: '{color.background}',
+      overflow: 'auto',
+    },
+  });
+
+  row.children = [...aside.map((subtree) => subtree.rootId), content.id];
+  content.parent = row.id;
+  content.children = stacked.map((subtree) => subtree.rootId);
+
+  return {
+    type: 'insertSubtree',
+    // Parents before children: the row, then each aside with its descendants,
+    // then the content column, then the sections it holds.
+    nodes: [
+      row,
+      ...aside.flatMap((subtree) => reparent(subtree, row.id)),
+      content,
+      ...stacked.flatMap((subtree) => reparent(subtree, content.id)),
+    ],
+    rootId: row.id,
+    parentId,
+    index: 0,
+  };
+}
+
+/** Points a subtree's root at its new parent, leaving the rest untouched. */
+function reparent(subtree: SubtreeInput, parentId: string): SceneNode[] {
+  return subtree.nodes.map((node) =>
+    node.id === subtree.rootId ? { ...node, parent: parentId } : node,
+  );
 }
 
 /** Request in, document out — the whole flow in one call. */

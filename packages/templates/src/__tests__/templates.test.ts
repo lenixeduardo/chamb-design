@@ -97,8 +97,78 @@ describe('building a document', () => {
       expect(validateDocumentIntegrity(document).ok, blueprint.id).toBe(true);
 
       const root = document.nodes[document.pages[0]!.rootId]!;
-      expect(root.children, blueprint.id).toHaveLength(blueprint.sections.length);
+      const asides = blueprint.sections.filter((section) => section.slot === 'aside');
+
+      if (asides.length === 0) {
+        expect(root.children, blueprint.id).toHaveLength(blueprint.sections.length);
+        continue;
+      }
+
+      // A shell layout puts one row under the page root: aside(s) plus the
+      // content column holding everything else.
+      expect(root.children, blueprint.id).toHaveLength(1);
+      const shell = document.nodes[root.children[0]!]!;
+      expect(shell.style.direction, blueprint.id).toBe('row');
+      expect(shell.children, blueprint.id).toHaveLength(asides.length + 1);
+
+      const content = document.nodes[shell.children[shell.children.length - 1]!]!;
+      expect(content.children, blueprint.id).toHaveLength(
+        blueprint.sections.length - asides.length,
+      );
     }
+  });
+
+  /**
+   * The library ships sections *and* widgets. A widget dropped straight on the
+   * page root sits flush against the viewport edge — which is what the
+   * generated examples showed before `wrap` existed.
+   */
+  it('wraps a widget-sized block in a padded section', () => {
+    const blueprint = {
+      ...TEMPLATE_BLUEPRINTS[0]!,
+      sections: [{ block: 'lib:newsletter', hero: true, wrap: true }],
+    };
+
+    const { document } = buildTemplate(blueprint, { components: BUILTIN_COMPONENTS });
+    expect(validateDocumentIntegrity(document).ok).toBe(true);
+
+    const root = document.nodes[document.pages[0]!.rootId]!;
+    const wrapper = document.nodes[root.children[0]!]!;
+
+    expect(wrapper.name).toBe('Section');
+    expect(wrapper.style.width).toBe('fill');
+    expect(wrapper.style.padding?.left).toBe('{spacing.6}');
+    expect(wrapper.children).toHaveLength(1);
+
+    // The block itself is untouched: it keeps its own max width and centres.
+    const widget = document.nodes[wrapper.children[0]!]!;
+    expect(widget.name).toBe('Newsletter');
+    expect(widget.style.maxWidth).toBe('480px');
+  });
+
+  it('puts an aside beside the content column, not above it', () => {
+    const blueprint = {
+      ...TEMPLATE_BLUEPRINTS[0]!,
+      sections: [
+        { block: 'lib:app-sidebar', slot: 'aside' as const },
+        { block: 'lib:stat-grid', hero: true },
+        { block: 'lib:data-table' },
+      ],
+    };
+
+    const { document } = buildTemplate(blueprint, { components: BUILTIN_COMPONENTS });
+    expect(validateDocumentIntegrity(document).ok).toBe(true);
+
+    const root = document.nodes[document.pages[0]!.rootId]!;
+    const shell = document.nodes[root.children[0]!]!;
+    expect(shell.style.direction).toBe('row');
+
+    const [sidebarId, contentId] = shell.children;
+    expect(document.nodes[sidebarId!]!.name).toBe('Sidebar');
+
+    const content = document.nodes[contentId!]!;
+    expect(content.style.gap).toBe('{spacing.6}');
+    expect(content.children).toHaveLength(2);
   });
 
   it('carries the blueprint meta onto the page', () => {

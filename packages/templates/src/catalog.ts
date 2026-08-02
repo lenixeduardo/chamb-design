@@ -51,11 +51,15 @@ const saas: TemplateBlueprint = {
         title: 'O painel que sua equipe abre primeiro',
         subtitle:
           'Conecte suas fontes de dados, acompanhe o que importa e compartilhe com o time — sem planilha no meio do caminho.',
+        primaryCta: 'Testar grátis',
+        secondaryCta: 'Ver demonstração',
       },
     },
     { block: 'lib:logo-cloud', props: { title: 'Equipes que já usam' } },
     { block: 'lib:feature-grid', props: { title: 'Tudo que a operação precisa', columns: 3 } },
-    { block: 'lib:stat-grid', props: { columns: 4 } },
+    // A dashboard widget doing duty as a marketing proof point: it needs the
+    // section padding the Dashboard blocks deliberately do not carry.
+    { block: 'lib:stat-grid', wrap: true, props: { columns: 4 } },
     { block: 'lib:testimonials', props: { title: 'Quem usa, conta' } },
     {
       block: 'lib:pricing-table',
@@ -129,7 +133,7 @@ const landing: TemplateBlueprint = {
         cta: 'Começar agora',
       },
     },
-    { block: 'lib:footer', props: {} },
+    { block: 'lib:footer', props: { tagline: 'Uma promessa, uma ação.' } },
   ],
 };
 
@@ -174,6 +178,7 @@ const waitlist: TemplateBlueprint = {
     { block: 'lib:feature-grid', props: { title: 'O que vem aí', columns: 3 } },
     {
       block: 'lib:newsletter',
+      wrap: true,
       props: { title: 'Receba o convite primeiro', submitLabel: 'Entrar na lista' },
     },
     { block: 'lib:footer', props: { tagline: 'Em breve.' } },
@@ -214,12 +219,15 @@ const portfolio: TemplateBlueprint = {
         title: 'Desenho produtos que as pessoas entendem de primeira',
         subtitle:
           'Dez anos entre pesquisa, interface e código. Abaixo, alguns trabalhos e o que mudou depois deles.',
+        primaryCta: 'Ver trabalhos',
+        secondaryCta: 'Falar comigo',
       },
     },
     { block: 'lib:feature-grid', props: { title: 'Trabalhos selecionados', columns: 3 } },
     { block: 'lib:testimonials', props: { title: 'O que dizem os clientes' } },
     {
       block: 'lib:contact-form',
+      wrap: true,
       props: {
         title: 'Vamos conversar',
         subtitle: 'Conte o que você precisa — respondo em um dia útil.',
@@ -272,6 +280,7 @@ const agency: TemplateBlueprint = {
     { block: 'lib:testimonials', props: { title: 'O que dizem sobre o trabalho' } },
     {
       block: 'lib:contact-form',
+      wrap: true,
       props: {
         title: 'Conte seu projeto',
         subtitle: 'Respondemos em um dia útil com uma primeira leitura do escopo.',
@@ -315,6 +324,8 @@ const store: TemplateBlueprint = {
         title: 'Feito para durar mais que a próxima estação',
         subtitle:
           'Materiais escolhidos um a um, produção em série curta e envio em até dois dias úteis.',
+        primaryCta: 'Comprar agora',
+        secondaryCta: 'Ver detalhes',
       },
     },
     { block: 'lib:feature-grid', props: { title: 'Por dentro do produto', columns: 3 } },
@@ -328,7 +339,7 @@ const store: TemplateBlueprint = {
         cta: 'Comprar agora',
       },
     },
-    { block: 'lib:footer', props: {} },
+    { block: 'lib:footer', props: { tagline: 'Feito para durar.' } },
   ],
 };
 
@@ -360,6 +371,7 @@ const app: TemplateBlueprint = {
   sections: [
     {
       block: 'lib:app-sidebar',
+      slot: 'aside',
       props: { items: 'Visão geral,Clientes,Negócios,Relatórios,Ajustes' },
     },
     { block: 'lib:stat-grid', hero: true, props: { columns: 4 } },

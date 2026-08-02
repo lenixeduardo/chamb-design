@@ -24,6 +24,24 @@ export interface TemplateSection {
    * moment a blueprint picks a different hero variant.
    */
   hero?: boolean;
+  /**
+   * Wraps the block in a page section — full width, vertical rhythm, centred.
+   *
+   * The library contains both *sections* (a hero, a pricing table: they own
+   * their padding) and *widgets* (a newsletter field, a contact form: 480px
+   * wide, meant to sit inside something else). Dropping a widget straight onto
+   * the page root leaves it flush against the viewport edge. This flag is how
+   * a blueprint uses a widget as a section without forking the block.
+   */
+  wrap?: boolean;
+  /**
+   * `aside` places the block beside the rest of the page rather than above it.
+   *
+   * A dashboard is the case that needs it: a sidebar and the content column are
+   * siblings in a row, not two stacked sections. Without this an app shell
+   * renders as a nav list with the tables underneath it.
+   */
+  slot?: 'aside';
 }
 
 export interface TemplateBlueprint {
