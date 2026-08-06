@@ -122,4 +122,87 @@ describe('blocks that carry imagery', () => {
     expect(images.map((node) => node.props.alt)).toEqual(['Um', 'Dois', 'Três', 'Quatro']);
     expect(new Set(images.map((node) => node.props.src)).size).toBe(4);
   });
+
+  describe('imagery: stock', () => {
+    it('puts a real photograph in the hero', () => {
+      const image = build('lib:hero-split', { imagery: 'stock' }).nodes.find(
+        (node) => node.type === 'image',
+      );
+
+      expect(String(image?.props.src)).toMatch(/^https:\/\/images\.unsplash\.com\/photo-/);
+      // Alt text travels with the photograph: the block's generic caption was
+      // true of the drawing it replaced, not of what the CDN will serve.
+      expect(String(image?.props.alt)).not.toBe('Product screenshot');
+      expect(String(image?.props.alt).length).toBeGreaterThan(0);
+    });
+
+    it('still lets a real image win', () => {
+      const image = build('lib:hero-split', {
+        imagery: 'stock',
+        image: 'https://example.com/shot.png',
+      }).nodes.find((node) => node.type === 'image');
+
+      expect(image?.props.src).toBe('https://example.com/shot.png');
+    });
+
+    it('honours the topic a page asks for', () => {
+      const retail = build('lib:hero-split', {
+        imagery: 'stock',
+        topic: 'retail',
+        visual: 'photo',
+      });
+      const product = build('lib:hero-split', { imagery: 'stock', topic: 'product' });
+      const src = (result: ReturnType<typeof build>) =>
+        String(result.nodes.find((node) => node.type === 'image')?.props.src);
+
+      expect(src(retail)).not.toBe(src(product));
+    });
+
+    it('fills a gallery with photographs that differ from each other', () => {
+      const images = build('lib:gallery', {
+        imagery: 'stock',
+        items: 'Um,Dois,Três,Quatro',
+        columns: 4,
+      }).nodes.filter((node) => node.type === 'image');
+
+      expect(images).toHaveLength(4);
+      for (const image of images) {
+        expect(String(image.props.src)).toContain('images.unsplash.com');
+      }
+      expect(new Set(images.map((node) => node.props.src)).size).toBe(4);
+    });
+
+    /**
+     * Photographs scale the frame, they do not fit it. Without `cover` a 3:2
+     * picture in the block's 4:3 slot is a stretched picture.
+     */
+    it('crops rather than stretches', () => {
+      const image = build('lib:hero-split', { imagery: 'stock' }).nodes.find(
+        (node) => node.type === 'image',
+      );
+      expect(image?.style?.objectFit).toBe('cover');
+    });
+
+    it('draws the placeholder for anything that is not a mode', () => {
+      const image = build('lib:hero-split', { imagery: 'photos-please' }).nodes.find(
+        (node) => node.type === 'image',
+      );
+      expect(String(image?.props.src)).toContain('data:image/svg+xml');
+    });
+
+    /**
+     * A testimonial keeps its initials on purpose. A stranger's face under an
+     * invented quote is a claim about a person who never said it.
+     */
+    it('leaves testimonial portraits alone', () => {
+      const images = build('lib:testimonials', { imagery: 'stock' }).nodes.filter(
+        (node) => node.type === 'image',
+      );
+
+      expect(images).toHaveLength(3);
+      for (const image of images) {
+        expect(String(image.props.src)).toContain('data:image/svg+xml');
+      }
+    });
+  });
 });

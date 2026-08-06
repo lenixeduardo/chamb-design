@@ -10,6 +10,7 @@ import {
   type ThemeDef,
   type TokenSet,
 } from '@opendesign/core';
+import type { ImageryMode } from '@opendesign/components';
 import {
   missingBlocks,
   toLookup,
@@ -46,6 +47,18 @@ export interface BuildTemplateOptions {
    * the page — the right default in an app where plugins come and go.
    */
   onMissingBlock?: 'skip' | 'throw';
+  /**
+   * Where the imagery in the page comes from. Defaults to `stock`.
+   *
+   * A template is judged in the two seconds after it opens, and a page whose
+   * every picture is an abstract gradient reads as a wireframe someone forgot
+   * to fill in — so a template built for a person gets photographs.
+   *
+   * `placeholder` keeps the old behaviour, and it is not a legacy setting:
+   * the committed examples build with it so they render with no network, and
+   * so does anything that has to stay a single portable file.
+   */
+  imagery?: ImageryMode;
 }
 
 export interface BuildTemplateResult {
@@ -71,6 +84,7 @@ export function buildTemplate(
 ): BuildTemplateResult {
   const lookup = toLookup(options.components);
   const createId = options.createId ?? defaultCreateId;
+  const imagery = options.imagery ?? 'stock';
 
   if (options.onMissingBlock === 'throw') {
     const missing = missingBlocks(blueprint, lookup);
@@ -111,10 +125,13 @@ export function buildTemplate(
         continue;
       }
 
+      // The imagery mode rides in as a prop rather than as a `create` option:
+      // it is the block that owns the decision, and a blueprint that wants a
+      // particular section drawn rather than photographed can still say so.
       built = block.create({
         createId,
         tokens: document.tokens,
-        ...(section.props ? { props: section.props } : {}),
+        props: { imagery, ...section.props },
       });
     }
 

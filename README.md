@@ -38,6 +38,7 @@ packages/
   ai             Claude, GPT, Gemini, DeepSeek, OpenRouter, Ollama, LM Studio
                  plus image generation: gpt-image, Imagen, local servers
   assets         Ingestion: storage adapters, image probing, asset operations
+                 plus the free-licence stock photo catalog templates draw from
 plugins/
   plugin-charts             Example component pack
   plugin-exporter-solid     Example export target

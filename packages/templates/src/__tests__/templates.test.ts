@@ -239,6 +239,75 @@ describe('building a document', () => {
   });
 });
 
+describe('imagery', () => {
+  const imageSources = (document: ReturnType<typeof buildTemplate>['document']): string[] =>
+    Object.values(document.nodes)
+      .filter((node) => node.type === 'image')
+      .map((node) => String(node.props.src));
+
+  /** `lib:testimonials` also draws images, but portraits stay drawn in both modes. */
+  const isImageLed = (blueprint: (typeof TEMPLATE_BLUEPRINTS)[number]): boolean =>
+    blueprint.sections.some((section) => ['lib:hero-split', 'lib:gallery'].includes(section.block));
+
+  /** The point of the default: a page nobody configured still opens with pictures. */
+  it('gives every image-led blueprint real photographs by default', () => {
+    for (const blueprint of TEMPLATE_BLUEPRINTS) {
+      if (!isImageLed(blueprint)) continue;
+      const sources = imageSources(
+        buildTemplate(blueprint, { components: BUILTIN_COMPONENTS }).document,
+      );
+
+      expect(
+        sources.some((src) => src.startsWith('https://images.unsplash.com/')),
+        blueprint.id,
+      ).toBe(true);
+    }
+  });
+
+  /**
+   * This is the test that protects `examples/templates/**`: those files are
+   * committed, and a committed page that reaches for a CDN stops rendering the
+   * day the network is gone.
+   */
+  it('reaches for nothing remote in placeholder mode', () => {
+    for (const blueprint of TEMPLATE_BLUEPRINTS) {
+      const sources = imageSources(
+        buildTemplate(blueprint, { components: BUILTIN_COMPONENTS, imagery: 'placeholder' })
+          .document,
+      );
+
+      if (isImageLed(blueprint)) expect(sources.length, blueprint.id).toBeGreaterThan(0);
+      for (const src of sources) {
+        expect(src.startsWith('data:image/svg+xml'), `${blueprint.id}: ${src.slice(0, 40)}`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  it('lets a blueprint section overrule the build-wide mode', () => {
+    const blueprint = {
+      ...TEMPLATE_BLUEPRINTS[0]!,
+      sections: [{ block: 'lib:hero-split', hero: true, props: { imagery: 'placeholder' } }],
+    };
+
+    const { document } = buildTemplate(blueprint, {
+      components: BUILTIN_COMPONENTS,
+      imagery: 'stock',
+    });
+
+    expect(imageSources(document)[0]).toContain('data:image/svg+xml');
+  });
+
+  it('picks the same photographs on every rebuild', () => {
+    const landing = TEMPLATE_BLUEPRINTS.find((entry) => entry.id === 'tpl:landing')!;
+    const build = () =>
+      imageSources(buildTemplate(landing, { components: BUILTIN_COMPONENTS }).document);
+
+    expect(build()).toEqual(build());
+  });
+});
+
 describe('the plugin', () => {
   it('contributes every blueprint through the public API', async () => {
     const registry = new PluginRegistry();

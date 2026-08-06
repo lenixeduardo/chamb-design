@@ -16,6 +16,7 @@ import { chartCard, crmPipeline, dataTable, statGrid } from './blocks/applicatio
 
 export * from './builder.js';
 export * from './placeholders.js';
+export * from './imagery.js';
 
 /** Every block shipped in the box, in library display order. */
 export const BUILTIN_COMPONENTS: ComponentContribution[] = [

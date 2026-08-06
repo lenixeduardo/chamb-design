@@ -127,6 +127,14 @@ export interface StyleMap {
   overflow?: 'visible' | 'hidden' | 'auto' | 'scroll';
   cursor?: string;
   aspectRatio?: string;
+  /**
+   * How an image fills its box.
+   *
+   * Only meaningful on a replaced element, and that is exactly why it exists:
+   * a block sets the frame's aspect ratio, and a photograph arriving from a
+   * stock catalog will not match it. Without `cover` the picture stretches.
+   */
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
   font?: FontValue;
 
