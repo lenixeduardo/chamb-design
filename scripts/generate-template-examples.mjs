@@ -81,6 +81,11 @@ const brand = () => ({
   tokens: chambTokens(),
   themes: chambThemes(),
   activeThemeId: 'chamb-light',
+  // The app builds templates with `imagery: 'stock'`, which points the image
+  // slots at the Unsplash CDN. These files are pinned to the drawn
+  // placeholders instead: a committed example has to render with no network,
+  // and a photograph would make the diff depend on a third party.
+  imagery: 'placeholder',
 });
 
 async function writeExample(slug, document, note) {

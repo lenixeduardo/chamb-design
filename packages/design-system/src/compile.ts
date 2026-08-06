@@ -261,6 +261,7 @@ export function styleToClasses(style: StyleMap, options: CompileOptions = {}): s
   if (style.overflow) c.push(`overflow-${style.overflow}`);
   if (style.cursor) c.push(`cursor-${style.cursor}`);
   if (style.aspectRatio) c.push(`aspect-[${style.aspectRatio.replace(/\s+/g, '')}]`);
+  if (style.objectFit) c.push(`object-${style.objectFit}`);
 
   if (style.font) {
     const {
@@ -442,6 +443,7 @@ export function styleToCssProperties(style: StyleMap): Record<string, string> {
   set('overflow', style.overflow);
   set('cursor', style.cursor);
   set('aspect-ratio', style.aspectRatio);
+  set('object-fit', style.objectFit);
 
   if (style.font) {
     set('font-family', tokenToVar(style.font.family));

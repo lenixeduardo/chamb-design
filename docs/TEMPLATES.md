@@ -72,27 +72,86 @@ an API key.
 ## Imagery
 
 A template with no pictures reads as a wireframe, so every blueprint that
-should show something does. The images are **inline SVG data URIs generated
-from the project's own tokens** — `screenshotPlaceholder`, `photoPlaceholder`
-and `avatarPlaceholder` in
-[`packages/components`](../packages/components/src/placeholders.ts):
+should show something does. Each image slot resolves in one order, and
+[`packages/components/src/imagery.ts`](../packages/components/src/imagery.ts)
+is the only place that order lives:
+
+```
+props.image explícito  >  foto de banco (imagery: 'stock')  >  ilustração SVG
+```
+
+**1. A real image always wins.** Pass `image` and nothing else is consulted.
+
+**2. `imagery: 'stock'` — a photograph.** A curated catalog of Unsplash
+photographs lives in
+[`packages/assets/src/stock.ts`](../packages/assets/src/stock.ts), addressed
+straight on `images.unsplash.com`: **no API key, no account, and no network
+call while the page is being built** — a photo id is a permanent path, and
+`stockPhotoUrl` only assembles a string. Picking is a seeded hash, so the same
+template always produces the same page, and `pickStockPhotos` walks the pool
+(spilling into the rest of the catalog when a topic runs out) so a six-tile
+gallery never shows the same photograph twice. Blocks ask for a `topic` —
+`product`, `workspace`, `team`, `retail`, `craft`, `food`, `nature`,
+`abstract` — and the blueprint sets it per section, so an agency's hero gets
+its team and its case wall gets the work.
+
+**3. Otherwise, an illustration.** Inline SVG data URIs generated from the
+project's own tokens — `screenshotPlaceholder`, `photoPlaceholder` and
+`avatarPlaceholder` in
+[`packages/components`](../packages/components/src/placeholders.ts). They
+render offline (a document stays one portable JSON file, the same promise the
+asset pipeline makes for dropped images), they retheme with the project, and
+they read as placeholders rather than as content someone forgot to replace.
+
+Which blocks take part:
 
 - `lib:hero-split` fills its visual slot by default, and takes `visual:
 'screenshot' | 'photo'` so a page selling a jacket does not open on a
   dashboard mock.
-- `lib:gallery` is a new block whose subject _is_ a picture — work samples,
-  product shots, a case wall. Each tile is seeded by its caption, so six of them
-  are six different arrangements rather than one tile repeated.
-- `lib:testimonials` gives each quote an initials portrait.
+- `lib:hero-centered` has no slot to fill — it is a headline — so in photo mode
+  it gains a full-bleed **backdrop** instead, under a frosted scrim mixed from
+  `color.background`. The copy keeps using `color.foreground`, so the hero
+  stays readable in a dark theme and in a light one.
+- `lib:gallery` is the block whose subject _is_ a picture — work samples,
+  product shots, a case wall.
+- `lib:testimonials` keeps its initials portraits in **both** modes, on
+  purpose: a stranger's face under an invented quote is a claim about a person
+  who never made it.
 
-Why generated rather than stock photography: they render offline (a document
-stays one portable JSON file, the same promise the asset pipeline makes for
-dropped images), they retheme with the project, and they read as placeholders —
-where a photograph of a real office reads as content someone forgot to replace.
-Pass a real `image` prop and it wins.
+`buildTemplate` defaults to `imagery: 'stock'`, so a page created in the app
+opens with photographs. The committed examples under `examples/templates/`
+build with `imagery: 'placeholder'` — a file in the repository has to render
+with no network, and a photograph would make its diff depend on a third party.
+`packages/templates` has a test for exactly that.
+
+On attribution: the Unsplash Licence allows use and redistribution without
+permission or attribution ("appreciated but not required"). The catalog still
+records a `credit` per photo and `stockCreditLine()` renders it. Unsplash
+publishes no reverse lookup from a CDN file to its photographer, so
+`credit.author` is filled in only where it is known — run
+`pnpm stock:verify` on a machine that can reach the CDN to
+check every entry and report what is missing.
 
 Images coming _from_ 21st.dev are kept as they arrive, remote URL and all; see
 [the MCP doc](MCP_21ST.md).
+
+## Screenshots
+
+```bash
+pnpm screenshots            # todos os templates
+pnpm screenshots landing    # só um
+```
+
+[`scripts/capture-template-screenshots.mjs`](../scripts/capture-template-screenshots.mjs)
+builds each blueprint the way the app does, exports it through the real HTML
+exporter and photographs it in Chromium at 1440×1000 @2x. It scrolls the page
+and waits for every `<img>` to have pixels first, because blocks emit
+`loading="lazy"` and a full-page shot would otherwise catch the fold below
+still empty.
+
+`STOCK_MIRROR=<dir>` serves `<photo-id>.jpg` from a local directory in place of
+the Unsplash CDN — for a machine that cannot reach it, offline or behind an
+egress policy. Nothing about the page changes; only where the bytes come from.
 
 ## Matching a request
 

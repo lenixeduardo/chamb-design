@@ -382,6 +382,7 @@ iframe {
 .screenshot-8fmc {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .gallery-avx5 {
@@ -433,6 +434,7 @@ iframe {
 .image-awuc {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .caption-5ii9 {
@@ -458,6 +460,7 @@ iframe {
 .image-hued {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .caption-mr9n {
@@ -483,6 +486,7 @@ iframe {
 .image-sqsm {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .caption-7n19 {

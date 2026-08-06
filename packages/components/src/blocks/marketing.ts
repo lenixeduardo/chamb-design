@@ -12,12 +12,13 @@ import {
   space,
   type NodeSpec,
 } from '../builder.js';
+import { avatarPlaceholder, paletteFromTokens, photoPlaceholder } from '../placeholders.js';
 import {
-  avatarPlaceholder,
-  paletteFromTokens,
-  photoPlaceholder,
-  screenshotPlaceholder,
-} from '../placeholders.js';
+  IMAGERY_MODE_OPTIONS,
+  STOCK_TOPIC_OPTIONS,
+  resolveImage,
+  resolveImages,
+} from '../imagery.js';
 
 /** Marketing sections: the blocks a landing page is actually made of. */
 
@@ -77,19 +78,91 @@ export const heroCentered: ComponentContribution = {
     },
     { name: 'primaryCta', type: 'string', defaultValue: 'Start building' },
     { name: 'secondaryCta', type: 'string', defaultValue: 'View the docs' },
+    {
+      name: 'imagery',
+      type: 'enum',
+      defaultValue: 'placeholder',
+      options: [...IMAGERY_MODE_OPTIONS],
+      description: 'Set to photo and the hero gains a full-bleed background image.',
+    },
+    {
+      name: 'topic',
+      type: 'enum',
+      defaultValue: 'workspace',
+      options: [...STOCK_TOPIC_OPTIONS],
+      description: 'What that background photo should be of.',
+    },
   ],
-  create: ({ createId, props }) =>
-    buildTree(
+  create: ({ createId, props, tokens }) => {
+    // This hero has no image slot to fill — it is a headline. What it can take
+    // is a *backdrop*, and only when asked: the drawn mode keeps the flat
+    // themed panel it has always rendered, so nothing built offline moves.
+    const backdrop = resolveImage({
+      explicit: props?.image,
+      mode: props?.imagery,
+      topic: props?.topic,
+      kind: 'photo',
+      seed: String(props?.title ?? 'hero'),
+      defaultTopic: 'workspace',
+      palette: paletteFromTokens(tokens),
+      width: 2000,
+    });
+    const photographed = backdrop.src.startsWith('data:') === false;
+
+    return buildTree(
       {
         type: 'frame',
         name: 'Hero',
-        style: section({ align: 'center', padding: pad(24, 6), background: color('background') }),
+        style: section({
+          align: 'center',
+          padding: pad(24, 6),
+          background: color('background'),
+          ...(photographed ? { position: 'relative', overflow: 'hidden' } : {}),
+        }),
         responsive: { md: { padding: pad(32, 10) } },
         children: [
+          ...(photographed
+            ? ([
+                {
+                  type: 'image',
+                  name: 'Backdrop',
+                  props: { src: backdrop.src, alt: backdrop.alt, loading: 'eager' },
+                  style: {
+                    position: 'absolute',
+                    inset: { top: 0, right: 0, bottom: 0, left: 0 },
+                    width: 'fill',
+                    height: 'fill',
+                    objectFit: 'cover',
+                  },
+                },
+                {
+                  // A scrim in the theme's own background colour: the copy keeps
+                  // using `color.foreground`, so the hero stays readable in a
+                  // dark theme and in a light one without hard-coding white.
+                  // The blur is what buys the photograph its opacity back —
+                  // frosted, the picture can sit at 60% and the headline still
+                  // has nothing sharp behind it to fight.
+                  type: 'frame',
+                  name: 'Scrim',
+                  style: {
+                    position: 'absolute',
+                    inset: { top: 0, right: 0, bottom: 0, left: 0 },
+                    backdropBlur: '3px',
+                    background:
+                      'linear-gradient(180deg, color-mix(in srgb, var(--color-background) 88%, transparent) 0%, color-mix(in srgb, var(--color-background) 58%, transparent) 50%, color-mix(in srgb, var(--color-background) 90%, transparent) 100%)',
+                  },
+                },
+              ] as NodeSpec[])
+            : []),
           {
             type: 'frame',
             name: 'Content',
-            style: container({ ...column(6), align: 'center', maxWidth: '760px' }),
+            style: container({
+              ...column(6),
+              align: 'center',
+              maxWidth: '760px',
+              ...(photographed ? { position: 'relative', zIndex: 1 } : {}),
+            }),
             children: [
               eyebrow((props?.eyebrow as string) ?? 'Now in public beta'),
               {
@@ -154,7 +227,8 @@ export const heroCentered: ComponentContribution = {
         ],
       },
       createId,
-    ),
+    );
+  },
 };
 
 export const heroSplit: ComponentContribution = {
@@ -182,20 +256,41 @@ export const heroSplit: ComponentContribution = {
         { label: 'Screenshot', value: 'screenshot' },
         { label: 'Photo', value: 'photo' },
       ],
-      description: 'Which placeholder to draw while there is no image.',
+      description: 'Which kind of visual the slot holds while there is no image.',
+    },
+    {
+      name: 'imagery',
+      type: 'enum',
+      defaultValue: 'placeholder',
+      options: [...IMAGERY_MODE_OPTIONS],
+      description: 'Where that visual comes from: a drawing from the tokens, or a real photo.',
+    },
+    {
+      name: 'topic',
+      type: 'enum',
+      defaultValue: 'product',
+      options: [...STOCK_TOPIC_OPTIONS],
+      description: 'What the photo should be of. Ignored unless imagery is set to photo.',
     },
   ],
   create: ({ createId, props, tokens }) => {
     // An empty visual slot is the block's worst first impression, and it is
-    // its default state. The placeholder is drawn from the project's own
-    // tokens, so it arrives already wearing the theme — and a page selling a
-    // jacket gets a photo rather than a dashboard.
+    // its default state. `imagery: 'stock'` fills it with a photograph; the
+    // fallback is drawn from the project's own tokens, so it arrives already
+    // wearing the theme — and a page selling a jacket gets a photo rather than
+    // a dashboard either way.
     const palette = paletteFromTokens(tokens);
-    const image =
-      (props?.image as string) ||
-      (props?.visual === 'photo'
-        ? photoPlaceholder(palette, String(props?.title ?? 'hero'))
-        : screenshotPlaceholder(palette));
+    const visual = props?.visual === 'photo' ? 'photo' : 'screenshot';
+    const image = resolveImage({
+      explicit: props?.image,
+      mode: props?.imagery,
+      topic: props?.topic,
+      kind: visual,
+      seed: String(props?.title ?? 'hero'),
+      palette,
+      width: 1400,
+      alt: 'Product screenshot',
+    });
 
     return buildTree(
       {
@@ -278,8 +373,8 @@ export const heroSplit: ComponentContribution = {
                   {
                     type: 'image',
                     name: 'Screenshot',
-                    props: { src: image, alt: 'Product screenshot' },
-                    style: { width: 'fill', height: 'fill' },
+                    props: { src: image.src, alt: image.alt },
+                    style: { width: 'fill', height: 'fill', objectFit: 'cover' },
                   },
                 ],
                 motion: {
@@ -712,6 +807,20 @@ export const gallery: ComponentContribution = {
       defaultValue: 'Northwind — design system,Kestrel — mobile app,Lumen — brand and site',
       description: 'One caption per image, comma separated.',
     },
+    {
+      name: 'imagery',
+      type: 'enum',
+      defaultValue: 'placeholder',
+      options: [...IMAGERY_MODE_OPTIONS],
+      description: 'Where the tiles come from: drawings from the tokens, or real photos.',
+    },
+    {
+      name: 'topic',
+      type: 'enum',
+      defaultValue: 'craft',
+      options: [...STOCK_TOPIC_OPTIONS],
+      description: 'What the photos should be of. Ignored unless imagery is set to photo.',
+    },
   ],
   create: ({ createId, props, tokens }) => {
     const palette = paletteFromTokens(tokens);
@@ -722,6 +831,20 @@ export const gallery: ComponentContribution = {
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+
+    // Resolved for the whole grid at once: photographs have to be *different*
+    // from each other, which a per-tile call cannot guarantee.
+    const images = resolveImages(items.length, {
+      mode: props?.imagery,
+      topic: props?.topic,
+      kind: 'photo',
+      seed: String(props?.title ?? 'gallery'),
+      seeds: items.map((caption, index) => `${caption}-${index}`),
+      alts: items,
+      defaultTopic: 'craft',
+      palette,
+      width: columns === 1 ? 1400 : 900,
+    });
 
     return buildTree(
       {
@@ -781,13 +904,15 @@ export const gallery: ComponentContribution = {
                         {
                           type: 'image',
                           name: 'Image',
-                          // Seeded per position: six identical tiles would read
-                          // as a rendering bug rather than as placeholders.
+                          // Varied per position: six identical tiles would read
+                          // as a rendering bug rather than as imagery.
                           props: {
-                            src: photoPlaceholder(palette, `${caption}-${index}`),
-                            alt: caption,
+                            src:
+                              images[index]?.src ??
+                              photoPlaceholder(palette, `${caption}-${index}`),
+                            alt: images[index]?.alt || caption,
                           },
-                          style: { width: 'fill', height: 'fill' },
+                          style: { width: 'fill', height: 'fill', objectFit: 'cover' },
                         },
                       ],
                       motion: {

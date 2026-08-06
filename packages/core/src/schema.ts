@@ -69,6 +69,7 @@ export const styleSchema = z
     overflow: z.enum(['visible', 'hidden', 'auto', 'scroll']).optional(),
     cursor: z.string().optional(),
     aspectRatio: z.string().optional(),
+    objectFit: z.enum(['cover', 'contain', 'fill', 'none', 'scale-down']).optional(),
 
     font: z
       .object({
