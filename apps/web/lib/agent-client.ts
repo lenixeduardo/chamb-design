@@ -27,7 +27,8 @@ export interface AgentStreamHandlers {
   onStatus?: (status: string) => void;
   onOperations?: (operations: Operation[]) => void;
   onReview?: (issues: { message: string; nodeId: string; severity: string }[]) => void;
-  onError?: (message: string) => void;
+  /** `recoverable` is true for failures a retry can clear (e.g. a 429). */
+  onError?: (message: string, recoverable?: boolean) => void;
   onDone?: (usage?: { inputTokens: number; outputTokens: number }) => void;
 }
 
@@ -184,7 +185,7 @@ function dispatch(event: AgentEvent, handlers: AgentStreamHandlers): void {
       );
       break;
     case 'error':
-      handlers.onError?.(event.message);
+      handlers.onError?.(event.message, event.recoverable);
       break;
     case 'done':
       handlers.onDone?.(event.usage);

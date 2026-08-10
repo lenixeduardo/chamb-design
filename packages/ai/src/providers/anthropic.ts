@@ -101,8 +101,15 @@ export function anthropicProvider(config: ProviderConfig = {}): ChatProvider {
         }
 
         if (type === 'error') {
-          const error = event.error as { message?: string } | undefined;
-          throw new ProviderError(error?.message ?? 'stream error', 'anthropic');
+          // Anthropic reports a rate limit hit mid-stream as an error event
+          // rather than an HTTP status; carry 429 through so the caller can
+          // format it like the request-time rate limit.
+          const error = event.error as { message?: string; type?: string } | undefined;
+          throw new ProviderError(
+            error?.message ?? 'stream error',
+            'anthropic',
+            error?.type === 'rate_limit_error' ? 429 : undefined,
+          );
         }
       }
 
