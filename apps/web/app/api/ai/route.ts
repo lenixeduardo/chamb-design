@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { DesignAgent, createProvider, listProviders } from '@opendesign/ai';
+import { DesignAgent, createProvider, listProviders, ProviderError } from '@opendesign/ai';
 import { validateDocumentIntegrity, type DesignDocument } from '@opendesign/core';
 import { getRegistry } from '@/lib/registry';
 import { CredentialError, providerSignal, resolveCredentials } from '@/lib/provider-credentials';
@@ -147,11 +147,24 @@ export async function POST(request: Request) {
           }
         }
       } catch (error) {
-        send({
-          type: 'error',
-          message: error instanceof Error ? error.message : String(error),
-          recoverable: false,
-        });
+        // A 429 means the provider's rate limit is exhausted — the one failure
+        // the user can act on by simply trying again, so it is the only one
+        // surfaced with a plain-language explanation and `recoverable: true`.
+        // Everything else keeps the raw provider message for the log.
+        if (error instanceof ProviderError && error.status === 429) {
+          send({
+            type: 'error',
+            message:
+              'O provedor de IA atingiu o limite de requisições (429). Aguarde alguns segundos e tente de novo.',
+            recoverable: true,
+          });
+        } else {
+          send({
+            type: 'error',
+            message: error instanceof Error ? error.message : String(error),
+            recoverable: false,
+          });
+        }
       } finally {
         controller.close();
       }

@@ -51,6 +51,8 @@ interface Turn {
   operationCount?: number;
   issues?: { message: string; nodeId: string; severity: string }[];
   error?: string;
+  /** True for failures a retry can clear (e.g. a 429 rate limit). */
+  errorRecoverable?: boolean;
 }
 
 interface ProviderInfo {
@@ -256,8 +258,12 @@ export function ChatSidebar({
             patch({ operationCount: operations.length });
           },
           onReview: (issues) => patch({ issues }),
-          onError: (message) => patch({ error: message }),
-          onDone: () => patch({ status: undefined }),
+          onError: (message, recoverable) =>
+            patch({ error: message, errorRecoverable: recoverable }),
+          // A successful finish clears any mid-stream error (the agent can
+          // emit a recoverable repair error and then fix it) — otherwise the
+          // error box and its retry button persist next to a good edit.
+          onDone: () => patch({ status: undefined, error: undefined, errorRecoverable: undefined }),
         },
       );
     } catch (error) {
@@ -364,7 +370,7 @@ export function ChatSidebar({
           </div>
         )}
 
-        {turns.map((turn) => (
+        {turns.map((turn, index) => (
           <article key={turn.id} className="animate-fade-up space-y-1.5">
             {turn.role === 'user' ? (
               <div className="rounded-control rounded-br-md bg-brand/10 px-3 py-2">
@@ -422,9 +428,29 @@ export function ChatSidebar({
                 )}
 
                 {turn.error && (
-                  <p className="rounded-md border border-critical/25 bg-critical/8 px-2 py-1.5 text-[11px] leading-relaxed text-critical">
-                    {turn.error}
-                  </p>
+                  <div className="rounded-md border border-critical/25 bg-critical/8 px-2 py-1.5">
+                    <p className="text-[11px] leading-relaxed text-critical">{turn.error}</p>
+                    {/* A recoverable failure (429) is worth one tap back into
+                        the same prompt. Walk back to the user's message that
+                        started this assistant turn — the assistant's own `text`
+                        is the answer, not the question. */}
+                    {turn.errorRecoverable && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          const userPrompt = [...turns]
+                            .slice(0, index)
+                            .reverse()
+                            .find((entry) => entry.role === 'user')?.text;
+                          if (userPrompt) void submit(userPrompt);
+                        }}
+                        className="mt-1.5 inline-flex items-center gap-1 rounded-chip border border-critical/30 px-2.5 py-1 text-[11px] font-medium text-critical transition-colors hover:bg-critical/12 disabled:opacity-40"
+                      >
+                        Tentar de novo
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             )}

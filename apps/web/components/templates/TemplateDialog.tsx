@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink, LayoutTemplate, Sparkles, Wand2 } from 'lucide-react';
+import { Check, ExternalLink, LayoutTemplate, Sparkles, Wand2 } from 'lucide-react';
 import type { TemplateBlueprint } from '@opendesign/templates';
 import { Overlay, OverlayHeader } from '@/components/ui/overlay';
 import { Badge, Button } from '@/components/ui/primitives';
@@ -47,7 +47,12 @@ export function TemplateDialog({
   // the user picks again, which is why `chosen` is separate rather than being
   // seeded from the match.
   const suggestions = useMemo(() => suggestForRequest(request, 3), [request]);
-  const suggestedId = suggestions[0]?.blueprint.id ?? null;
+  // An empty request must not produce a suggestion: the matcher falls back to
+  // the default blueprint when nothing scores, and treating that fallback as a
+  // suggestion leaves a "Sugerido pelo seu texto" badge and a pre-selected card
+  // on a fresh open — with a key saved the modal opens with nothing typed and
+  // the ghost selection reads as broken UI.
+  const suggestedId = request.trim() ? (suggestions[0]?.blueprint.id ?? null) : null;
   const activeId = chosen ?? suggestedId;
 
   const create = async () => {
@@ -97,14 +102,18 @@ export function TemplateDialog({
         />
 
         <div className="mt-5">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex min-h-5 items-center justify-between gap-2">
             <span className="text-[12px] text-ink-faint">Modelo</span>
             {suggestedId && !chosen && <Badge tone="brand">Sugerido pelo seu texto</Badge>}
           </div>
 
           <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-            {blueprints.map((blueprint) => (
-              <li key={blueprint.id}>
+            {blueprints.map((blueprint, index) => (
+              <li
+                key={blueprint.id}
+                className={cn(blueprint.intent === 'app' && 'sm:col-span-2')}
+                style={{ ['--i' as string]: index % 8 }}
+              >
                 <TemplateCard
                   blueprint={blueprint}
                   active={blueprint.id === activeId}
@@ -185,6 +194,51 @@ export function TemplateDialog({
   );
 }
 
+/** The tallest bar a structure preview draws, in pixels. */
+const PREVIEW_MAX_BARS = 8;
+
+/**
+ * A tiny wireframe of the page a blueprint would build.
+ *
+ * Each section of the blueprint becomes a bar; the hero section is the loud
+ * one (brand, full height), the nav is the short one at the start, and the
+ * rest carry a quiet rhythm. It is the fastest way for someone browsing to
+ * see that SaaS is ten sections of marketing and App is a dashboard shell —
+ * which is the one real difference between templates.
+ */
+function StructurePreview({ blueprint }: { blueprint: TemplateBlueprint }) {
+  const sections = blueprint.sections.slice(0, PREVIEW_MAX_BARS);
+  const rest = blueprint.sections.length - sections.length;
+
+  return (
+    <span
+      aria-hidden
+      className="flex h-7 items-end gap-[3px] overflow-hidden rounded-[6px] bg-panel-raised p-[5px]"
+    >
+      {sections.map((section, index) => {
+        const hero = Boolean(section.hero);
+        // Nav leads short and quiet; the hero is the only tall, loud bar.
+        const height = hero ? 100 : index === 0 ? 42 : 68;
+        return (
+          <span
+            key={index}
+            className={cn(
+              'min-w-0 flex-1 rounded-full transition-colors duration-200',
+              hero
+                ? 'bg-brand/70 group-hover:bg-brand'
+                : 'bg-hairline-strong/60 group-hover:bg-hairline-strong',
+            )}
+            style={{ height: `${height}%` }}
+          />
+        );
+      })}
+      {rest > 0 && (
+        <span className="ml-0.5 shrink-0 text-[9px] font-medium text-ink-faint">+{rest}</span>
+      )}
+    </span>
+  );
+}
+
 function TemplateCard({
   blueprint,
   active,
@@ -196,27 +250,39 @@ function TemplateCard({
   suggested: boolean;
   onSelect: () => void;
 }) {
+  const horizontal = blueprint.intent === 'app';
+
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={active}
       className={cn(
-        'rounded-control w-full border p-3 text-left transition-colors',
+        'animate-fade-up stagger-item group rounded-control w-full border p-3 text-left transition-all duration-200',
+        'hover:-translate-y-px hover:shadow-sm',
         active
-          ? 'border-brand/40 bg-brand/8'
+          ? 'border-brand/40 bg-brand/8 shadow-[inset_0_0_0_1px_var(--color-brand)]'
           : 'border-hairline bg-panel hover:border-hairline-strong',
+        horizontal && 'sm:flex sm:items-center sm:gap-4',
       )}
     >
-      <span className="flex items-center justify-between gap-2">
-        <span className="truncate text-[13px] font-medium">{blueprint.name}</span>
-        {suggested && !active && <Badge>sugerido</Badge>}
-      </span>
-      <span className="mt-1 block text-[11.5px] leading-relaxed text-ink-faint">
-        {blueprint.description}
-      </span>
-      <span className="mt-2 block text-[10.5px] text-ink-faint">
-        {blueprint.sections.length} seções
+      <StructurePreview blueprint={blueprint} />
+      <span className="mt-2.5 block min-w-0">
+        <span className="flex min-w-0 items-center justify-between gap-2">
+          <span className="min-w-0 truncate text-[13px] font-medium">{blueprint.name}</span>
+          {suggested && !active && <Badge>sugerido</Badge>}
+          {active && (
+            <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-brand text-white">
+              <Check size={10} strokeWidth={3} />
+            </span>
+          )}
+        </span>
+        <span className="mt-1 block text-[11.5px] leading-relaxed text-ink-faint">
+          {blueprint.description}
+        </span>
+        <span className="mt-2 block text-[10.5px] text-ink-faint">
+          {blueprint.sections.length} seções
+        </span>
       </span>
     </button>
   );

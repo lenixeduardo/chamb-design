@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 /**
@@ -115,10 +116,22 @@ export function Overlay({
   children: ReactNode;
 }) {
   const [leaving, setLeaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idRef = useRef<symbol>(undefined as unknown as symbol);
   if (idRef.current === undefined) idRef.current = Symbol('overlay');
+
+  // Portaled to `document.body` because `position: fixed` is resolved against
+  // the nearest transformed ancestor, not the viewport. The workspace and the
+  // editor both arrive inside an `animate-page-in` wrapper whose fill-mode
+  // leaves a live `transform` on the element — under that ancestor the
+  // backdrop's `inset-0` covers the whole page (1261px of it) instead of the
+  // viewport, and the dialog opens centred in the page, its footer below the
+  // fold. Rendering into `body` takes the overlay out of every ancestor's
+  // stacking and containing-block context. `mounted` guards the portal node
+  // against server rendering, where `document` does not exist.
+  useEffect(() => setMounted(true), []);
 
   // `onClose` is an inline arrow at every call site, so it is read through a
   // ref: keying effects on it would rebind the key listener each render, and a
@@ -144,8 +157,16 @@ export function Overlay({
 
   useEffect(() => lockScroll(), []);
 
-  /* Focus: move into the dialog on open, restore to the opener on close. */
+  /* Focus: move into the dialog on open, restore to the opener on close.
+
+     Depends on `mounted`: the surface does not exist until the portal has been
+     rendered, so running this against the first (null) render would focus
+     nothing and never run again. Capturing `opener` here rather than on the
+     first mount is the same element in practice — nothing else can take focus
+     between the click that opened the dialog and this effect.
+  */
   useEffect(() => {
+    if (!mounted) return;
     const opener = document.activeElement as HTMLElement | null;
     const surface = surfaceRef.current;
 
@@ -154,7 +175,7 @@ export function Overlay({
     surface?.focus({ preventScroll: true });
 
     return () => opener?.focus?.({ preventScroll: true });
-  }, []);
+  }, [mounted]);
 
   /* Escape, and a Tab that cannot leave. */
   useEffect(() => {
@@ -205,7 +226,7 @@ export function Overlay({
     };
   }, [requestClose]);
 
-  return (
+  const surface = (
     <OverlayContext.Provider value={requestClose}>
       <div
         className={cn(
@@ -245,6 +266,11 @@ export function Overlay({
       </div>
     </OverlayContext.Provider>
   );
+
+  // `mounted` is false on the server and on the first client render; nothing
+  // may touch `document.body` before hydration completes.
+  if (!mounted) return null;
+  return createPortal(surface, document.body);
 }
 
 /**
