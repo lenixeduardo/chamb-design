@@ -61,6 +61,13 @@ export interface TemplateBlueprint {
   keywords: string[];
   meta: { title: string; description: string };
   sections: TemplateSection[];
+  /**
+   * A 16:9 preview image of the rendered page, e.g. `/images/templates/saas-template.png`.
+   *
+   * Optional: a blueprint without one falls back to the structural bar preview
+   * (see `StructurePreview` in the template picker) rather than showing a hole.
+   */
+  thumbnail?: string;
 }
 
 export function heroSectionOf(blueprint: TemplateBlueprint): TemplateSection | undefined {
