@@ -1,13 +1,155 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Check, Copy, Download, FileCode } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Check,
+  Copy,
+  Download,
+  File,
+  FileCode,
+  FileImage,
+  FileJson,
+  FileText,
+  Folder,
+  Paintbrush,
+} from 'lucide-react';
 import type { ExporterContribution, GeneratedFile, PluginRegistry } from '@opendesign/core';
 import { useDocument, type Editor } from '@opendesign/editor';
 import { Badge, Button } from '@/components/ui/primitives';
 import { Overlay, OverlayHeader } from '@/components/ui/overlay';
 import { CodePreviewSkeleton, FileListSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { cn, formatBytes } from '@/lib/utils';
+
+interface FileTreeNode {
+  name: string;
+  path: string;
+  file?: GeneratedFile;
+  children: FileTreeNode[];
+}
+
+/** Groups flat generated paths ("app/page.tsx") into a folder/file tree. */
+function buildFileTree(files: GeneratedFile[]): FileTreeNode[] {
+  const root: FileTreeNode[] = [];
+
+  for (const file of files) {
+    const segments = file.path.split('/').filter(Boolean);
+    let level = root;
+
+    segments.forEach((segment, index) => {
+      const isLeaf = index === segments.length - 1;
+      let node = level.find((entry) => entry.name === segment && Boolean(entry.file) === isLeaf);
+      if (!node) {
+        node = {
+          name: segment,
+          path: segments.slice(0, index + 1).join('/'),
+          children: [],
+          file: isLeaf ? file : undefined,
+        };
+        level.push(node);
+      }
+      level = node.children;
+    });
+  }
+
+  const sort = (nodes: FileTreeNode[]) => {
+    nodes.sort((a, b) => {
+      if (Boolean(a.file) !== Boolean(b.file)) return a.file ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
+    nodes.forEach((node) => sort(node.children));
+  };
+  sort(root);
+
+  return root;
+}
+
+/** Icon that matches a file's extension, so the tree reads like a real file system. */
+function FileTypeIcon({ path, size = 12 }: { path: string; size?: number }) {
+  const extension = path.split('.').pop()?.toLowerCase() ?? '';
+  const className = 'shrink-0 text-ink-faint';
+
+  switch (extension) {
+    case 'html':
+    case 'htm':
+    case 'js':
+    case 'mjs':
+    case 'cjs':
+    case 'jsx':
+    case 'ts':
+    case 'tsx':
+    case 'vue':
+    case 'svelte':
+      return <FileCode size={size} className={className} />;
+    case 'json':
+      return <FileJson size={size} className={className} />;
+    case 'css':
+    case 'scss':
+    case 'less':
+      return <Paintbrush size={size} className={className} />;
+    case 'md':
+    case 'mdx':
+    case 'txt':
+      return <FileText size={size} className={className} />;
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'svg':
+    case 'webp':
+    case 'ico':
+      return <FileImage size={size} className={className} />;
+    default:
+      return <File size={size} className={className} />;
+  }
+}
+
+function FileTree({
+  nodes,
+  depth,
+  activePath,
+  onSelect,
+}: {
+  nodes: FileTreeNode[];
+  depth: number;
+  activePath: string | null;
+  onSelect: (path: string) => void;
+}) {
+  return (
+    <>
+      {nodes.map((node) =>
+        node.file ? (
+          <button
+            key={node.path}
+            type="button"
+            onClick={() => onSelect(node.file!.path)}
+            style={{ paddingLeft: `${12 + depth * 14}px` }}
+            className={cn(
+              'flex w-full items-center gap-1.5 truncate py-1.5 pr-3 text-left font-mono text-[11px] transition-colors',
+              activePath === node.file.path
+                ? 'bg-brand/12 text-ink'
+                : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
+            )}
+            title={node.file.path}
+          >
+            <FileTypeIcon path={node.name} />
+            <span className="truncate">{node.name}</span>
+          </button>
+        ) : (
+          <div key={node.path}>
+            <div
+              style={{ paddingLeft: `${12 + depth * 14}px` }}
+              className="flex items-center gap-1.5 py-1.5 pr-3 font-mono text-[11px] text-ink-faint"
+            >
+              <Folder size={12} className="shrink-0" />
+              <span className="truncate">{node.name}</span>
+            </div>
+            <FileTree nodes={node.children} depth={depth + 1} activePath={activePath} onSelect={onSelect} />
+          </div>
+        ),
+      )}
+    </>
+  );
+}
 
 /**
  * Export preview.
@@ -73,6 +215,7 @@ export function ExportDialog({
 
   const active = files.find((file) => file.path === activePath);
   const totalBytes = files.reduce((sum, file) => sum + file.contents.length, 0);
+  const tree = useMemo(() => buildFileTree(files), [files]);
 
   const download = () => {
     // A tar/zip would need a dependency; concatenating with clear delimiters
@@ -185,22 +328,7 @@ export function ExportDialog({
           {generating && files.length === 0 ? (
             <FileListSkeleton />
           ) : (
-            files.map((file) => (
-              <button
-                key={file.path}
-                type="button"
-                onClick={() => setActivePath(file.path)}
-                className={cn(
-                  'block w-full truncate px-3 py-1.5 text-left font-mono text-[11px] transition-colors',
-                  activePath === file.path
-                    ? 'bg-brand/12 text-ink'
-                    : 'text-ink-muted hover:bg-panel-raised hover:text-ink',
-                )}
-                title={file.path}
-              >
-                {file.path}
-              </button>
-            ))
+            <FileTree nodes={tree} depth={0} activePath={activePath} onSelect={setActivePath} />
           )}
         </nav>
 
