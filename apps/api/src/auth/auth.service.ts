@@ -42,7 +42,9 @@ export class AuthService {
       throw new UnauthorizedException('enter a valid email address');
     }
     if (password.length < MIN_PASSWORD_LENGTH) {
-      throw new UnauthorizedException(`password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+      throw new UnauthorizedException(
+        `password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+      );
     }
   }
 

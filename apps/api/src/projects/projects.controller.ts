@@ -59,11 +59,7 @@ export class ProjectsController {
   }
 
   @Get(':id/history')
-  history(
-    @Param('id') id: string,
-    @CurrentUser() userId: string,
-    @Query('limit') limit?: string,
-  ) {
+  history(@Param('id') id: string, @CurrentUser() userId: string, @Query('limit') limit?: string) {
     return this.projects.history(id, userId, limit === undefined ? undefined : Number(limit));
   }
 

@@ -238,8 +238,12 @@ describe('ProjectsService', () => {
       await expect(service.create('  ', 'n', createDocument({ name: 'x' }))).rejects.toThrow(
         /authentication is required/,
       );
-      await expect(service.remove('p1', undefined as never)).rejects.toThrow(/authentication is required/);
-      await expect(service.applyOperations('p1', [], {})).rejects.toThrow(/authentication is required/);
+      await expect(service.remove('p1', undefined as never)).rejects.toThrow(
+        /authentication is required/,
+      );
+      await expect(service.applyOperations('p1', [], {})).rejects.toThrow(
+        /authentication is required/,
+      );
     });
   });
 

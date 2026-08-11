@@ -4,7 +4,10 @@ import { AuthService } from './auth.service';
 import type { PrismaService } from '../common/prisma.service';
 
 function makeService() {
-  const users = new Map<string, { id: string; email: string; name: string | null; passwordHash: string | null }>();
+  const users = new Map<
+    string,
+    { id: string; email: string; name: string | null; passwordHash: string | null }
+  >();
   let nextId = 1;
 
   const prisma = {
@@ -14,11 +17,22 @@ function makeService() {
         if (where.id) return [...users.values()].find((u) => u.id === where.id) ?? null;
         return null;
       }),
-      create: vi.fn(async ({ data }: { data: { email: string; passwordHash: string; name: string | null } }) => {
-        const user = { id: `u${nextId++}`, email: data.email, name: data.name, passwordHash: data.passwordHash };
-        users.set(user.email, user);
-        return user;
-      }),
+      create: vi.fn(
+        async ({
+          data,
+        }: {
+          data: { email: string; passwordHash: string; name: string | null };
+        }) => {
+          const user = {
+            id: `u${nextId++}`,
+            email: data.email,
+            name: data.name,
+            passwordHash: data.passwordHash,
+          };
+          users.set(user.email, user);
+          return user;
+        },
+      ),
     },
   } as unknown as PrismaService;
 
@@ -53,14 +67,18 @@ describe('AuthService', () => {
     const ok = await service.login('a@b.com', 'correct-horse-battery');
     expect(ok.user.email).toBe('a@b.com');
 
-    await expect(service.login('a@b.com', 'wrong-password')).rejects.toThrow(/invalid email or password/);
+    await expect(service.login('a@b.com', 'wrong-password')).rejects.toThrow(
+      /invalid email or password/,
+    );
   });
 
   it('gives the same error for an unknown email as a wrong password', async () => {
     const { service } = makeService();
     await service.register('a@b.com', 'correct-horse-battery');
 
-    const unknown = service.login('nobody@b.com', 'whatever-password').catch((e: Error) => e.message);
+    const unknown = service
+      .login('nobody@b.com', 'whatever-password')
+      .catch((e: Error) => e.message);
     const wrong = service.login('a@b.com', 'wrong-password-here').catch((e: Error) => e.message);
     expect(await unknown).toBe(await wrong);
   });
