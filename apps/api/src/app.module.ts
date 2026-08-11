@@ -2,6 +2,7 @@ import { Controller, Get, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
 import { PrismaService } from './common/prisma.service';
+import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
 import { AiModule } from './ai/ai.module';
 import { ExportModule } from './export/export.module';
@@ -32,6 +33,7 @@ class HealthController {
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CommonModule,
+    AuthModule,
     ProjectsModule,
     AiModule,
     ExportModule,
