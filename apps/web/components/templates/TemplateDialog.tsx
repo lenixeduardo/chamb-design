@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type SyntheticEvent } from 'react';
 import { Check, ExternalLink, LayoutTemplate, Sparkles, Wand2 } from 'lucide-react';
 import type { TemplateBlueprint } from '@opendesign/templates';
 import { Overlay, OverlayHeader } from '@/components/ui/overlay';
@@ -239,6 +239,44 @@ function StructurePreview({ blueprint }: { blueprint: TemplateBlueprint }) {
   );
 }
 
+/**
+ * The 16:9 page preview at the top of a card, with the structural bars as a
+ * fallback for blueprints that have no rendered thumbnail (or whose image
+ * fails to load) — the card must never be left with a blank top.
+ */
+function TemplatePreview({ blueprint }: { blueprint: TemplateBlueprint }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!blueprint.thumbnail || failed) {
+    return (
+      <span className="rounded-[10px] border border-hairline bg-panel-raised aspect-video flex items-center justify-center overflow-hidden">
+        <StructurePreview blueprint={blueprint} />
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded-[10px] border border-hairline bg-panel-raised aspect-video block overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element -- fixed local
+          asset shown at its native aspect ratio; next/image adds a loader
+          and layout wrapper for no benefit here. */}
+      <img
+        src={blueprint.thumbnail}
+        alt={`Prévia do modelo ${blueprint.name}`}
+        width={1672}
+        height={941}
+        loading="lazy"
+        decoding="async"
+        onError={(event: SyntheticEvent<HTMLImageElement>) => {
+          event.currentTarget.onerror = null;
+          setFailed(true);
+        }}
+        className="block h-full w-full object-cover object-top"
+      />
+    </span>
+  );
+}
+
 function TemplateCard({
   blueprint,
   active,
@@ -250,8 +288,6 @@ function TemplateCard({
   suggested: boolean;
   onSelect: () => void;
 }) {
-  const horizontal = blueprint.intent === 'app';
-
   return (
     <button
       type="button"
@@ -263,10 +299,9 @@ function TemplateCard({
         active
           ? 'border-brand/40 bg-brand/8 shadow-[inset_0_0_0_1px_var(--color-brand)]'
           : 'border-hairline bg-panel hover:border-hairline-strong',
-        horizontal && 'sm:flex sm:items-center sm:gap-4',
       )}
     >
-      <StructurePreview blueprint={blueprint} />
+      <TemplatePreview blueprint={blueprint} />
       <span className="mt-2.5 block min-w-0">
         <span className="flex min-w-0 items-center justify-between gap-2">
           <span className="min-w-0 truncate text-[13px] font-medium">{blueprint.name}</span>

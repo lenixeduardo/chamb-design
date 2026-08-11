@@ -39,6 +39,7 @@ const saas: TemplateBlueprint = {
     description:
       'Landing de produto SaaS com prova social, funcionalidades, planos e perguntas frequentes.',
   },
+  thumbnail: '/images/templates/saas-template.png',
   sections: [
     {
       block: 'lib:navbar',
@@ -106,6 +107,7 @@ const landing: TemplateBlueprint = {
     title: 'Landing page',
     description: 'Página de conversão com promessa, prova social, benefícios e chamada final.',
   },
+  thumbnail: '/images/templates/landing-page-template.png',
   sections: [
     {
       block: 'lib:navbar',
@@ -172,6 +174,7 @@ const waitlist: TemplateBlueprint = {
     title: 'Lista de espera',
     description: 'Página de pré-lançamento com captura de e-mail.',
   },
+  thumbnail: '/images/templates/lista-espera-template.png',
   sections: [
     { block: 'lib:navbar', props: { links: 'O produto,Novidades', cta: 'Entrar na lista' } },
     {
@@ -222,6 +225,7 @@ const portfolio: TemplateBlueprint = {
     title: 'Portfólio',
     description: 'Portfólio com trabalhos selecionados e contato.',
   },
+  thumbnail: '/images/templates/portfolio-template.png',
   sections: [
     { block: 'lib:navbar', props: { links: 'Trabalhos,Sobre,Contato', cta: 'Falar comigo' } },
     {
@@ -284,6 +288,7 @@ const agency: TemplateBlueprint = {
     title: 'Agência',
     description: 'Site de agência com serviços, clientes e contato.',
   },
+  thumbnail: '/images/templates/agencia-template.png',
   sections: [
     { block: 'lib:navbar', props: { links: 'Serviços,Cases,Time,Contato', cta: 'Pedir proposta' } },
     {
@@ -348,6 +353,7 @@ const store: TemplateBlueprint = {
     title: 'Loja — página de produto',
     description: 'Página de venda com detalhes do produto, prova social e garantia.',
   },
+  thumbnail: '/images/templates/product-template.png',
   sections: [
     { block: 'lib:navbar', props: { links: 'Produto,Entrega,Garantia', cta: 'Comprar' } },
     {
