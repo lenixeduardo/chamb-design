@@ -206,14 +206,23 @@ const PREVIEW_MAX_BARS = 8;
  * see that SaaS is ten sections of marketing and App is a dashboard shell —
  * which is the one real difference between templates.
  */
-function StructurePreview({ blueprint }: { blueprint: TemplateBlueprint }) {
+function StructurePreview({
+  blueprint,
+  className,
+}: {
+  blueprint: TemplateBlueprint;
+  className?: string;
+}) {
   const sections = blueprint.sections.slice(0, PREVIEW_MAX_BARS);
   const rest = blueprint.sections.length - sections.length;
 
   return (
     <span
       aria-hidden
-      className="flex h-7 items-end gap-[3px] overflow-hidden rounded-[6px] bg-panel-raised p-[5px]"
+      className={cn(
+        'flex h-7 items-end gap-[3px] overflow-hidden rounded-[6px] bg-panel p-[5px]',
+        className,
+      )}
     >
       {sections.map((section, index) => {
         const hero = Boolean(section.hero);
@@ -249,8 +258,8 @@ function TemplatePreview({ blueprint }: { blueprint: TemplateBlueprint }) {
 
   if (!blueprint.thumbnail || failed) {
     return (
-      <span className="rounded-[10px] border border-hairline bg-panel-raised aspect-video flex items-center justify-center overflow-hidden">
-        <StructurePreview blueprint={blueprint} />
+      <span className="rounded-[10px] border border-hairline bg-panel-raised aspect-video flex items-center overflow-hidden p-5">
+        <StructurePreview blueprint={blueprint} className="w-full" />
       </span>
     );
   }
