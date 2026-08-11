@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Headers, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import type { DesignDocument } from '@opendesign/core';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ProjectsService } from './projects.service';
 
 interface CreateProjectBody {
@@ -18,37 +20,34 @@ interface ApplyOperationsBody {
 /**
  * Project REST surface.
  *
- * Identity arrives as `x-user-id` here. That is the seam where a real auth
- * provider plugs in — Clerk, Better Auth, or an existing SSO — and keeping it
- * a single header means swapping one guard rather than rewriting controllers.
- *
- * Every route passes it through, including the ones that do not otherwise need
- * it: the service refuses to act on a project the caller cannot reach, and it
- * can only do that if it is told who is asking.
+ * Every route sits behind `JwtAuthGuard`: identity comes from a verified
+ * bearer token, not a caller-supplied header, so a project's owner is the
+ * only one who can list, read or write it unless they add a collaborator.
  */
+@UseGuards(JwtAuthGuard)
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projects: ProjectsService) {}
 
   @Get()
-  list(@Headers('x-user-id') userId: string) {
+  list(@CurrentUser() userId: string) {
     return this.projects.list(userId);
   }
 
   @Get(':id')
-  get(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+  get(@Param('id') id: string, @CurrentUser() userId: string) {
     return this.projects.get(id, userId);
   }
 
   @Post()
-  create(@Headers('x-user-id') userId: string, @Body() body: CreateProjectBody) {
+  create(@CurrentUser() userId: string, @Body() body: CreateProjectBody) {
     return this.projects.create(userId, body.name, body.document, body.folder);
   }
 
   @Post(':id/operations')
   applyOperations(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
+    @CurrentUser() userId: string,
     @Body() body: ApplyOperationsBody,
   ) {
     return this.projects.applyOperations(id, body.operations, {
@@ -60,18 +59,14 @@ export class ProjectsController {
   }
 
   @Get(':id/history')
-  history(
-    @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
-    @Query('limit') limit?: string,
-  ) {
+  history(@Param('id') id: string, @CurrentUser() userId: string, @Query('limit') limit?: string) {
     return this.projects.history(id, userId, limit === undefined ? undefined : Number(limit));
   }
 
   @Post(':id/snapshots')
   createSnapshot(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string,
+    @CurrentUser() userId: string,
     @Body() body: { name: string; message?: string },
   ) {
     return this.projects.createSnapshot(id, userId, body.name, body.message);
@@ -81,13 +76,13 @@ export class ProjectsController {
   restoreSnapshot(
     @Param('id') id: string,
     @Param('snapshotId') snapshotId: string,
-    @Headers('x-user-id') userId: string,
+    @CurrentUser() userId: string,
   ) {
     return this.projects.restoreSnapshot(id, userId, snapshotId);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Headers('x-user-id') userId: string) {
+  async remove(@Param('id') id: string, @CurrentUser() userId: string) {
     await this.projects.remove(id, userId);
     return { ok: true };
   }

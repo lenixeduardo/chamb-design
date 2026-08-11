@@ -233,13 +233,17 @@ describe('ProjectsService', () => {
     it('refuses every route without an identity rather than acting anonymously', async () => {
       const { service } = makeService();
 
-      await expect(service.list('')).rejects.toThrow(/x-user-id/);
-      await expect(service.get('p1', '')).rejects.toThrow(/x-user-id/);
+      await expect(service.list('')).rejects.toThrow(/authentication is required/);
+      await expect(service.get('p1', '')).rejects.toThrow(/authentication is required/);
       await expect(service.create('  ', 'n', createDocument({ name: 'x' }))).rejects.toThrow(
-        /x-user-id/,
+        /authentication is required/,
       );
-      await expect(service.remove('p1', undefined as never)).rejects.toThrow(/x-user-id/);
-      await expect(service.applyOperations('p1', [], {})).rejects.toThrow(/x-user-id/);
+      await expect(service.remove('p1', undefined as never)).rejects.toThrow(
+        /authentication is required/,
+      );
+      await expect(service.applyOperations('p1', [], {})).rejects.toThrow(
+        /authentication is required/,
+      );
     });
   });
 

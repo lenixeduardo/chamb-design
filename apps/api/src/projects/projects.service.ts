@@ -41,7 +41,7 @@ export class ProjectsService {
 
   private static requireUser(userId: string | undefined): string {
     const id = userId?.trim();
-    if (!id) throw new UnauthorizedException('the x-user-id header is required');
+    if (!id) throw new UnauthorizedException('authentication is required');
     return id;
   }
 

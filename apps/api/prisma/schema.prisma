@@ -27,7 +27,11 @@ model User {
   email     String   @unique
   name      String?
   avatarUrl String?
-  createdAt DateTime @default(now())
+  /// Null for accounts that have not set a password yet (e.g. provisioned by
+  /// an admin). Login is refused until one is set — there is no "empty
+  /// password" state.
+  passwordHash String?
+  createdAt    DateTime @default(now())
 
   ownedProjects Project[]     @relation("ProjectOwner")
   memberships   Membership[]
